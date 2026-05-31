@@ -19,11 +19,12 @@ public class RegistrationController {
 
     @FXML
     public void handleRegister() {
-        String idNumber      = idNumberField.getText().trim();
+        String idNumber      = InputValidator.formatStudentNumber(idNumberField.getText());
         String fullName      = fullNameField.getText().trim();
         String password      = passwordField.getText();
         String confirmPass   = confirmPasswordField.getText();
         String contactNumber = contactNumberField.getText().trim();
+        idNumberField.setText(idNumber);
 
         if (idNumber.isEmpty() || fullName.isEmpty() || password.isEmpty()
                 || confirmPass.isEmpty() || contactNumber.isEmpty()) {

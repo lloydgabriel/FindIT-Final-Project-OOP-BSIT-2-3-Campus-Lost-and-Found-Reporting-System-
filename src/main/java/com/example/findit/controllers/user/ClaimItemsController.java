@@ -43,7 +43,10 @@ public class ClaimItemsController {
             return;
         }
 
-        if (!InputValidator.isValidStudentNumber(txtStudentNumber.getText())) {
+        String studentNumber = InputValidator.formatStudentNumber(txtStudentNumber.getText());
+        txtStudentNumber.setText(studentNumber);
+
+        if (!InputValidator.isValidStudentNumber(studentNumber)) {
             showAlert(Alert.AlertType.WARNING, "Invalid Student Number",
                     "Please use the correct student number format, for example 2024-00000-SR-0.");
             return;
@@ -66,7 +69,7 @@ public class ClaimItemsController {
             AppDataStore.addClaimRequest(
                     item,
                     txtClaimantName.getText().trim(),
-                    txtStudentNumber.getText().trim(),
+                    studentNumber,
                     txtContact.getText().trim(),
                     txtProofDescription.getText().trim()
             );
