@@ -8,7 +8,6 @@ import java.sql.Connection;
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -57,7 +56,7 @@ public class ClaimRequestDAO {
         String sql = """
                 INSERT INTO claims
                 (item_id, claimant_id, claim_date, claim_status, claimant_name, student_number, contact_info, proof_description, tracking_id)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, (timezone('Asia/Manila', now()))::date, ?, ?, ?, ?, ?, ?)
                 RETURNING claim_id
                 """;
 
@@ -67,15 +66,14 @@ public class ClaimRequestDAO {
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
                 stmt.setInt(1, item.getId());
                 stmt.setInt(2, claimantId);
-                stmt.setDate(3, Date.valueOf(LocalDate.now()));
-                stmt.setString(4, status);
-                stmt.setString(5, claimantName);
-                stmt.setString(6, studentNumber);
-                stmt.setString(7, contactInfo);
-                stmt.setString(8, proofDescription);
+                stmt.setString(3, status);
+                stmt.setString(4, claimantName);
+                stmt.setString(5, studentNumber);
+                stmt.setString(6, contactInfo);
+                stmt.setString(7, proofDescription);
                 
                 // Bind the tracking ticket
-                stmt.setString(9, newTicket);
+                stmt.setString(8, newTicket);
                 
                 ResultSet rs = stmt.executeQuery();
                 if (!rs.next()) {

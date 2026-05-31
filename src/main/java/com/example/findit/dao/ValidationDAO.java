@@ -4,20 +4,16 @@ import com.example.findit.model.ValidationLog;
 import com.example.findit.util.DBConnection;
 
 import java.sql.*;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 
 public class ValidationDAO {
-    private static final ZoneId APP_ZONE = ZoneId.of("Asia/Manila");
-
     public void logValidation(int itemId, int validatedBy,
                               String validationType, String remarks) {
         String sql = """
                 INSERT INTO validation_logs
                     (item_id, validated_by, validation_type, remarks, validated_at)
-                VALUES (?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, timezone('Asia/Manila', now()))
                 """;
         try (Connection conn = DBConnection.connect();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -26,7 +22,6 @@ public class ValidationDAO {
             ps.setInt(2, validatedBy);
             ps.setString(3, validationType);
             ps.setString(4, remarks);
-            ps.setTimestamp(5, Timestamp.valueOf(LocalDateTime.now(APP_ZONE)));
             ps.executeUpdate();
 
         } catch (Exception e) {

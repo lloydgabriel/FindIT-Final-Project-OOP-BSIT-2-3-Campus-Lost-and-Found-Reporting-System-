@@ -69,7 +69,16 @@ public class LostFormController {
             return;
         }
 
-        if (InputValidator.isFutureDate(dpDate.getValue())) {
+        boolean futureDate;
+        try {
+            futureDate = InputValidator.isFutureDate(dpDate.getValue());
+        } catch (IllegalStateException e) {
+            showAlert(Alert.AlertType.ERROR, "Date Check Error",
+                    "The current Philippine date could not be verified. Please try again later.");
+            return;
+        }
+
+        if (futureDate) {
             showAlert(Alert.AlertType.WARNING, "Invalid Date", "The report date cannot be later than today.");
             return;
         }

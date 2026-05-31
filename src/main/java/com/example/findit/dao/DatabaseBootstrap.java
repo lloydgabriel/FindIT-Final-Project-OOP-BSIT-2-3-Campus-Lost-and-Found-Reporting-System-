@@ -39,7 +39,7 @@ public final class DatabaseBootstrap {
                             user_id INTEGER,
                             action VARCHAR(50) NOT NULL,
                             description TEXT,
-                            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                            created_at TIMESTAMP DEFAULT timezone('Asia/Manila', now())
                         )
                         """);
         stmt.executeUpdate("""
@@ -49,9 +49,17 @@ public final class DatabaseBootstrap {
             validated_by    INT         NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
             validation_type VARCHAR(20) NOT NULL CHECK (validation_type IN ('APPROVED', 'REJECTED', 'PENDING')),
             remarks         VARCHAR(500),
-            validated_at    TIMESTAMP   NOT NULL DEFAULT NOW()
+            validated_at    TIMESTAMP   NOT NULL DEFAULT timezone('Asia/Manila', now())
         )
         """);
+                stmt.executeUpdate("""
+                        ALTER TABLE activity_logs
+                        ALTER COLUMN created_at SET DEFAULT timezone('Asia/Manila', now())
+                        """);
+                stmt.executeUpdate("""
+                        ALTER TABLE validation_logs
+                        ALTER COLUMN validated_at SET DEFAULT timezone('Asia/Manila', now())
+                        """);
             }
 
             for (String category : List.of("Electronics", "Wallet", "Documents", "Clothing", "Accessories", "Other")) {

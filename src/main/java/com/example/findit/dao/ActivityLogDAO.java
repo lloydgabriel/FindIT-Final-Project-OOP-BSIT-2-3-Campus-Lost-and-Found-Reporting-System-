@@ -6,20 +6,15 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Timestamp;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 
 public class ActivityLogDAO {
-    private static final ZoneId APP_ZONE = ZoneId.of("Asia/Manila");
-
     public void log(int userId, String action, String description) {
         String sql = """
         INSERT INTO activity_logs
         (user_id, action, description, created_at)
-        VALUES (?, ?, ?, ?)
+        VALUES (?, ?, ?, timezone('Asia/Manila', now()))
         """;
 
         try {
@@ -34,9 +29,6 @@ public class ActivityLogDAO {
             ps.setInt(1, userId);
             ps.setString(2, action);
             ps.setString(3, description);
-            ps.setTimestamp(4, java.sql.Timestamp.valueOf(
-                    LocalDateTime.now(APP_ZONE)
-            ));
             ps.executeUpdate();
         } catch (Exception e) {
             e.printStackTrace();
@@ -79,16 +71,13 @@ public class ActivityLogDAO {
         String sql = """
                 SELECT COUNT(*) FROM activity_logs
                 WHERE action = ?
-                  AND created_at >= ?
-                  AND created_at < ?
+                  AND created_at >= (timezone('Asia/Manila', now()))::date
+                  AND created_at < ((timezone('Asia/Manila', now()))::date + INTERVAL '1 day')
                 """;
         try (Connection conn = DBConnection.connect();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            LocalDate today = LocalDate.now(APP_ZONE);
             ps.setString(1, action);
-            ps.setTimestamp(2, Timestamp.valueOf(today.atStartOfDay()));
-            ps.setTimestamp(3, Timestamp.valueOf(today.plusDays(1).atStartOfDay()));
             ResultSet rs = ps.executeQuery();
             if (rs.next()) return rs.getInt(1);
 
