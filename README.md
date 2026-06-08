@@ -1,1 +1,2 @@
-# Final-Project-OOP---Campus-Lost-and-Found-Reporting-System
+Status Report: June 6, 2026
+Added Student and Registration Module in the repository
