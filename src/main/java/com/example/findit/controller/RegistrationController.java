@@ -1,0 +1,78 @@
+package com.example.findit.controller;
+
+import com.findit.dao.UserDAO;
+import com.findit.model.User;
+import javafx.fxml.FXML;
+import javafx.scene.control.*;
+
+public class RegistrationController {
+
+    @FXML private TextField idNumberField;
+    @FXML private TextField fullNameField;
+    @FXML private PasswordField passwordField;
+    @FXML private PasswordField confirmPasswordField;
+    @FXML private TextField contactNumberField;
+    @FXML private Label messageLabel;
+
+    private final UserDAO userDAO = new UserDAO();
+
+    @FXML
+    public void handleRegister() {
+        String idNumber      = idNumberField.getText().trim();
+        String fullName      = fullNameField.getText().trim();
+        String password      = passwordField.getText();
+        String confirmPass   = confirmPasswordField.getText();
+        String contactNumber = contactNumberField.getText().trim();
+
+        if (idNumber.isEmpty() || fullName.isEmpty() || password.isEmpty()
+                || confirmPass.isEmpty() || contactNumber.isEmpty()) {
+            showMessage("Please fill in all fields.", "error");
+            return;
+        }
+
+        if (!password.equals(confirmPass)) {
+            showMessage("Passwords do not match.", "error");
+            return;
+        }
+
+        if (password.length() < 6) {
+            showMessage("Password must be at least 6 characters.", "error");
+            return;
+        }
+
+        if (userDAO.isIdNumberTaken(idNumber)) {
+            showMessage("This ID number is already registered.", "error");
+            return;
+        }
+
+        User newUser = new User(idNumber, fullName, password, "Student", contactNumber);
+        boolean success = userDAO.registerUser(newUser);
+
+        if (success) {
+            showMessage("Registration successful! You can now log in.", "success");
+            handleClear();
+        } else {
+            showMessage("Registration failed. Please try again.", "error");
+        }
+    }
+
+    @FXML
+    public void handleClear() {
+        idNumberField.clear();
+        fullNameField.clear();
+        passwordField.clear();
+        confirmPasswordField.clear();
+        contactNumberField.clear();
+        messageLabel.setText("");
+    }
+
+    private void showMessage(String message, String type) {
+        messageLabel.setText(message);
+        if (type.equals("error")) {
+            messageLabel.setStyle("-fx-text-fill: red;");
+        } else {
+            messageLabel.setStyle("-fx-text-fill: green;");
+        }
+    }
+}
+
