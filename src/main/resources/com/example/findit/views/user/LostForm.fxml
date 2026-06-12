@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<VBox prefHeight="700.0" prefWidth="1050.0" style="-fx-background-color: #800000;" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.findit.controllers.user.LostFormController">
+   <children>
+      <HBox alignment="CENTER_LEFT" prefHeight="55.0" spacing="5.0">
+         <children>
+            <Button mnemonicParsing="false" onAction="#handleBack" style="-fx-background-color: transparent; -fx-cursor: hand;" text="← Back" textFill="WHITE">
+               <font><Font name="System Bold" size="18.0" /></font>
+            </Button>
+         </children>
+         <padding><Insets left="20.0" /></padding>
+      </HBox>
+
+      <AnchorPane VBox.vgrow="ALWAYS">
+         <children>
+            <VBox layoutX="40.0" layoutY="10.0" prefWidth="970.0" spacing="18.0" style="-fx-background-color: #FFFFFF; -fx-background-radius: 18; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.15), 12, 0, 0, 6);" AnchorPane.leftAnchor="40.0" AnchorPane.rightAnchor="40.0">
+               <padding><Insets bottom="30.0" left="35.0" right="35.0" top="25.0" /></padding>
+               <children>
+
+                  <VBox spacing="3.0">
+                     <children>
+                        <Label text="Report Lost Item" textFill="#800000"><font><Font name="System Bold" size="26.0" /></font></Label>
+                        <Label text="Please fill in all the details about your lost item" textFill="#555555" />
+                     </children>
+                  </VBox>
+
+                  <GridPane hgap="25.0" vgap="12.0">
+                     <columnConstraints>
+                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                     </columnConstraints>
+                     <rowConstraints>
+                        <RowConstraints minHeight="10.0" prefHeight="62.0" vgrow="SOMETIMES" />
+                        <RowConstraints minHeight="10.0" prefHeight="62.0" vgrow="SOMETIMES" />
+                     </rowConstraints>
+                     <children>
+                        <VBox spacing="4.0">
+                           <children>
+                              <HBox><children><Label text="Item Name " textFill="#333333"><font><Font name="System Bold" size="12.0" /></font></Label><Label text="*" textFill="RED" /></children></HBox>
+                              <TextField fx:id="txtItemName" prefHeight="38.0" promptText="e.g., iPhone 13 Pro" style="-fx-background-color: #FFFFFF; -fx-border-color: #CCCCCC; -fx-border-radius: 6;" />
+                           </children>
+                        </VBox>
+                        <VBox spacing="4.0" GridPane.columnIndex="1">
+                           <children>
+                              <HBox><children><Label text="Category " textFill="#333333"><font><Font name="System Bold" size="12.0" /></font></Label><Label text="*" textFill="RED" /></children></HBox>
+                              <ComboBox fx:id="cmbCategory" prefHeight="38.0" prefWidth="300.0" promptText="Select a category" style="-fx-background-color: #FFFFFF; -fx-border-color: #CCCCCC; -fx-border-radius: 6;" />
+                           </children>
+                        </VBox>
+                        <VBox spacing="4.0" GridPane.columnIndex="2">
+                           <children>
+                              <HBox><children><Label text="Date " textFill="#333333"><font><Font name="System Bold" size="12.0" /></font></Label><Label text="*" textFill="RED" /></children></HBox>
+                              <DatePicker fx:id="dpDate" prefHeight="38.0" prefWidth="300.0" promptText="mm/dd/yyyy" style="-fx-background-color: #FFFFFF; -fx-border-color: #CCCCCC; -fx-border-radius: 6;" />
+                           </children>
+                        </VBox>
+                        <VBox spacing="4.0" GridPane.rowIndex="1">
+                           <children>
+                              <HBox><children><Label text="Location Lost " textFill="#333333"><font><Font name="System Bold" size="12.0" /></font></Label><Label text="*" textFill="RED" /></children></HBox>
+                              <TextField fx:id="txtLocation" prefHeight="38.0" promptText="e.g., Canteen" style="-fx-background-color: #FFFFFF; -fx-border-color: #CCCCCC; -fx-border-radius: 6;" />
+                           </children>
+                        </VBox>
+                        <VBox spacing="4.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                           <children>
+                              <HBox><children><Label text="Name of Reporter " textFill="#333333"><font><Font name="System Bold" size="12.0" /></font></Label><Label text="*" textFill="RED" /></children></HBox>
+                              <TextField fx:id="txtReporterName" prefHeight="38.0" promptText="Full name" style="-fx-background-color: #FFFFFF; -fx-border-color: #CCCCCC; -fx-border-radius: 6;" />
+                           </children>
+                        </VBox>
+                        <VBox spacing="4.0" GridPane.columnIndex="2" GridPane.rowIndex="1">
+                           <children>
+                              <HBox><children><Label text="Contact Information " textFill="#333333"><font><Font name="System Bold" size="12.0" /></font></Label><Label text="*" textFill="RED" /></children></HBox>
+                              <TextField fx:id="txtContact" prefHeight="38.0" promptText="Email or phone number" style="-fx-background-color: #FFFFFF; -fx-border-color: #CCCCCC; -fx-border-radius: 6;" />
+                           </children>
+                        </VBox>
+                     </children>
+                  </GridPane>
+
+                  <VBox spacing="4.0">
+                     <children>
+                        <HBox><children><Label text="Description " textFill="#333333"><font><Font name="System Bold" size="12.0" /></font></Label><Label text="*" textFill="RED" /></children></HBox>
+                        <TextArea fx:id="txtDescription" prefHeight="75.0" promptText="Provide detailed description..." style="-fx-background-color: #FFFFFF; -fx-border-color: #CCCCCC; -fx-border-radius: 6;" wrapText="true" />
+                     </children>
+                  </VBox>
+
+                  <VBox spacing="4.0">
+                     <children>
+                        <Label text="Upload Image (Optional)" textFill="#333333"><font><Font name="System Bold" size="12.0" /></font></Label>
+                        <VBox fx:id="uploadArea" alignment="CENTER" prefHeight="75.0" spacing="4.0" style="-fx-border-color: #CCCCCC; -fx-border-style: dashed; -fx-border-radius: 8; -fx-background-color: #FAFAFA; -fx-cursor: hand;">
+                           <children>
+                              <Label text="Click to upload or drag and drop" textFill="#666666"><font><Font name="System Bold" size="12.0" /></font></Label>
+                              <Label text="PNG, JPG up to 10MB" textFill="#999999"><font><Font size="10.0" /></font></Label>
+                           </children>
+                        </VBox>
+                     </children>
+                  </VBox>
+
+                  <HBox spacing="20.0">
+                     <VBox.margin><Insets top="5.0" /></VBox.margin>
+                     <children>
+                        <Button mnemonicParsing="false" onAction="#handleSubmit" prefHeight="44.0" prefWidth="440.0" style="-fx-background-color: #800000; -fx-background-radius: 8; -fx-cursor: hand;" text="Submit Report" textFill="WHITE" HBox.hgrow="ALWAYS">
+                           <font><Font name="System Bold" size="14.0" /></font>
+                        </Button>
+                        <Button mnemonicParsing="false" onAction="#handleCancel" prefHeight="44.0" prefWidth="440.0" style="-fx-background-color: #CCCCCC; -fx-background-radius: 8; -fx-cursor: hand;" text="Cancel" textFill="#333333" HBox.hgrow="ALWAYS">
+                           <font><Font name="System Bold" size="14.0" /></font>
+                        </Button>
+                     </children>
+                  </HBox>
+               </children>
+            </VBox>
+         </children>
+      </AnchorPane>
+   </children>
+</VBox>

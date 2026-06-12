@@ -1,7 +1,7 @@
-package com.example.findit.controller;
+package com.example.findit.controllers;
 
-import com.findit.dao.UserDAO;
-import com.findit.model.User;
+import com.example.findit.dao.UserDAO;
+import com.example.findit.model.User;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 

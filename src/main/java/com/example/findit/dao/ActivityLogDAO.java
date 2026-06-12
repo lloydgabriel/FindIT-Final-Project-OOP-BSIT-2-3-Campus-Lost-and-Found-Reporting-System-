@@ -1,5 +1,5 @@
-package application;
-
+package com.example.findit.dao;
+import com.example.findit.util.DBConnection;
 import java.sql.*;
 
 public class ActivityLogDAO {

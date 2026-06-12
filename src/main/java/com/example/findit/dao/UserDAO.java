@@ -1,7 +1,7 @@
-package com.findit.dao;
+package com.example.findit.dao;
 
-import com.findit.model.User;
-import com.findit.util.DatabaseConnection;
+import com.example.findit.model.User;
+import com.example.findit.util.DBConnection;
 
 import java.sql.*;
 
@@ -10,7 +10,7 @@ public class UserDAO {
     public boolean registerUser(User user) {
         String sql = "INSERT INTO users (id_number, full_name, password, role, contact_number) VALUES (?, ?, ?, ?, ?)";
 
-        try (Connection conn = DatabaseConnection.getConnection();
+        try (Connection conn = DBConnection.connect();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, user.getIdNumber());
@@ -31,7 +31,7 @@ public class UserDAO {
     public boolean isIdNumberTaken(String idNumber) {
         String sql = "SELECT user_id FROM users WHERE id_number = ?";
 
-        try (Connection conn = DatabaseConnection.getConnection();
+        try (Connection conn = DBConnection.connect();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, idNumber);
@@ -47,7 +47,7 @@ public class UserDAO {
     public User loginUser(String idNumber, String password) {
         String sql = "SELECT * FROM users WHERE id_number = ? AND password = ?";
 
-        try (Connection conn = DatabaseConnection.getConnection();
+        try (Connection conn = DBConnection.connect();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, idNumber);

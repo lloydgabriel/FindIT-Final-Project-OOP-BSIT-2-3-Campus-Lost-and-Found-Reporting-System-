@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<VBox prefHeight="700.0" prefWidth="1050.0" style="-fx-background-color: #800000;" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.findit.controllers.user.FoundFormController">
+   <children>
+      <HBox alignment="CENTER_LEFT" prefHeight="60.0" spacing="10.0">
+         <children>
+            <Button mnemonicParsing="false" onAction="#handleBack" style="-fx-background-color: transparent; -fx-cursor: hand;" text="← Back" textFill="WHITE">
+               <font><Font name="System Bold" size="18.0" /></font>
+            </Button>
+         </children>
+         <padding><Insets left="20.0" /></padding>
+      </HBox>
+
+      <AnchorPane VBox.vgrow="ALWAYS">
+         <children>
+            <VBox layoutX="40.0" layoutY="10.0" prefWidth="970.0" spacing="18.0" style="-fx-background-color: white; -fx-background-radius: 20; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 10, 0, 0, 5);" AnchorPane.leftAnchor="40.0" AnchorPane.rightAnchor="40.0">
+               <padding><Insets bottom="30.0" left="35.0" right="35.0" top="25.0" /></padding>
+               <children>
+                  <VBox spacing="5.0">
+                     <children>
+                        <Label text="Report Found Item" textFill="#800000"><font><Font name="System Bold" size="26.0" /></font></Label>
+                        <Label text="Please fill in all the details about your found item" textFill="#666666" />
+                     </children>
+                  </VBox>
+
+                  <GridPane hgap="30.0" vgap="15.0">
+                     <columnConstraints>
+                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                     </columnConstraints>
+                     <rowConstraints>
+                        <RowConstraints minHeight="10.0" prefHeight="60.0" vgrow="SOMETIMES" />
+                        <RowConstraints minHeight="10.0" prefHeight="60.0" vgrow="SOMETIMES" />
+                     </rowConstraints>
+                     <children>
+                        <VBox spacing="5.0">
+                           <children>
+                              <Label text="Item Name *" textFill="#333333">
+                                 <font>
+                                    <Font name="System Bold" size="12.0" />
+                                 </font></Label><TextField fx:id="txtItemName" prefHeight="40.0" promptText="e.g., iPhone 13 Pro" style="-fx-border-color: #CCCCCC; -fx-border-radius: 8;" />
+                           </children>
+                        </VBox>
+                        <VBox spacing="5.0" GridPane.columnIndex="1">
+                           <children>
+                              <Label text="Category *">
+                                 <font>
+                                    <Font name="System Bold" size="12.0" />
+                                 </font></Label><ComboBox fx:id="cmbCategory" prefHeight="40.0" prefWidth="300.0" promptText="Select a category" style="-fx-background-color: white; -fx-border-color: #CCCCCC; -fx-border-radius: 8;" />
+                           </children>
+                        </VBox>
+                        <VBox spacing="5.0" GridPane.columnIndex="2">
+                           <children>
+                              <Label text="Date *">
+                                 <font>
+                                    <Font name="System Bold" size="12.0" />
+                                 </font></Label><DatePicker fx:id="dpDate" prefHeight="40.0" prefWidth="300.0" promptText="mm/dd/yyyy" style="-fx-border-color: #CCCCCC;" />
+                           </children>
+                        </VBox>
+                        <VBox spacing="5.0" GridPane.rowIndex="1">
+                           <children>
+                              <Label text="Location Found *" /><TextField fx:id="txtLocation" prefHeight="40.0" promptText="e.g., Canteen" style="-fx-border-color: #CCCCCC; -fx-border-radius: 8;" />
+                           </children>
+                        </VBox>
+                        <VBox spacing="5.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                           <children>
+                              <Label text="Name of Reporter *" /><TextField fx:id="txtReporterName" prefHeight="40.0" promptText="Full name" style="-fx-border-color: #CCCCCC; -fx-border-radius: 8;" />
+                           </children>
+                        </VBox>
+                        <VBox spacing="5.0" GridPane.columnIndex="2" GridPane.rowIndex="1">
+                           <children>
+                              <Label text="Contact Information *" /><TextField fx:id="txtContact" prefHeight="40.0" promptText="Email or phone number" style="-fx-border-color: #CCCCCC; -fx-border-radius: 8;" />
+                           </children>
+                        </VBox>
+                     </children>
+                  </GridPane>
+
+                  <VBox spacing="5.0">
+                     <children>
+                        <Label text="Location Description *" /><TextArea fx:id="txtDescription" prefHeight="80.0" promptText="Provide detailed description..." style="-fx-border-color: #CCCCCC; -fx-border-radius: 8;" wrapText="true" />
+                     </children>
+                  </VBox>
+
+                  <VBox fx:id="uploadArea" alignment="CENTER" prefHeight="100.0" spacing="10.0" style="-fx-border-color: #CCCCCC; -fx-border-style: dashed; -fx-border-radius: 10; -fx-cursor: hand;">
+                     <children>
+                        <Label text="Upload Image (Optional)" textFill="#666666" />
+                        <Label text="Click to upload or drag and drop" textFill="#999999"><font><Font size="11.0" /></font></Label>
+                     </children>
+                  </VBox>
+
+                  <HBox spacing="20.0">
+                     <children>
+                        <Button mnemonicParsing="false" onAction="#handleSubmit" prefHeight="44.0" prefWidth="440.0" style="-fx-background-color: #800000; -fx-background-radius: 10; -fx-cursor: hand;" text="Submit Report" textFill="WHITE" HBox.hgrow="ALWAYS"><font><Font name="System Bold" size="14.0" /></font></Button>
+                        <Button mnemonicParsing="false" onAction="#handleCancel" prefHeight="44.0" prefWidth="440.0" style="-fx-background-color: #CCCCCC; -fx-background-radius: 10; -fx-cursor: hand;" text="Cancel" textFill="#333333" HBox.hgrow="ALWAYS"><font><Font name="System Bold" size="14.0" /></font></Button>
+                     </children>
+                  </HBox>
+               </children>
+            </VBox>
+         </children>
+      </AnchorPane>
+   </children>
+</VBox>

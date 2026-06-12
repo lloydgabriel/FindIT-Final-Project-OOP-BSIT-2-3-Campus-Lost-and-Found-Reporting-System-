@@ -1,8 +1,8 @@
-package com.findit.util;
+package com.example.findit.util;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.SQLException
+import java.sql.SQLException;
 
 public class DBConnection {
 

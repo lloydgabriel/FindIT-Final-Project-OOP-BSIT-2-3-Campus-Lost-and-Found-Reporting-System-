@@ -1,4 +1,4 @@
-package com.findit.model;
+package com.example.findit.model;
 
 public class User {
 
