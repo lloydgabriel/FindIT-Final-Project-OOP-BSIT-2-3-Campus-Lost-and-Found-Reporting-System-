@@ -14,7 +14,6 @@ import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
-import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 import java.io.IOException;
@@ -99,15 +98,13 @@ public class ItemDetailsController {
             Parent root = loader.load();
             ClaimItemsController controller = loader.getController();
             controller.setItem(item);
-            Stage claimStage = new Stage();
-            claimStage.initModality(Modality.APPLICATION_MODAL);
-            claimStage.initOwner(((Node) event.getSource()).getScene().getWindow());
-            claimStage.setTitle("Claim Item");
-            claimStage.setScene(new Scene(root));
-            claimStage.showAndWait();
-        } catch (IOException e) {
-            System.err.println("Could not open claim form");
-            e.printStackTrace();
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            stage.setTitle("Claim Item");
+            stage.setScene(new Scene(root));
+            stage.centerOnScreen();
+        } catch (IOException | RuntimeException e) {
+            showAlert(Alert.AlertType.ERROR, "Claim Form Error",
+                    "The claim form could not be opened. Please try again.");
         }
     }
 

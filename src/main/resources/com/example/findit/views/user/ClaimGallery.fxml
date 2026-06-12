@@ -12,7 +12,7 @@
 
 <AnchorPane prefHeight="500.0" prefWidth="800.0" style="-fx-background-color: rgba(0, 0, 0, 0.45);" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.findit.controllers.user.ClaimItemsController">
    <children>
-      <VBox layoutX="60.0" layoutY="55.0" prefHeight="390.0" prefWidth="680.0" style="-fx-background-color: #FFFFFF; -fx-background-radius: 18;" AnchorPane.bottom.to="55.0" AnchorPane.left.to="60.0" AnchorPane.right.to="60.0" AnchorPane.top.to="55.0">
+      <VBox layoutX="60.0" layoutY="55.0" prefHeight="390.0" prefWidth="680.0" style="-fx-background-color: #FFFFFF; -fx-background-radius: 18;" AnchorPane.bottomAnchor="55.0" AnchorPane.leftAnchor="60.0" AnchorPane.rightAnchor="60.0" AnchorPane.topAnchor="55.0">
          <padding>
             <Insets bottom="25.0" left="30.0" right="30.0" top="25.0" />
          </padding>
