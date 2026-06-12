@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.example.findit.controllers.admin.MonitoringController"
+            style="-fx-background-color: #F5F5F5;">
+
+    <left>
+        <fx:include fx:id="sidebar"
+                    source="AdminDashboardSidebar.fxml"/>
+    </left>
+
+    <center>
+        <ScrollPane fitToWidth="true" style="-fx-background-color: transparent;">
+            <VBox spacing="20" style="-fx-padding: 30;">
+
+                <Label text="Monitoring"
+                       style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #1A1A2E;"/>
+
+                <!-- Summary Cards -->
+                <HBox spacing="16">
+                    <VBox style="-fx-background-color: white; -fx-background-radius: 10;
+                                 -fx-padding: 16; -fx-effect: dropshadow(gaussian,#0001,6,0,0,2);"
+                          prefWidth="150">
+                        <Label text="Today's Logins" style="-fx-text-fill: #666; -fx-font-size: 12px;"/>
+                        <Label fx:id="lblTodayCheckIn" text="0"
+                               style="-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #2E7D32;"/>
+                        <Label text="CHECK IN" style="-fx-text-fill: #2E7D32; -fx-font-size: 11px;"/>
+                    </VBox>
+                    <VBox style="-fx-background-color: white; -fx-background-radius: 10;
+                                 -fx-padding: 16; -fx-effect: dropshadow(gaussian,#0001,6,0,0,2);"
+                          prefWidth="150">
+                        <Label text="Today's Logouts" style="-fx-text-fill: #666; -fx-font-size: 12px;"/>
+                        <Label fx:id="lblTodayCheckOut" text="0"
+                               style="-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #C62828;"/>
+                        <Label text="CHECK OUT" style="-fx-text-fill: #C62828; -fx-font-size: 11px;"/>
+                    </VBox>
+                    <VBox style="-fx-background-color: white; -fx-background-radius: 10;
+                                 -fx-padding: 16; -fx-effect: dropshadow(gaussian,#0001,6,0,0,2);"
+                          prefWidth="150">
+                        <Label text="Approved" style="-fx-text-fill: #666; -fx-font-size: 12px;"/>
+                        <Label fx:id="lblApproved" text="0"
+                               style="-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #2E7D32;"/>
+                        <Label text="VALIDATED" style="-fx-text-fill: #2E7D32; -fx-font-size: 11px;"/>
+                    </VBox>
+                    <VBox style="-fx-background-color: white; -fx-background-radius: 10;
+                                 -fx-padding: 16; -fx-effect: dropshadow(gaussian,#0001,6,0,0,2);"
+                          prefWidth="150">
+                        <Label text="Rejected" style="-fx-text-fill: #666; -fx-font-size: 12px;"/>
+                        <Label fx:id="lblRejected" text="0"
+                               style="-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #C62828;"/>
+                        <Label text="VALIDATED" style="-fx-text-fill: #C62828; -fx-font-size: 11px;"/>
+                    </VBox>
+                    <VBox style="-fx-background-color: white; -fx-background-radius: 10;
+                                 -fx-padding: 16; -fx-effect: dropshadow(gaussian,#0001,6,0,0,2);"
+                          prefWidth="150">
+                        <Label text="Pending" style="-fx-text-fill: #666; -fx-font-size: 12px;"/>
+                        <Label fx:id="lblPending" text="0"
+                               style="-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #F57F17;"/>
+                        <Label text="VALIDATED" style="-fx-text-fill: #F57F17; -fx-font-size: 11px;"/>
+                    </VBox>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Button text="⟳  Refresh" onAction="#handleRefresh"
+                            style="-fx-background-color: #1A1A2E; -fx-text-fill: white;
+                                   -fx-background-radius: 8; -fx-padding: 8 16 8 16; -fx-cursor: hand;"/>
+                </HBox>
+
+                <!-- Ingress / Egress Table -->
+                <VBox spacing="10"
+                      style="-fx-background-color: white; -fx-background-radius: 12;
+                             -fx-padding: 20; -fx-effect: dropshadow(gaussian,#0001,8,0,0,2);">
+                    <HBox alignment="CENTER_LEFT" spacing="12">
+                        <Label text="Ingress / Egress Log"
+                               style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1A1A2E;"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <TextField fx:id="ieSearch" promptText="Search…" prefWidth="180"
+                                   style="-fx-background-radius: 6; -fx-border-radius: 6;
+                                          -fx-border-color: #DDD; -fx-padding: 6 10 6 10;"/>
+                        <ComboBox fx:id="ieFilter" prefWidth="130" style="-fx-background-radius: 6;"/>
+                    </HBox>
+                    <TableView fx:id="ieTable" prefHeight="260">
+                        <columns>
+                            <TableColumn fx:id="colIEUserId"      text="User ID"    prefWidth="80"/>
+                            <TableColumn fx:id="colIEAction"      text="Event"      prefWidth="120"/>
+                            <TableColumn fx:id="colIEDescription" text="Description" prefWidth="300"/>
+                            <TableColumn fx:id="colIETime"        text="Timestamp"  prefWidth="180"/>
+                        </columns>
+                        <placeholder>
+                            <Label text="No ingress/egress records found."
+                                   style="-fx-text-fill: #999;"/>
+                        </placeholder>
+                    </TableView>
+                </VBox>
+
+                <!-- Validation Table -->
+                <VBox spacing="10"
+                      style="-fx-background-color: white; -fx-background-radius: 12;
+                             -fx-padding: 20; -fx-effect: dropshadow(gaussian,#0001,8,0,0,2);">
+                    <HBox alignment="CENTER_LEFT" spacing="12">
+                        <Label text="Validation Log"
+                               style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1A1A2E;"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <TextField fx:id="valSearch" promptText="Search…" prefWidth="180"
+                                   style="-fx-background-radius: 6; -fx-border-radius: 6;
+                                          -fx-border-color: #DDD; -fx-padding: 6 10 6 10;"/>
+                        <ComboBox fx:id="valFilter" prefWidth="140" style="-fx-background-radius: 6;"/>
+                    </HBox>
+                    <TableView fx:id="valTable" prefHeight="260">
+                        <columns>
+                            <TableColumn fx:id="colValItem"    text="Item ID"      prefWidth="80"/>
+                            <TableColumn fx:id="colValAdmin"   text="Admin ID"     prefWidth="90"/>
+                            <TableColumn fx:id="colValType"    text="Decision"     prefWidth="120"/>
+                            <TableColumn fx:id="colValRemarks" text="Remarks"      prefWidth="260"/>
+                            <TableColumn fx:id="colValTime"    text="Validated At" prefWidth="180"/>
+                        </columns>
+                        <placeholder>
+                            <Label text="No validation records found."
+                                   style="-fx-text-fill: #999;"/>
+                        </placeholder>
+                    </TableView>
+                </VBox>
+
+            </VBox>
+        </ScrollPane>
+    </center>
+
+</BorderPane>

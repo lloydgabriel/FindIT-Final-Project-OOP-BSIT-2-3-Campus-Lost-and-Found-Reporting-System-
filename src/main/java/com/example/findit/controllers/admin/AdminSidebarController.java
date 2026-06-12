@@ -20,6 +20,8 @@ public class AdminSidebarController {
     @FXML private VBox sidebarContainer;
     @FXML private Label logoText;
     @FXML private Button btnDashboard, btnReported, btnClaims, btnMatch, btnLogout;
+    @FXML private Button btnMonitoring;
+    @FXML private ImageView imgMonitoring;
     @FXML private ImageView imgDashboard, imgReported, imgClaims, imgMatch;
     
     private boolean isSidebarExpanded = true;
@@ -110,6 +112,13 @@ public class AdminSidebarController {
                 imgMatch.setImage(safeLoadImage("/com/example/findit/assets/yellow_icons/MatchSuggestion.png"));
                 imgMatch.setEffect(null);
                 break;
+            case "Monitoring":
+                btnMonitoring.setStyle(activeStyle);
+                imgMonitoring.setImage(safeLoadImage(
+                        "/com/example/findit/assets/reportsidebar.png"));
+                imgMonitoring.setEffect(null);
+                break;
+
         }
     }
 
@@ -121,6 +130,12 @@ public class AdminSidebarController {
     @FXML private void handleLogout(ActionEvent event) {
         SessionManager.checkOut("Admin Login");
         navigateTo(event, "/com/example/findit/views/admin/AdminLogin.fxml", "Admin Login");
+    }
+    @FXML
+    private void goToMonitoring(ActionEvent event) {
+        navigateTo(event,
+                "/com/example/findit/views/admin/Monitoring.fxml",
+                "Monitoring");
     }
 
     private void navigateTo(ActionEvent event, String fxmlPath, String title) {

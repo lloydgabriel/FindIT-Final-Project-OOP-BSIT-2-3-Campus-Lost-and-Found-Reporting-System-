@@ -40,6 +40,16 @@ public final class DatabaseBootstrap {
                             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                         )
                         """);
+        stmt.executeUpdate("""
+         CREATE TABLE IF NOT EXISTS validation_logs (
+            validation_id   SERIAL      PRIMARY KEY,
+            item_id         INT         NOT NULL,
+            validated_by    INT         NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+            validation_type VARCHAR(20) NOT NULL CHECK (validation_type IN ('APPROVED', 'REJECTED', 'PENDING')),
+            remarks         VARCHAR(500),
+            validated_at    TIMESTAMP   NOT NULL DEFAULT NOW()
+        )
+        """);
             }
 
             for (String category : List.of("Electronics", "Wallet", "Documents", "Clothing", "Accessories", "Other")) {
