@@ -9,7 +9,7 @@ For your Information:
 * **Language:** Java 17
 * **GUI Framework:** JavaFX
 * **Build Tool:** Maven
-* **Database:** MySQL / JDBC
+* **Database:** Supabase / JDBC
 
 ```text
 FindIT-Final-Project-OOP-BSIT/
