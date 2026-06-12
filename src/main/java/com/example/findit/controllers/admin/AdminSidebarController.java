@@ -75,16 +75,19 @@ public class AdminSidebarController {
         btnReported.setStyle(defaultStyle);
         btnClaims.setStyle(defaultStyle);
         btnMatch.setStyle(defaultStyle);
+        btnMonitoring.setStyle(defaultStyle);
 
         // 2. Load the base default images for all buttons
         imgDashboard.setImage(safeLoadImage("/com/example/findit/assets/dashboard.png"));
         imgReported.setImage(safeLoadImage("/com/example/findit/assets/ItemReportedAdmin.png"));
         imgClaims.setImage(safeLoadImage("/com/example/findit/assets/claim.png"));
         imgMatch.setImage(safeLoadImage("/com/example/findit/assets/MatchSuggestion.png"));
+        imgMonitoring.setImage(safeLoadImage("/com/example/findit/assets/reportsidebar.png"));
 
         // 3. Create the white effect and apply it to ALL icons
         ColorAdjust makeWhite = new ColorAdjust();
         makeWhite.setBrightness(1.0);
+        imgMonitoring.setEffect(makeWhite);
         imgDashboard.setEffect(makeWhite);
         imgReported.setEffect(makeWhite);
         imgClaims.setEffect(makeWhite);
