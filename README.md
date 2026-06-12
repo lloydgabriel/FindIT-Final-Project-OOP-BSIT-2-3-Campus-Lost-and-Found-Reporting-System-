@@ -5,7 +5,7 @@ Status Report: June 12, 2026
 Finished Adding FXMLs and Controllers - procceed with backend and database
 
 Status Report: June 13, 2026 (Midnight)
-Polishing the System and Fixing Encounter Errors (will update again June 13, 2026 afternoon)
+Polishing the System and Fixing Encountered Errors (will update again June 13, 2026 afternoon)
 
 For your Information:
 
