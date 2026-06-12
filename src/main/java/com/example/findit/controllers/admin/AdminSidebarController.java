@@ -1,5 +1,7 @@
 package com.example.findit.controllers.admin;
 
+import com.example.findit.model.SessionManager;
+
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -116,7 +118,10 @@ public class AdminSidebarController {
     @FXML private void goToReportedItems(ActionEvent event) { navigateTo(event, "/com/example/findit/views/admin/ReportedItems.fxml", "Reported Items"); }
     @FXML private void goToClaims(ActionEvent event) { navigateTo(event, "/com/example/findit/views/admin/Claims.fxml", "Claims"); }
     @FXML private void goToMatchSuggestions(ActionEvent event) { navigateTo(event, "/com/example/findit/views/admin/MatchSuggestionPanel.fxml", "Match Suggestions"); }
-    @FXML private void handleLogout(ActionEvent event) { navigateTo(event, "/com/example/findit/views/admin/AdminLogin.fxml", "Admin Login"); }
+    @FXML private void handleLogout(ActionEvent event) {
+        SessionManager.checkOut("Admin Login");
+        navigateTo(event, "/com/example/findit/views/admin/AdminLogin.fxml", "Admin Login");
+    }
 
     private void navigateTo(ActionEvent event, String fxmlPath, String title) {
         try {

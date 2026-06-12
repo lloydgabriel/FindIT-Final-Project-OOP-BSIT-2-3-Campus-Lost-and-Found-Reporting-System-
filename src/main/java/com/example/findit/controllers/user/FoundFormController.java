@@ -11,6 +11,8 @@ import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
+import com.example.findit.model.AppDataStore;
+
 import java.io.File;
 
 public class FoundFormController {
@@ -23,6 +25,7 @@ public class FoundFormController {
     @FXML private TextField txtContact;
     @FXML private TextArea txtDescription;
     @FXML private VBox uploadArea;
+    private String selectedImagePath;
 
     @FXML
     public void initialize() {
@@ -55,10 +58,27 @@ public class FoundFormController {
             return;
         }
 
+        try {
+            AppDataStore.addItemReport(
+                    "Found",
+                    txtItemName.getText().trim(),
+                    cmbCategory.getValue(),
+                    dpDate.getValue().toString(),
+                    txtLocation.getText().trim(),
+                    txtReporterName.getText().trim(),
+                    txtContact.getText().trim(),
+                    txtDescription.getText().trim(),
+                    selectedImagePath
+            );
+        } catch (RuntimeException e) {
+            showAlert(Alert.AlertType.ERROR, "Database Error", "The report could not be saved. Please try again.");
+            return;
+        }
+
         showAlert(Alert.AlertType.INFORMATION, "Report Submitted",
                 "Your found item report has been submitted successfully.");
-        UserSidebarController.setActivePage("Dashboard");
-        UserNavigationHelper.switchScene(event, "/com/example/findit/views/user/Dashboard.fxml");
+        UserSidebarController.setActivePage("Items");
+        UserNavigationHelper.switchScene(event, "/com/example/findit/views/user/Items.fxml");
     }
 
     @FXML
@@ -71,6 +91,7 @@ public class FoundFormController {
         Stage stage = (Stage) txtItemName.getScene().getWindow();
         File file = chooser.showOpenDialog(stage);
         if (file != null) {
+            selectedImagePath = file.toURI().toString();
             showAlert(Alert.AlertType.INFORMATION, "Image Selected", "Selected: " + file.getName());
         }
     }

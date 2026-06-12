@@ -1,6 +1,7 @@
 package com.example.findit.controllers.admin;
 
 import com.example.findit.dao.UserDAO;
+import com.example.findit.model.SessionManager;
 import com.example.findit.model.User;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -38,6 +39,7 @@ public class AdminLoginController {
 
             System.out.println("Admin Logged In: "
                     + admin.getFullName());
+            SessionManager.checkIn(admin, "Admin Portal");
 
             navigateTo(
                     "/com/example/findit/views/admin/AdminDashboard.fxml",

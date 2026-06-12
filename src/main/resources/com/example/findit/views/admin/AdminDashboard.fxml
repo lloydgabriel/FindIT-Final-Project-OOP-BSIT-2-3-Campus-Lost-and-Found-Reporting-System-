@@ -127,14 +127,7 @@
                            <padding> <Insets bottom="15.0" left="20.0" right="20.0" top="15.0" /> </padding>
                            <children>
                               <Label text="Item Top Locations" textFill="#4A1515"><font><Font name="System Bold" size="16.0" /></font></Label>
-                              <HBox alignment="CENTER_LEFT" prefHeight="35.0" style="-fx-background-color: #FDF7F7; -fx-background-radius: 20;">
-                                 <children>
-                                    <Circle fill="#800000" radius="10.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" />
-                                    <Region HBox.hgrow="ALWAYS" />
-                                    <Label text="0 items" textFill="#666666" />
-                                 </children>
-                                 <padding> <Insets left="10.0" right="15.0" /> </padding>
-                              </HBox>
+                              <VBox fx:id="topLocationsBox" spacing="8.0" />
                            </children>
                         </VBox>
                      </children>
@@ -155,9 +148,6 @@
                               <TableColumn fx:id="colStatus" prefWidth="120.0" text="STATUS" />
                               <TableColumn fx:id="colDate" prefWidth="120.0" text="DATE" />
                           </columns>
-                           <columnResizePolicy>
-                              <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
-                           </columnResizePolicy>
                            <VBox.margin> <Insets bottom="15.0" left="15.0" right="15.0" /> </VBox.margin>
                         </TableView>
                      </children>

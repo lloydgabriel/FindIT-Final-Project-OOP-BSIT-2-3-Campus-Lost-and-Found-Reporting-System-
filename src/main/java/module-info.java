@@ -14,4 +14,7 @@ module com.example.findit {
 
     opens com.example.findit.controllers.user to javafx.fxml;
     exports com.example.findit.controllers.user;
+
+    opens com.example.findit.model to javafx.base;
+    exports com.example.findit.model;
 }

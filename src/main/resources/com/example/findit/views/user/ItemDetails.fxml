@@ -20,7 +20,7 @@
             
             <HBox spacing="30.0" VBox.vgrow="ALWAYS">
                <children>
-                  <VBox prefHeight="200.0" prefWidth="220.0" style="-fx-background-color: #EFEFEF; -fx-background-radius: 10;" />
+                  <VBox fx:id="imageBox" alignment="CENTER" prefHeight="200.0" prefWidth="220.0" style="-fx-background-color: #EFEFEF; -fx-background-radius: 10;" />
                   
                   <GridPane hgap="20.0" HBox.hgrow="ALWAYS">
                     <columnConstraints>
@@ -35,25 +35,25 @@
                     </rowConstraints>
                      <children>
                         <VBox spacing="2.0">
-                           <children><Label text="Item Name" textFill="#999999" /><Label text="Chanel Wallet" font="$font"><font><Font name="System Bold" size="14.0" /></font></Label></children>
+                           <children><Label text="Item Name" textFill="#999999" /><Label fx:id="lblItemName" text="Chanel Wallet"><font><Font name="System Bold" size="14.0" /></font></Label></children>
                         </VBox>
                         <VBox spacing="2.0" GridPane.columnIndex="1">
-                           <children><Label text="Category" textFill="#999999" /><Label text="Wallet" font="$font"><font><Font name="System Bold" size="14.0" /></font></Label></children>
+                           <children><Label text="Category" textFill="#999999" /><Label fx:id="lblCategory" text="Wallet"><font><Font name="System Bold" size="14.0" /></font></Label></children>
                         </VBox>
                         <VBox spacing="2.0" GridPane.rowIndex="1">
-                           <children><Label text="Status" textFill="#999999" /><Label prefHeight="20.0" prefWidth="60.0" style="-fx-background-color: #FFCDD2; -fx-background-radius: 10;" text="Status" textAlignment="CENTER" textFill="#C62828" /></children>
+                           <children><Label text="Status" textFill="#999999" /><Label fx:id="lblStatus" prefHeight="20.0" prefWidth="60.0" style="-fx-background-color: #FFCDD2; -fx-background-radius: 10;" text="Status" textAlignment="CENTER" textFill="#C62828" /></children>
                         </VBox>
                         <VBox spacing="2.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
-                           <children><Label text="Date" textFill="#999999" /><Label text="05-28-2026" font="$font"><font><Font name="System Bold" size="14.0" /></font></Label></children>
+                           <children><Label text="Date" textFill="#999999" /><Label fx:id="lblDate" text="05-28-2026"><font><Font name="System Bold" size="14.0" /></font></Label></children>
                         </VBox>
                         <VBox spacing="2.0" GridPane.rowIndex="2">
-                           <children><Label text="Location" textFill="#999999" /><Label text="Library 3rd Floor" font="$font"><font><Font name="System Bold" size="14.0" /></font></Label></children>
+                           <children><Label text="Location" textFill="#999999" /><Label fx:id="lblLocation" text="Library 3rd Floor"><font><Font name="System Bold" size="14.0" /></font></Label></children>
                         </VBox>
                         <VBox spacing="2.0" GridPane.columnIndex="1" GridPane.rowIndex="2">
-                           <children><Label text="Reported By" textFill="#999999" /><Label text="Alexa Marie" font="$font"><font><Font name="System Bold" size="14.0" /></font></Label></children>
+                           <children><Label text="Reported By" textFill="#999999" /><Label fx:id="lblReportedBy" text="Alexa Marie"><font><Font name="System Bold" size="14.0" /></font></Label></children>
                         </VBox>
                         <VBox spacing="2.0" GridPane.columnSpan="2" GridPane.rowIndex="3">
-                           <children><Label text="Description" textFill="#999999" /><Label text="Black Chanel Wallet with clover leaf keychain" wrapText="true" /></children>
+                           <children><Label text="Description" textFill="#999999" /><Label fx:id="lblDescription" text="Black Chanel Wallet with clover leaf keychain" wrapText="true" /></children>
                         </VBox>
                      </children>
                   </GridPane>
@@ -62,7 +62,7 @@
 
             <HBox spacing="20.0">
                <children>
-                  <Button mnemonicParsing="false" onAction="#handleClaimItem" prefHeight="45.0" prefWidth="290.0" style="-fx-background-color: #800000; -fx-background-radius: 8; -fx-cursor: hand;" text="Claim Item" textFill="WHITE"><font><Font name="System Bold" size="14.0" /></font></Button>
+                  <Button fx:id="btnClaimItem" mnemonicParsing="false" onAction="#handleClaimItem" prefHeight="45.0" prefWidth="290.0" style="-fx-background-color: #800000; -fx-background-radius: 8; -fx-cursor: hand;" text="Claim Item" textFill="WHITE"><font><Font name="System Bold" size="14.0" /></font></Button>
                   <Button mnemonicParsing="false" onAction="#handleClose" prefHeight="45.0" prefWidth="290.0" style="-fx-background-color: #CCCCCC; -fx-background-radius: 8; -fx-cursor: hand;" text="Close"><font><Font name="System Bold" size="14.0" /></font></Button>
                </children>
             </HBox>

@@ -1,117 +1,97 @@
 package com.example.findit.controllers.admin;
 
+import com.example.findit.model.AppDataStore;
+import com.example.findit.model.ItemMatch;
+import com.example.findit.model.ItemReport;
+
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.stage.Stage;
 
 import java.net.URL;
 import java.util.ResourceBundle;
 
-/**
- * Controller for MatchSuggestion.fxml  (modal overlay)
- *
- * Required fx:id additions in MatchSuggestion.fxml:
- *
- *   Header row:
- *     Label "Pending" badge          → fx:id="statusBadge"
- *
- *   Lost-item column:
- *     Label "Item Name"              → fx:id="lostItemName"
- *     Label "Reported by:"           → fx:id="lostReportedBy"
- *     Label "Date:"                  → fx:id="lostDate"
- *     Label "Location:"              → fx:id="lostLocation"
- *
- *   Found-item column:
- *     Label "Item Name"              → fx:id="foundItemName"
- *     Label "Reported by:"           → fx:id="foundReportedBy"
- *     Label "Date:"                  → fx:id="foundDate"
- *     Label "Location:"              → fx:id="foundLocation"
- *
- *   Action buttons:
- *     Button "Confirm Match"         → onAction="#handleConfirmMatch"
- *     Button "Close"                 → onAction="#handleClose"
- */
 public class MatchSuggestionController implements Initializable {
-
-    // ── FXML bindings ─────────────────────────────────────────────────────────
-
-    // Status
     @FXML private Label statusBadge;
-
-    // Lost item side
     @FXML private Label lostItemName;
     @FXML private Label lostReportedBy;
     @FXML private Label lostDate;
     @FXML private Label lostLocation;
-
-    // Found item side
     @FXML private Label foundItemName;
     @FXML private Label foundReportedBy;
     @FXML private Label foundDate;
     @FXML private Label foundLocation;
+    @FXML private Button confirmButton;
 
-    // Internal state
-    private int currentMatchId = -1;
-
-    // ── Lifecycle ─────────────────────────────────────────────────────────────
+    private ItemMatch currentMatch;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        // Labels default to the values set in FXML; they'll be overwritten by loadMatch().
     }
 
-    // ── Public API ────────────────────────────────────────────────────────────
-
-    /**
-     * Populates the modal with data for the given match ID.
-     * Called by {@link MatchSuggestionPanelController#openMatchDetail(int)}.
-     */
-    public void loadMatch(int matchId) {
-        this.currentMatchId = matchId;
-
-        // TODO: fetch MatchSuggestion object from your service/repository using matchId
-        // and set the label texts below.  The example values are placeholders.
-
-        statusBadge.setText("Pending");
-
-        lostItemName.setText("Lost Item Name");
-        lostReportedBy.setText("Reported by: Juan dela Cruz");
-        lostDate.setText("Date: 2025-01-08");
-        lostLocation.setText("Location: Library");
-
-        foundItemName.setText("Found Item Name");
-        foundReportedBy.setText("Reported by: Maria Santos");
-        foundDate.setText("Date: 2025-01-09");
-        foundLocation.setText("Location: Cafeteria");
+    public void loadMatch(ItemMatch match) {
+        this.currentMatch = match;
+        setStatus(match.getStatus());
+        populateLostItem(match.getLostItem());
+        populateFoundItem(match.getFoundItem());
     }
 
-    // ── Action handlers ───────────────────────────────────────────────────────
+    private void populateLostItem(ItemReport item) {
+        lostItemName.setText(item.getItemName());
+        lostReportedBy.setText("Reported by: " + safe(item.getReportedBy()));
+        lostDate.setText("Date: " + safe(item.getDate()));
+        lostLocation.setText("Location: " + safe(item.getLocation()));
+    }
 
-    /** Confirms the match: persists the decision and closes the dialog. */
+    private void populateFoundItem(ItemReport item) {
+        foundItemName.setText(item.getItemName());
+        foundReportedBy.setText("Reported by: " + safe(item.getReportedBy()));
+        foundDate.setText("Date: " + safe(item.getDate()));
+        foundLocation.setText("Location: " + safe(item.getLocation()));
+    }
+
     @FXML
     private void handleConfirmMatch() {
-        if (currentMatchId < 0) return;
+        if (currentMatch == null) {
+            return;
+        }
 
-        // TODO: call matchService.confirmMatch(currentMatchId)
-
-        showAlert(Alert.AlertType.INFORMATION, "Match Confirmed",
-                "The match has been confirmed successfully.");
-
-        statusBadge.setText("Confirmed");
-        statusBadge.setStyle("-fx-background-color: #C8E6C9; -fx-background-radius: 12; -fx-text-fill: #2E7D32;");
-
-        closeDialog();
+        try {
+            AppDataStore.confirmMatch(currentMatch);
+            setStatus("Confirmed");
+            showAlert(Alert.AlertType.INFORMATION, "Match Confirmed",
+                    "An approved claim has been added to the Claims tab.");
+            closeDialog();
+        } catch (RuntimeException e) {
+            showAlert(Alert.AlertType.ERROR, "Database Error",
+                    "The match could not be confirmed. Please try again.");
+        }
     }
 
-    /** Closes the modal without making any change. */
     @FXML
     private void handleClose() {
         closeDialog();
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
+    private void setStatus(String status) {
+        statusBadge.setText(status);
+        if ("Confirmed".equalsIgnoreCase(status)) {
+            statusBadge.setStyle("-fx-background-color: #C8E6C9; -fx-background-radius: 12; -fx-text-fill: #2E7D32; -fx-font-weight: bold;");
+            if (confirmButton != null) {
+                confirmButton.setDisable(true);
+                confirmButton.setText("Match Confirmed");
+            }
+        } else {
+            statusBadge.setStyle("-fx-background-color: #FFE0B2; -fx-background-radius: 12; -fx-text-fill: #E65100; -fx-font-weight: bold;");
+            if (confirmButton != null) {
+                confirmButton.setDisable(false);
+                confirmButton.setText("Confirm Match");
+            }
+        }
+    }
 
     private void closeDialog() {
         Stage stage = (Stage) statusBadge.getScene().getWindow();
@@ -119,10 +99,14 @@ public class MatchSuggestionController implements Initializable {
     }
 
     private void showAlert(Alert.AlertType type, String title, String msg) {
-        Alert a = new Alert(type);
-        a.setTitle(title);
-        a.setHeaderText(null);
-        a.setContentText(msg);
-        a.showAndWait();
+        Alert alert = new Alert(type);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(msg);
+        alert.showAndWait();
+    }
+
+    private String safe(String value) {
+        return value == null ? "" : value;
     }
 }

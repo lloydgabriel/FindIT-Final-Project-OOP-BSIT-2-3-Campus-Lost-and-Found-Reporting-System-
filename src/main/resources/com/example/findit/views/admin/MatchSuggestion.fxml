@@ -75,7 +75,7 @@
             <HBox spacing="20.0" prefHeight="45.0">
                <VBox.margin><Insets top="15.0" /></VBox.margin>
                <children>
-                  <Button mnemonicParsing="false" onAction="#handleConfirmMatch" prefHeight="44.0" prefWidth="330.0" style="-fx-background-color: #00E676; -fx-background-radius: 8; -fx-cursor: hand;" text="Confirm Match" textFill="WHITE" HBox.hgrow="ALWAYS">
+                  <Button fx:id="confirmButton" mnemonicParsing="false" onAction="#handleConfirmMatch" prefHeight="44.0" prefWidth="330.0" style="-fx-background-color: #00E676; -fx-background-radius: 8; -fx-cursor: hand;" text="Confirm Match" textFill="WHITE" HBox.hgrow="ALWAYS">
                      <font><Font name="System Bold" size="14.0" /></font>
                   </Button>
                   <Button mnemonicParsing="false" onAction="#handleClose" prefHeight="44.0" prefWidth="330.0" style="-fx-background-color: #EFEFEF; -fx-background-radius: 8; -fx-cursor: hand;" text="Close" textFill="#333333" HBox.hgrow="ALWAYS">

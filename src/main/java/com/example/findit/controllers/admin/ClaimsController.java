@@ -1,5 +1,8 @@
 package com.example.findit.controllers.admin;
 
+import com.example.findit.model.AppDataStore;
+import com.example.findit.model.ClaimRequest;
+
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -45,27 +48,6 @@ public class ClaimsController implements Initializable {
         colLocation.setCellValueFactory(new PropertyValueFactory<>("location"));
         colType.setCellValueFactory(new PropertyValueFactory<>("type"));
         colAction.setCellFactory(col -> new TableCell<ClaimRow, String>() {
-            private final Label badge = new Label();
-
-            @Override
-            protected void updateItem(String item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || item == null) {
-                    setGraphic(null);
-                } else {
-                    badge.setText(item);
-                    if (item.equalsIgnoreCase("Unclaimed")) {
-                        badge.setStyle("-fx-background-color: #FFE0B2; -fx-text-fill: #E65100; -fx-font-weight: bold; -fx-padding: 3 10 3 10; -fx-background-radius: 12;");
-                    } else if (item.equalsIgnoreCase("Claimed")) {
-                        badge.setStyle("-fx-background-color: #E8EAF6; -fx-text-fill: #3F51B5; -fx-font-weight: bold; -fx-padding: 3 10 3 10; -fx-background-radius: 12;");
-                    } else {
-                        badge.setStyle("-fx-background-color: #E0E0E0; -fx-text-fill: #333333; -fx-font-weight: bold; -fx-padding: 3 10 3 10; -fx-background-radius: 12;");
-                    }
-                    setGraphic(badge);
-                }
-            }
-        });
-        colAction.setCellFactory(col -> new TableCell<ClaimRow, String>() {
             private final Button approveBtn = new Button();
             private final Button rejectBtn  = new Button();
             private final Button deleteBtn  = new Button();
@@ -108,11 +90,15 @@ public class ClaimsController implements Initializable {
     }
 
     private void loadClaims() {
-        masterData.addAll(
-                new ClaimRow("Unclaimed", "Laptop",       "Electronics", "2025-01-08", "Juan dela Cruz", "Library",   "Pending"),
-                new ClaimRow("Claimed",   "Black Wallet", "Wallet",      "2025-01-09", "Maria Santos",   "Cafeteria", "Pending"),
-                new ClaimRow("Unclaimed", "ID Card",      "Document",    "2025-01-10", "Jose Reyes",     "Gym",       "Approved")
-        );
+        masterData.setAll(AppDataStore.getClaimRequests().stream()
+                .map(ClaimRow::new)
+                .toList());
+        AppDataStore.getClaimRequests().addListener((javafx.collections.ListChangeListener<ClaimRequest>) change -> {
+            masterData.setAll(AppDataStore.getClaimRequests().stream()
+                    .map(ClaimRow::new)
+                    .toList());
+            applyFilter();
+        });
     }
 
     private void handleDeleteItem(ClaimRow item) {
@@ -122,9 +108,8 @@ public class ClaimsController implements Initializable {
         confirmDialog.setContentText("Are you sure you want to permanently delete this claim request?");
         confirmDialog.showAndWait().ifPresent(response -> {
             if (response == ButtonType.OK) {
+                AppDataStore.deleteClaimRequest(item.getRequest());
                 masterData.remove(item);
-                
-                // TODO: Add backend SQL 'DELETE FROM claims WHERE claim_id = ?'
             }
         });
     }
@@ -157,13 +142,30 @@ public class ClaimsController implements Initializable {
 
     // Button actions
     private void handleApprove(ClaimRow row) {
-        row.setClaimStatus("Approved");
+        AppDataStore.updateClaimStatus(row.getRequest(), "Approved");
+        showClaimDetails(row, "Claim Approved");
         claimsTable.refresh();
+        applyFilter();
     }
 
     private void handleReject(ClaimRow row) {
-        row.setClaimStatus("Rejected");
+        AppDataStore.updateClaimStatus(row.getRequest(), "Rejected");
+        showClaimDetails(row, "Claim Rejected");
         claimsTable.refresh();
+        applyFilter();
+    }
+
+    private void showClaimDetails(ClaimRow row, String title) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle(title);
+        alert.setHeaderText(row.getItemName() + " - " + row.getClaimStatus());
+        alert.setContentText(
+                "Claimant: " + row.getClaimantName() + "\n" +
+                "Student Number: " + row.getStudentNumber() + "\n" +
+                "Contact: " + row.getContactInfo() + "\n\n" +
+                "Proof:\n" + row.getProofDescription()
+        );
+        alert.showAndWait();
     }
 
     private ImageView createIcon(String path) {
@@ -179,20 +181,25 @@ public class ClaimsController implements Initializable {
         return imgView;
     }
     public static class ClaimRow {
-        private final String type, itemName, category, date, reportedBy, location;
-        private String claimStatus;
+        private final ClaimRequest request;
 
-        public ClaimRow(String type, String itemName, String category, String date, String reportedBy, String location, String claimStatus) {
-            this.type = type; this.itemName = itemName; this.category = category;
-            this.date = date; this.reportedBy = reportedBy; this.location = location;
-            this.claimStatus = claimStatus;
+        public ClaimRow(ClaimRequest request) {
+            this.request = request;
         }
 
-        public String getType() { return type; } public String getItemName() { return itemName; }
-        public String getCategory() { return category; } public String getDate() { return date; }
-        public String getReportedBy() { return reportedBy; } public String getLocation() { return location; }
-        public String getClaimStatus() { return claimStatus; }
-        public void setClaimStatus(String s) { this.claimStatus = s; }
+        public ClaimRequest getRequest() { return request; }
+        public String getType() { return request.getItem().getType(); }
+        public String getItemName() { return request.getItem().getItemName(); }
+        public String getCategory() { return request.getItem().getCategory(); }
+        public String getDate() { return request.getItem().getDate(); }
+        public String getReportedBy() { return request.getItem().getReportedBy(); }
+        public String getLocation() { return request.getItem().getLocation(); }
+        public String getClaimantName() { return request.getClaimantName(); }
+        public String getStudentNumber() { return request.getStudentNumber(); }
+        public String getContactInfo() { return request.getContactInfo(); }
+        public String getProofDescription() { return request.getProofDescription(); }
+        public String getClaimStatus() { return request.getStatus(); }
+        public void setClaimStatus(String s) { request.setStatus(s); }
     }
 
 

@@ -1,5 +1,7 @@
 package com.example.findit.controllers;
 
+import com.example.findit.model.SessionManager;
+
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -14,6 +16,7 @@ public class MainPortalController {
     @FXML
     public void goToUserDashboard(ActionEvent event) {
         // Points to the User Dashboard FXML
+        SessionManager.checkInGuestUser();
         switchScene(event, "/com/example/findit/views/user/Dashboard.fxml");
     }
 

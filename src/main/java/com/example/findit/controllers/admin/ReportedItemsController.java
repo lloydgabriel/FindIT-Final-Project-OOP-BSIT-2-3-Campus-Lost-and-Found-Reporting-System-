@@ -1,7 +1,9 @@
 package com.example.findit.controllers.admin;
 
+import com.example.findit.model.AppDataStore;
+import com.example.findit.model.ItemReport;
+
 import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -9,8 +11,6 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import java.net.URL;
 import java.util.ResourceBundle;
-
-import com.example.findit.controllers.admin.ReportedItemsController.ReportedItem;
 
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -23,11 +23,10 @@ public class ReportedItemsController implements Initializable {
     @FXML private TextField searchField;
     @FXML private ComboBox<String> typeFilter;
 
-    @FXML private TableView<ReportedItem> itemsTable;
-    @FXML private TableColumn<ReportedItem, String> colType, colItemName, colCategory, colDate, colReportedBy, colLocation, colAction;
+    @FXML private TableView<ItemReport> itemsTable;
+    @FXML private TableColumn<ItemReport, String> colType, colItemName, colCategory, colDate, colReportedBy, colLocation, colAction;
 
-    private final ObservableList<ReportedItem> masterData = FXCollections.observableArrayList();
-    private FilteredList<ReportedItem> filteredData;
+    private FilteredList<ItemReport> filteredData;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -36,7 +35,6 @@ public class ReportedItemsController implements Initializable {
         typeFilter.setItems(FXCollections.observableArrayList("All", "Lost", "Found"));
         typeFilter.getSelectionModel().selectFirst();
         configureTableColumns();
-        loadItems();
         wireSearchAndFilter();
     }
 
@@ -47,7 +45,7 @@ public class ReportedItemsController implements Initializable {
         colReportedBy.setCellValueFactory(new PropertyValueFactory<>("reportedBy"));
         colLocation.setCellValueFactory(new PropertyValueFactory<>("location"));
         colType.setCellValueFactory(new PropertyValueFactory<>("type"));
-        colType.setCellFactory(col -> new TableCell<ReportedItem, String>() {
+        colType.setCellFactory(col -> new TableCell<ItemReport, String>() {
             private final Label badge = new Label();
             
             @Override
@@ -67,7 +65,7 @@ public class ReportedItemsController implements Initializable {
             }
         });
 
-        colAction.setCellFactory(col -> new TableCell<ReportedItem, String>() {
+        colAction.setCellFactory(col -> new TableCell<ItemReport, String>() {
             private final Button viewBtn = new Button();
             private final Button deleteBtn = new Button();
 
@@ -82,12 +80,12 @@ public class ReportedItemsController implements Initializable {
                 deleteBtn.setStyle(transparentStyle);
 
                 viewBtn.setOnAction(e -> {
-                    ReportedItem item = getTableView().getItems().get(getIndex());
+                    ItemReport item = getTableView().getItems().get(getIndex());
                     handleViewItem(item);
                 });
 
                 deleteBtn.setOnAction(e -> {
-                    ReportedItem item = getTableView().getItems().get(getIndex());
+                    ItemReport item = getTableView().getItems().get(getIndex());
                     handleDeleteItem(item);
                 });
             }
@@ -118,15 +116,8 @@ public class ReportedItemsController implements Initializable {
         imgView.setPreserveRatio(true);
         return imgView;
     }
-    private void loadItems() {
-        masterData.addAll(
-            new ReportedItem("Lost", "Laptop", "Electronics", "2025-01-08", "Juan dela Cruz", "Library"),
-            new ReportedItem("Found", "Black Wallet", "Wallet", "2025-01-09", "Maria Santos", "Cafeteria")
-        );
-    }
-
     private void wireSearchAndFilter() {
-        filteredData = new FilteredList<>(masterData, p -> true);
+        filteredData = new FilteredList<>(AppDataStore.getItemReports(), p -> true);
         itemsTable.setItems(filteredData);
 
         searchField.textProperty().addListener((obs, oldVal, newVal) -> applyFilter());
@@ -151,7 +142,7 @@ public class ReportedItemsController implements Initializable {
         });
     }
 
-    private void handleViewItem(ReportedItem item) {
+    private void handleViewItem(ItemReport item) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("Item Details");
         alert.setHeaderText(item.getItemName());
@@ -160,22 +151,14 @@ public class ReportedItemsController implements Initializable {
                 "Category: "    + item.getCategory()   + "\n" +
                 "Date: "        + item.getDate()        + "\n" +
                 "Reported By: " + item.getReportedBy() + "\n" +
-                "Location: "    + item.getLocation()
+                "Contact: "     + item.getContact()    + "\n" +
+                "Location: "    + item.getLocation()   + "\n\n" +
+                "Description:\n" + item.getDescription()
         );
         alert.showAndWait();
     }
 
-    public static class ReportedItem {
-        private final String type, itemName, category, date, reportedBy, location;
-        public ReportedItem(String typ, String itm, String cat, String dt, String rep, String loc) {
-            type = typ; itemName = itm; category = cat; date = dt; reportedBy = rep; location = loc;
-        }
-        public String getType() { return type; } public String getItemName() { return itemName; }
-        public String getCategory() { return category; } public String getDate() { return date; }
-        public String getReportedBy() { return reportedBy; } public String getLocation() { return location; }
-    }
-
-    private void handleDeleteItem(ReportedItem item) {
+    private void handleDeleteItem(ItemReport item) {
         // CONFIRMATION DIALOG BEFORE DELETION
         Alert confirmDialog = new Alert(Alert.AlertType.CONFIRMATION);
         confirmDialog.setTitle("Delete Confirmation");
@@ -183,10 +166,7 @@ public class ReportedItemsController implements Initializable {
         confirmDialog.setContentText("Are you sure you want to delete this report? This action cannot be undone.");
         confirmDialog.showAndWait().ifPresent(response -> {
             if (response == ButtonType.OK) {
-                masterData.remove(item);
-                
-                // REMOVE COMMENT IF DATABASE HANDLES THIS FOR DELETION OF REPORTED ITEMS
-                // SQL 'DELETE FROM items WHERE id = ?' execution right here!
+                AppDataStore.deleteItemReport(item);
             }
         });
     }

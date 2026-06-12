@@ -105,6 +105,18 @@
                         </ImageView>
                     </graphic>
                 </Button>
+                <Button fx:id="btnLogout" alignment="CENTER_LEFT" contentDisplay="LEFT" graphicTextGap="15.0" mnemonicParsing="false" onAction="#logout" prefHeight="45.0" prefWidth="200.0" style="-fx-background-color: transparent; -fx-text-fill: #FFFFFF; -fx-cursor: hand;" text="Logout">
+                    <font>
+                        <Font name="System Bold" size="16.0" />
+                    </font>
+                    <graphic>
+                        <ImageView fx:id="imgLogout" fitHeight="30.0" fitWidth="30.0" pickOnBounds="true" preserveRatio="true">
+                            <image>
+                                <Image url="@../../assets/logout.png" />
+                            </image>
+                        </ImageView>
+                    </graphic>
+                </Button>
             </children>
         </VBox>
     </children>

@@ -1,5 +1,7 @@
 package com.example.findit.controllers.user;
 
+import com.example.findit.model.SessionManager;
+
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -38,11 +40,13 @@ public class UserSidebarController {
     @FXML private Button btnNavItems;
     @FXML private Button btnNavClaims;
     @FXML private Button btnNavHelp;
+    @FXML private Button btnLogout;
 
     @FXML private ImageView imgNavDashboard;
     @FXML private ImageView imgNavItems;
     @FXML private ImageView imgNavClaims;
     @FXML private ImageView imgNavHelp;
+    @FXML private ImageView imgLogout;
 
     @FXML
     public void initialize() {
@@ -80,6 +84,7 @@ public class UserSidebarController {
             setNavButtonExpanded(btnNavItems);
             setNavButtonExpanded(btnNavClaims);
             setNavButtonExpanded(btnNavHelp);
+            setNavButtonExpanded(btnLogout);
         } else {
             sidebarContainer.setPrefWidth(COLLAPSED_WIDTH);
             sidebarContainer.setMinWidth(COLLAPSED_WIDTH);
@@ -95,6 +100,7 @@ public class UserSidebarController {
             setNavButtonCollapsed(btnNavItems);
             setNavButtonCollapsed(btnNavClaims);
             setNavButtonCollapsed(btnNavHelp);
+            setNavButtonCollapsed(btnLogout);
         }
 
         highlightActiveTab();
@@ -133,11 +139,13 @@ public class UserSidebarController {
         btnNavItems.setStyle(defaultStyle);
         btnNavClaims.setStyle(defaultStyle);
         btnNavHelp.setStyle(defaultStyle);
+        btnLogout.setStyle(defaultStyle);
 
         imgNavDashboard.setImage(safeLoadImage("/com/example/findit/assets/dashboard.png"));
         imgNavItems.setImage(safeLoadImage("/com/example/findit/assets/Items.png"));
         imgNavClaims.setImage(safeLoadImage("/com/example/findit/assets/reportsidebar.png"));
         imgNavHelp.setImage(safeLoadImage("/com/example/findit/assets/help.png"));
+        imgLogout.setImage(safeLoadImage("/com/example/findit/assets/logout.png"));
 
         ColorAdjust makeWhite = new ColorAdjust();
         makeWhite.setBrightness(1.0);
@@ -145,6 +153,7 @@ public class UserSidebarController {
         imgNavItems.setEffect(makeWhite);
         imgNavClaims.setEffect(makeWhite);
         imgNavHelp.setEffect(makeWhite);
+        imgLogout.setEffect(makeWhite);
     }
 
     private void highlightActiveTab() {
@@ -229,6 +238,13 @@ public class UserSidebarController {
     public void goToHelpPage(ActionEvent event) {
         activePage = "Help";
         switchScene(event, "/com/example/findit/views/user/Help.fxml");
+    }
+
+    @FXML
+    public void logout(ActionEvent event) {
+        SessionManager.checkOut("Main Portal");
+        activePage = "Dashboard";
+        switchScene(event, "/com/example/findit/views/user/MainPortal.fxml");
     }
 
     private void switchScene(ActionEvent event, String fxmlPath) {
