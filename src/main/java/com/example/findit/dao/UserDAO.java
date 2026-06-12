@@ -45,7 +45,7 @@ public class UserDAO {
     }
 
     public User loginUser(String idNumber, String password) {
-        String sql = "SELECT * FROM users WHERE id_number = ? AND password = ?";
+        String sql = "SELECT * FROM users WHERE id_number = ? AND password_hash = ?";
 
         try (Connection conn = DBConnection.connect();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -71,4 +71,42 @@ public class UserDAO {
 
         return null;
     }
+
+    public User adminLogin(String password) {
+
+        String sql =
+                "SELECT * FROM users " +
+                        "WHERE password_hash = ? " +
+                        "AND role = 'Admin'";
+
+        try (Connection conn = DBConnection.connect();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, password);
+
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+
+                System.out.println("ADMIN FOUND");
+
+                User user = new User();
+
+                user.setUserId(rs.getInt("user_id"));
+                user.setIdNumber(rs.getString("id_number"));
+                user.setFullName(rs.getString("full_name"));
+                user.setRole(rs.getString("role"));
+                user.setContactNumber(rs.getString("contact_number"));
+
+                return user;
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+
 }
