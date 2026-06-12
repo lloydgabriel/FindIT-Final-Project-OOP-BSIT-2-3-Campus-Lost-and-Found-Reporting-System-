@@ -1,0 +1,140 @@
+package com.example.findit.dao;
+
+import com.example.findit.model.ItemReport;
+import com.example.findit.util.DBConnection;
+
+import java.sql.Connection;
+import java.sql.Date;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.List;
+
+public class ItemReportDAO {
+    public List<ItemReport> findAll() {
+        DatabaseBootstrap.ensureApplicationSchema();
+        List<ItemReport> reports = new ArrayList<>();
+        String sql = """
+                SELECT i.item_id, i.item_type, i.item_name, i.description,
+                       i.date_lost, i.date_found, i.location, i.image_path,
+                       c.category_name, u.full_name, u.contact_number
+                FROM items i
+                JOIN categories c ON c.category_id = i.category_id
+                JOIN users u ON u.user_id = i.reporter_id
+                ORDER BY i.created_at DESC NULLS LAST, i.item_id DESC
+                """;
+
+        try (Connection conn = DBConnection.connect();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                reports.add(mapReport(rs));
+            }
+        } catch (Exception e) {
+            throw new IllegalStateException("Could not load item reports.", e);
+        }
+        return reports;
+    }
+
+    public ItemReport insert(String type, String itemName, String category, String date,
+                             String location, String reportedBy, String contact,
+                             String description, String imagePath) {
+        DatabaseBootstrap.ensureApplicationSchema();
+        String sql = """
+                INSERT INTO items
+                (item_type, item_name, description, date_lost, date_found, location, image_path, status, reporter_id, category_id)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                RETURNING item_id, item_type, item_name, description, date_lost, date_found, location, image_path,
+                          (SELECT category_name FROM categories WHERE category_id = ?) AS category_name,
+                          (SELECT full_name FROM users WHERE user_id = ?) AS full_name,
+                          (SELECT contact_number FROM users WHERE user_id = ?) AS contact_number
+                """;
+
+        try (Connection conn = DBConnection.connect()) {
+            int categoryId = DatabaseBootstrap.ensureCategory(conn, category);
+            int reporterId = DatabaseBootstrap.ensureUser(
+                    conn,
+                    generatedReporterId(contact),
+                    reportedBy,
+                    contact
+            );
+
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setString(1, type);
+                stmt.setString(2, itemName);
+                stmt.setString(3, description);
+                if ("Lost".equalsIgnoreCase(type)) {
+                    stmt.setDate(4, Date.valueOf(date));
+                    stmt.setDate(5, null);
+                } else {
+                    stmt.setDate(4, null);
+                    stmt.setDate(5, Date.valueOf(date));
+                }
+                stmt.setString(6, location);
+                stmt.setString(7, imagePath);
+                stmt.setString(8, "Unclaimed");
+                stmt.setInt(9, reporterId);
+                stmt.setInt(10, categoryId);
+                stmt.setInt(11, categoryId);
+                stmt.setInt(12, reporterId);
+                stmt.setInt(13, reporterId);
+                ResultSet rs = stmt.executeQuery();
+                if (rs.next()) {
+                    return mapReport(rs);
+                }
+            }
+        } catch (Exception e) {
+            throw new IllegalStateException("Could not save item report.", e);
+        }
+
+        throw new IllegalStateException("Item report was not saved.");
+    }
+
+    private String generatedReporterId(String contact) {
+        String timestamp = String.valueOf(System.currentTimeMillis());
+        String suffix = String.valueOf(Math.abs(contact.hashCode()));
+        if (suffix.length() > 4) {
+            suffix = suffix.substring(0, 4);
+        }
+        return "REP" + timestamp.substring(Math.max(0, timestamp.length() - 13)) + suffix;
+    }
+
+    public void delete(ItemReport item) {
+        DatabaseBootstrap.ensureApplicationSchema();
+        String deleteClaimsSql = "DELETE FROM claims WHERE item_id = ?";
+        String deleteItemSql = "DELETE FROM items WHERE item_id = ?";
+        try (Connection conn = DBConnection.connect();
+             PreparedStatement deleteClaims = conn.prepareStatement(deleteClaimsSql);
+             PreparedStatement deleteItem = conn.prepareStatement(deleteItemSql)) {
+            deleteClaims.setInt(1, item.getId());
+            deleteClaims.executeUpdate();
+            deleteItem.setInt(1, item.getId());
+            deleteItem.executeUpdate();
+        } catch (Exception e) {
+            throw new IllegalStateException("Could not delete item report.", e);
+        }
+    }
+
+    private ItemReport mapReport(ResultSet rs) throws Exception {
+        Date dateLost = rs.getDate("date_lost");
+        Date dateFound = rs.getDate("date_found");
+        String date = dateLost != null ? dateLost.toString() : dateFound != null ? dateFound.toString() : "";
+        String itemName = rs.getString("item_name");
+        if (itemName == null || itemName.isBlank()) {
+            itemName = rs.getString("description");
+        }
+
+        return new ItemReport(
+                rs.getInt("item_id"),
+                rs.getString("item_type"),
+                itemName,
+                rs.getString("category_name"),
+                date,
+                rs.getString("location"),
+                rs.getString("full_name"),
+                rs.getString("contact_number"),
+                rs.getString("description"),
+                rs.getString("image_path")
+        );
+    }
+}
