@@ -11,10 +11,10 @@ public class DBConnection {
         try {
 
             String url =
-                    "jdbc:postgresql://db.nowzolfypepurbxpjbwt.supabase.co:5432/postgres";
+                    "jdbc:postgresql://aws-1-ap-northeast-1.pooler.supabase.com:5432/postgres";
 
             String user =
-                    "postgres";
+                    "postgres.nowzolfypepurbxpjbwt";
 
             String password =
                     "vyb5gHtawnyWTGhY";
