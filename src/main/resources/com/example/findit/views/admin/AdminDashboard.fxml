@@ -141,7 +141,6 @@
                         </Label>
                         <TableView fx:id="recentItemsTable" prefHeight="200.0" prefWidth="200.0" style="-fx-background-color: transparent;" VBox.vgrow="ALWAYS">
                           <columns>
-                            <TableColumn fx:id="colImage" prefWidth="100.0" text="IMAGE" />
                             <TableColumn fx:id="colItem" prefWidth="150.0" text="ITEM" />
                               <TableColumn fx:id="colCategory" prefWidth="150.0" text="CATEGORY" />
                               <TableColumn fx:id="colLocation" prefWidth="150.0" text="LOCATION" />

@@ -2,11 +2,15 @@ package com.example.findit.controllers.admin;
 
 import com.example.findit.model.AppDataStore;
 import com.example.findit.model.ItemReport;
+import com.example.findit.util.ImageStorage;
+import com.example.findit.util.ResponsiveTable;
 
 import javafx.collections.FXCollections;
 import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import java.net.URL;
@@ -14,6 +18,11 @@ import java.util.ResourceBundle;
 
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.ColumnConstraints;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 
 public class ReportedItemsController implements Initializable {
 
@@ -35,6 +44,7 @@ public class ReportedItemsController implements Initializable {
         typeFilter.setItems(FXCollections.observableArrayList("All", "Lost", "Found"));
         typeFilter.getSelectionModel().selectFirst();
         configureTableColumns();
+        ResponsiveTable.fillAvailableWidth(itemsTable);
         wireSearchAndFilter();
     }
 
@@ -45,6 +55,8 @@ public class ReportedItemsController implements Initializable {
         colReportedBy.setCellValueFactory(new PropertyValueFactory<>("reportedBy"));
         colLocation.setCellValueFactory(new PropertyValueFactory<>("location"));
         colType.setCellValueFactory(new PropertyValueFactory<>("type"));
+        colType.setStyle("-fx-alignment: CENTER;");
+        colAction.setStyle("-fx-alignment: CENTER;");
         colType.setCellFactory(col -> new TableCell<ItemReport, String>() {
             private final Label badge = new Label();
             
@@ -54,6 +66,7 @@ public class ReportedItemsController implements Initializable {
                 if (empty || item == null) {
                     setGraphic(null);
                 } else {
+                    setStyle("-fx-alignment: CENTER;");
                     badge.setText(item);
                     if (item.equalsIgnoreCase("Lost")) {
                         badge.setStyle("-fx-background-color: #FFCDD2; -fx-text-fill: #C62828; -fx-font-weight: bold; -fx-padding: 3 10 3 10; -fx-background-radius: 12;");
@@ -97,8 +110,10 @@ public class ReportedItemsController implements Initializable {
                     setGraphic(null);
                 } else {
                     javafx.scene.layout.HBox actionBox = new javafx.scene.layout.HBox(8, viewBtn, deleteBtn);
-                    actionBox.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+                    actionBox.setAlignment(javafx.geometry.Pos.CENTER);
+                    actionBox.setMaxWidth(Double.MAX_VALUE);
                     setGraphic(actionBox);
+                    setStyle("-fx-alignment: CENTER;");
                 }
             }
         });
@@ -143,19 +158,103 @@ public class ReportedItemsController implements Initializable {
     }
 
     private void handleViewItem(ItemReport item) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Item Details");
-        alert.setHeaderText(item.getItemName());
-        alert.setContentText(
-                "Type: "        + item.getType()       + "\n" +
-                "Category: "    + item.getCategory()   + "\n" +
-                "Date: "        + item.getDate()        + "\n" +
-                "Reported By: " + item.getReportedBy() + "\n" +
-                "Contact: "     + item.getContact()    + "\n" +
-                "Location: "    + item.getLocation()   + "\n\n" +
-                "Description:\n" + item.getDescription()
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Item Details");
+        dialog.setHeaderText(item.getItemName());
+        dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
+        dialog.getDialogPane().setPrefWidth(760);
+
+        javafx.scene.layout.HBox content = new javafx.scene.layout.HBox(22);
+        content.setAlignment(Pos.TOP_LEFT);
+        content.setPadding(new Insets(10, 5, 5, 5));
+
+        VBox details = new VBox(12);
+        details.setPrefWidth(430);
+        details.getChildren().addAll(
+                createDetailsGrid(item),
+                createDescriptionBlock(item)
         );
-        alert.showAndWait();
+        javafx.scene.layout.HBox.setHgrow(details, Priority.ALWAYS);
+
+        content.getChildren().addAll(createImagePanel(item), details);
+        dialog.getDialogPane().setContent(content);
+        dialog.showAndWait();
+    }
+
+    private VBox createImagePanel(ItemReport item) {
+        VBox panel = new VBox(8);
+        panel.setAlignment(Pos.TOP_CENTER);
+        panel.setPrefWidth(250);
+
+        StackPane imageFrame = new StackPane();
+        imageFrame.setPrefSize(250, 230);
+        imageFrame.setStyle("-fx-background-color: #F0F0F3; -fx-background-radius: 10;");
+
+        Image image = ImageStorage.loadImage(item.getImagePath());
+        if (image == null) {
+            Label placeholder = new Label("No Image Available");
+            placeholder.setStyle("-fx-text-fill: #777777; -fx-font-weight: bold;");
+            imageFrame.getChildren().add(placeholder);
+        } else {
+            ImageView imageView = new ImageView(image);
+            imageView.setFitWidth(230);
+            imageView.setFitHeight(210);
+            imageView.setPreserveRatio(true);
+            imageFrame.getChildren().add(imageView);
+        }
+
+        Label imageLabel = new Label(item.getType() + " Item Image");
+        imageLabel.setStyle("-fx-text-fill: #4A1212; -fx-font-weight: bold;");
+        panel.getChildren().addAll(imageFrame, imageLabel);
+        return panel;
+    }
+
+    private GridPane createDetailsGrid(ItemReport item) {
+        GridPane grid = new GridPane();
+        grid.setHgap(12);
+        grid.setVgap(9);
+
+        ColumnConstraints labelColumn = new ColumnConstraints();
+        labelColumn.setPrefWidth(105);
+        ColumnConstraints valueColumn = new ColumnConstraints();
+        valueColumn.setHgrow(Priority.ALWAYS);
+        grid.getColumnConstraints().addAll(labelColumn, valueColumn);
+
+        addDetailRow(grid, 0, "Type", item.getType());
+        addDetailRow(grid, 1, "Category", item.getCategory());
+        addDetailRow(grid, 2, "Date", item.getDate());
+        addDetailRow(grid, 3, "Reported By", item.getReportedBy());
+        addDetailRow(grid, 4, "Contact", item.getContact());
+        addDetailRow(grid, 5, "Location", item.getLocation());
+        return grid;
+    }
+
+    private VBox createDescriptionBlock(ItemReport item) {
+        Label title = new Label("Description");
+        title.setStyle("-fx-text-fill: #4A1212; -fx-font-weight: bold; -fx-font-size: 13;");
+
+        Label description = new Label(safe(item.getDescription()));
+        description.setWrapText(true);
+        description.setMinHeight(80);
+        description.setStyle("-fx-background-color: #F7F7F9; -fx-background-radius: 8; -fx-padding: 10; -fx-text-fill: #333333;");
+
+        VBox block = new VBox(6, title, description);
+        return block;
+    }
+
+    private void addDetailRow(GridPane grid, int row, String labelText, String valueText) {
+        Label label = new Label(labelText + ":");
+        label.setStyle("-fx-text-fill: #777777; -fx-font-weight: bold;");
+
+        Label value = new Label(safe(valueText));
+        value.setWrapText(true);
+        value.setStyle("-fx-text-fill: #222222;");
+        grid.add(label, 0, row);
+        grid.add(value, 1, row);
+    }
+
+    private String safe(String value) {
+        return value == null || value.isBlank() ? "N/A" : value;
     }
 
     private void handleDeleteItem(ItemReport item) {

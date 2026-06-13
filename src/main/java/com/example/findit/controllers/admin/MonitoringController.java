@@ -4,6 +4,8 @@ import com.example.findit.dao.ActivityLogDAO;
 import com.example.findit.dao.ValidationDAO;
 import com.example.findit.model.ActivityLog;
 import com.example.findit.model.ValidationLog;
+import com.example.findit.util.ResponsiveTable;
+import javafx.concurrent.Task;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -13,6 +15,7 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import java.net.URL;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.ResourceBundle;
 
 public class MonitoringController implements Initializable {
@@ -51,6 +54,16 @@ public class MonitoringController implements Initializable {
     private static final DateTimeFormatter FMT =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
+    private record MonitoringSnapshot(
+            List<IERow> ieRows,
+            List<ValRow> valRows,
+            int todayCheckIn,
+            int todayCheckOut,
+            int approved,
+            int rejected,
+            int pending
+    ) { }
+
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         if (sidebarController != null) {
@@ -58,6 +71,8 @@ public class MonitoringController implements Initializable {
         }
         configureIETable();
         configureValTable();
+        ResponsiveTable.fillAvailableWidth(ieTable);
+        ResponsiveTable.fillAvailableWidth(valTable);
         setupFilters();
         loadData();
     }
@@ -157,44 +172,73 @@ public class MonitoringController implements Initializable {
     }
 
     private void loadData() {
-        loadIELogs();
-        loadValidationLogs();
-        updateSummary();
+        ieTable.setPlaceholder(new Label("Loading ingress / egress records..."));
+        valTable.setPlaceholder(new Label("Loading validation records..."));
+
+        Task<MonitoringSnapshot> task = new Task<>() {
+            @Override
+            protected MonitoringSnapshot call() {
+                ActivityLogDAO ieDao = new ActivityLogDAO();
+                ValidationDAO valDao = new ValidationDAO();
+                return new MonitoringSnapshot(
+                        loadIELogs(ieDao),
+                        loadValidationLogs(valDao),
+                        ieDao.countTodayByAction("CHECK_IN"),
+                        ieDao.countTodayByAction("CHECK_OUT"),
+                        valDao.countByType("APPROVED"),
+                        valDao.countByType("REJECTED"),
+                        valDao.countByType("PENDING")
+                );
+            }
+        };
+
+        task.setOnSucceeded(event -> {
+            MonitoringSnapshot snapshot = task.getValue();
+            ieMaster.setAll(snapshot.ieRows());
+            valMaster.setAll(snapshot.valRows());
+            lblTodayCheckIn.setText(String.valueOf(snapshot.todayCheckIn()));
+            lblTodayCheckOut.setText(String.valueOf(snapshot.todayCheckOut()));
+            lblApproved.setText(String.valueOf(snapshot.approved()));
+            lblRejected.setText(String.valueOf(snapshot.rejected()));
+            lblPending.setText(String.valueOf(snapshot.pending()));
+            ieTable.setPlaceholder(new Label("No ingress/egress records found."));
+            valTable.setPlaceholder(new Label("No validation records found."));
+            applyIEFilter();
+            applyValFilter();
+        });
+
+        task.setOnFailed(event -> {
+            task.getException().printStackTrace();
+            ieTable.setPlaceholder(new Label("Unable to load ingress/egress records."));
+            valTable.setPlaceholder(new Label("Unable to load validation records."));
+        });
+
+        Thread loader = new Thread(task, "monitoring-loader");
+        loader.setDaemon(true);
+        loader.start();
     }
 
-    private void loadIELogs() {
-        ieMaster.clear();
-        for (ActivityLog log : new ActivityLogDAO().getIngressEgressLogs()) {
-            ieMaster.add(new IERow(
+    private List<IERow> loadIELogs(ActivityLogDAO dao) {
+        return dao.getIngressEgressLogs().stream()
+                .map(log -> new IERow(
                     String.valueOf(log.getUserId()),
                     log.getAction(),
                     log.getDescription(),
                     log.getCreatedAt() != null ? log.getCreatedAt().format(FMT) : "-"
-            ));
-        }
+                ))
+                .toList();
     }
 
-    private void loadValidationLogs() {
-        valMaster.clear();
-        for (ValidationLog log : new ValidationDAO().getAllValidations()) {
-            valMaster.add(new ValRow(
+    private List<ValRow> loadValidationLogs(ValidationDAO dao) {
+        return dao.getAllValidations().stream()
+                .map(log -> new ValRow(
                     String.valueOf(log.getItemId()),
                     String.valueOf(log.getValidatedBy()),
                     log.getValidationType(),
                     log.getRemarks(),
                     log.getValidatedAt() != null ? log.getValidatedAt().format(FMT) : "-"
-            ));
-        }
-    }
-
-    private void updateSummary() {
-        ActivityLogDAO ieDao  = new ActivityLogDAO();
-        ValidationDAO  valDao = new ValidationDAO();
-        lblTodayCheckIn .setText(String.valueOf(ieDao.countTodayByAction("CHECK_IN")));
-        lblTodayCheckOut.setText(String.valueOf(ieDao.countTodayByAction("CHECK_OUT")));
-        lblApproved     .setText(String.valueOf(valDao.countByType("APPROVED")));
-        lblRejected     .setText(String.valueOf(valDao.countByType("REJECTED")));
-        lblPending      .setText(String.valueOf(valDao.countByType("PENDING")));
+                ))
+                .toList();
     }
 
     @FXML

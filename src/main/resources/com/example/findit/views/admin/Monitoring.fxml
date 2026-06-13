@@ -23,7 +23,7 @@
                 <HBox spacing="16">
                     <VBox style="-fx-background-color: white; -fx-background-radius: 10;
                                  -fx-padding: 16; -fx-effect: dropshadow(gaussian,#0001,6,0,0,2);"
-                          prefWidth="150">
+                          maxWidth="1.7976931348623157E308" prefWidth="210" HBox.hgrow="ALWAYS">
                         <Label text="Today's Logins" style="-fx-text-fill: #666; -fx-font-size: 12px;"/>
                         <Label fx:id="lblTodayCheckIn" text="0"
                                style="-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #2E7D32;"/>
@@ -31,7 +31,7 @@
                     </VBox>
                     <VBox style="-fx-background-color: white; -fx-background-radius: 10;
                                  -fx-padding: 16; -fx-effect: dropshadow(gaussian,#0001,6,0,0,2);"
-                          prefWidth="150">
+                          maxWidth="1.7976931348623157E308" prefWidth="210" HBox.hgrow="ALWAYS">
                         <Label text="Today's Logouts" style="-fx-text-fill: #666; -fx-font-size: 12px;"/>
                         <Label fx:id="lblTodayCheckOut" text="0"
                                style="-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #C62828;"/>
@@ -39,7 +39,7 @@
                     </VBox>
                     <VBox style="-fx-background-color: white; -fx-background-radius: 10;
                                  -fx-padding: 16; -fx-effect: dropshadow(gaussian,#0001,6,0,0,2);"
-                          prefWidth="150">
+                          maxWidth="1.7976931348623157E308" prefWidth="210" HBox.hgrow="ALWAYS">
                         <Label text="Approved" style="-fx-text-fill: #666; -fx-font-size: 12px;"/>
                         <Label fx:id="lblApproved" text="0"
                                style="-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #2E7D32;"/>
@@ -47,7 +47,7 @@
                     </VBox>
                     <VBox style="-fx-background-color: white; -fx-background-radius: 10;
                                  -fx-padding: 16; -fx-effect: dropshadow(gaussian,#0001,6,0,0,2);"
-                          prefWidth="150">
+                          maxWidth="1.7976931348623157E308" prefWidth="210" HBox.hgrow="ALWAYS">
                         <Label text="Rejected" style="-fx-text-fill: #666; -fx-font-size: 12px;"/>
                         <Label fx:id="lblRejected" text="0"
                                style="-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #C62828;"/>
@@ -55,13 +55,12 @@
                     </VBox>
                     <VBox style="-fx-background-color: white; -fx-background-radius: 10;
                                  -fx-padding: 16; -fx-effect: dropshadow(gaussian,#0001,6,0,0,2);"
-                          prefWidth="150">
+                          maxWidth="1.7976931348623157E308" prefWidth="210" HBox.hgrow="ALWAYS">
                         <Label text="Pending" style="-fx-text-fill: #666; -fx-font-size: 12px;"/>
                         <Label fx:id="lblPending" text="0"
                                style="-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #F57F17;"/>
                         <Label text="VALIDATED" style="-fx-text-fill: #F57F17; -fx-font-size: 11px;"/>
                     </VBox>
-                    <Region HBox.hgrow="ALWAYS"/>
                     <Button text="⟳  Refresh" onAction="#handleRefresh"
                             style="-fx-background-color: #1A1A2E; -fx-text-fill: white;
                                    -fx-background-radius: 8; -fx-padding: 8 16 8 16; -fx-cursor: hand;"/>

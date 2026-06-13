@@ -2,6 +2,7 @@ package com.example.findit.controllers.user;
 
 import com.example.findit.model.AppDataStore;
 import com.example.findit.model.ItemReport;
+import com.example.findit.util.ImageStorage;
 
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
@@ -18,6 +19,8 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.ColumnConstraints;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
@@ -28,10 +31,15 @@ import java.util.List;
 import java.util.Locale;
 
 public class ItemsController {
+    private static final double CARD_MIN_WIDTH = 185.0;
+    private static final double GRID_GAP = 20.0;
+
     @FXML private TextField searchField;
     @FXML private ComboBox<String> categoryFilter;
     @FXML private ComboBox<String> statusFilter;
     @FXML private GridPane itemsGrid;
+
+    private int currentColumnCount = 4;
 
     @FXML
     public void initialize() {
@@ -47,6 +55,7 @@ public class ItemsController {
         categoryFilter.valueProperty().addListener((obs, oldValue, newValue) -> renderItems());
         statusFilter.valueProperty().addListener((obs, oldValue, newValue) -> renderItems());
         AppDataStore.getItemReports().addListener((javafx.collections.ListChangeListener<ItemReport>) change -> renderItems());
+        itemsGrid.widthProperty().addListener((obs, oldWidth, newWidth) -> updateColumnsAndRender(newWidth.doubleValue()));
         renderItems();
     }
 
@@ -75,6 +84,7 @@ public class ItemsController {
 
     private void renderItems() {
         itemsGrid.getChildren().clear();
+        configureGridColumns(currentColumnCount);
 
         List<ItemReport> filteredItems = AppDataStore.getItemReports().stream()
                 .filter(this::matchesFilters)
@@ -83,14 +93,40 @@ public class ItemsController {
         if (filteredItems.isEmpty()) {
             Label emptyLabel = new Label("No items found.");
             emptyLabel.setStyle("-fx-text-fill: #777777; -fx-font-size: 16;");
-            itemsGrid.add(emptyLabel, 0, 0, 4, 1);
+            itemsGrid.add(emptyLabel, 0, 0, currentColumnCount, 1);
             return;
         }
 
         for (int index = 0; index < filteredItems.size(); index++) {
             ItemReport item = filteredItems.get(index);
             VBox card = createItemCard(item);
-            itemsGrid.add(card, index % 4, index / 4);
+            itemsGrid.add(card, index % currentColumnCount, index / currentColumnCount);
+        }
+    }
+
+    private void updateColumnsAndRender(double gridWidth) {
+        int newColumnCount = calculateColumnCount(gridWidth);
+        if (newColumnCount != currentColumnCount) {
+            currentColumnCount = newColumnCount;
+            renderItems();
+        }
+    }
+
+    private int calculateColumnCount(double gridWidth) {
+        if (gridWidth <= 0) {
+            return currentColumnCount;
+        }
+        return Math.max(1, (int) ((gridWidth + GRID_GAP) / (CARD_MIN_WIDTH + GRID_GAP)));
+    }
+
+    private void configureGridColumns(int columnCount) {
+        itemsGrid.getColumnConstraints().clear();
+        for (int column = 0; column < columnCount; column++) {
+            ColumnConstraints constraints = new ColumnConstraints();
+            constraints.setHgrow(Priority.ALWAYS);
+            constraints.setFillWidth(true);
+            constraints.setPercentWidth(100.0 / columnCount);
+            itemsGrid.getColumnConstraints().add(constraints);
         }
     }
 
@@ -118,11 +154,13 @@ public class ItemsController {
     private VBox createItemCard(ItemReport item) {
         VBox card = new VBox(8);
         card.setPrefWidth(185);
+        card.setMaxWidth(Double.MAX_VALUE);
         card.setMinHeight(205);
         card.setPadding(new Insets(12));
         card.setStyle("-fx-background-color: #FFFFFF; -fx-background-radius: 12; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.06), 8, 0, 0, 4); -fx-cursor: hand;");
         card.setUserData(item);
         card.setOnMouseClicked(this::handleItemClick);
+        GridPane.setHgrow(card, Priority.ALWAYS);
 
         Region imageBox = createImageBox(item);
         Label name = new Label(item.getItemName());
@@ -170,16 +208,16 @@ public class ItemsController {
     }
 
     private ImageView createImageView(String imagePath, double height, double width) {
-        try {
-            ImageView imageView = new ImageView(new Image(imagePath, true));
-            imageView.setFitHeight(height);
-            imageView.setFitWidth(width);
-            imageView.setPreserveRatio(true);
-            return imageView;
-        } catch (IllegalArgumentException e) {
-            System.err.println("Could not load item image: " + imagePath);
+        Image image = ImageStorage.loadImage(imagePath);
+        if (image == null) {
             return null;
         }
+
+        ImageView imageView = new ImageView(image);
+        imageView.setFitHeight(height);
+        imageView.setFitWidth(width);
+        imageView.setPreserveRatio(true);
+        return imageView;
     }
 
     private Label createPlaceholder(ItemReport item) {

@@ -9,10 +9,12 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.HBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
@@ -23,10 +25,14 @@ public class UserDashboardController {
 
     @FXML private TextField txtSearch;
     @FXML private ListView<ItemReport> searchSuggestions;
+    @FXML private HBox filterPanel;
+    @FXML private ComboBox<String> categoryFilter;
+    @FXML private ComboBox<String> statusFilter;
 
     @FXML
     public void initialize() {
         UserSidebarController.setActivePage("Dashboard");
+        setupDashboardFilters();
         if (txtSearch != null) {
             txtSearch.setOnAction(e -> goToItemsFromSearch());
             txtSearch.textProperty().addListener((obs, oldValue, newValue) -> updateSearchSuggestions(newValue));
@@ -60,8 +66,14 @@ public class UserDashboardController {
 
     @FXML
     public void handleFilter(ActionEvent event) {
-        UserSidebarController.setActivePage("Items");
-        UserNavigationHelper.switchScene(event, "/com/example/findit/views/user/Items.fxml");
+        if (filterPanel == null) {
+            return;
+        }
+
+        boolean shouldShow = !filterPanel.isVisible();
+        filterPanel.setVisible(shouldShow);
+        filterPanel.setManaged(shouldShow);
+        updateSearchSuggestions(txtSearch == null ? "" : txtSearch.getText());
     }
 
     private void goToItemsFromSearch() {
@@ -84,6 +96,7 @@ public class UserDashboardController {
 
         var matches = AppDataStore.getItemReports().stream()
                 .filter(item -> matchesSearch(item, searchText))
+                .filter(this::matchesDashboardFilters)
                 .limit(8)
                 .toList();
 
@@ -99,6 +112,41 @@ public class UserDashboardController {
                 || safe(item.getCategory()).toLowerCase(Locale.ROOT).contains(searchText)
                 || safe(item.getLocation()).toLowerCase(Locale.ROOT).contains(searchText)
                 || safe(item.getType()).toLowerCase(Locale.ROOT).contains(searchText);
+    }
+
+    private void setupDashboardFilters() {
+        if (categoryFilter != null) {
+            categoryFilter.setItems(FXCollections.observableArrayList(
+                    "All Categories", "Electronics", "Wallet", "Documents", "Clothing", "Accessories", "Other"
+            ));
+            categoryFilter.getSelectionModel().selectFirst();
+            categoryFilter.valueProperty().addListener((obs, oldValue, newValue) ->
+                    updateSearchSuggestions(txtSearch == null ? "" : txtSearch.getText()));
+        }
+
+        if (statusFilter != null) {
+            statusFilter.setItems(FXCollections.observableArrayList("All Status", "Lost", "Found"));
+            statusFilter.getSelectionModel().selectFirst();
+            statusFilter.valueProperty().addListener((obs, oldValue, newValue) ->
+                    updateSearchSuggestions(txtSearch == null ? "" : txtSearch.getText()));
+        }
+
+        if (filterPanel != null) {
+            filterPanel.setVisible(false);
+            filterPanel.setManaged(false);
+        }
+    }
+
+    private boolean matchesDashboardFilters(ItemReport item) {
+        String category = categoryFilter == null ? "All Categories" : categoryFilter.getValue();
+        String status = statusFilter == null ? "All Status" : statusFilter.getValue();
+
+        boolean matchesCategory = category == null || "All Categories".equals(category)
+                || safe(item.getCategory()).equalsIgnoreCase(category);
+        boolean matchesStatus = status == null || "All Status".equals(status)
+                || safe(item.getType()).equalsIgnoreCase(status);
+
+        return matchesCategory && matchesStatus;
     }
 
     @FXML

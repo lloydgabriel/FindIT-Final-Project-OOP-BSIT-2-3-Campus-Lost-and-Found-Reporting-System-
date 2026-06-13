@@ -1,6 +1,7 @@
 package com.example.findit.controllers.user;
 
 import com.example.findit.model.ItemReport;
+import com.example.findit.util.ImageStorage;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -67,16 +68,16 @@ public class ItemDetailsController {
     }
 
     private ImageView createImageView(String imagePath) {
-        try {
-            ImageView imageView = new ImageView(new Image(imagePath, true));
-            imageView.setFitHeight(190);
-            imageView.setFitWidth(210);
-            imageView.setPreserveRatio(true);
-            return imageView;
-        } catch (IllegalArgumentException e) {
-            System.err.println("Could not load detail image: " + imagePath);
+        Image image = ImageStorage.loadImage(imagePath);
+        if (image == null) {
             return null;
         }
+
+        ImageView imageView = new ImageView(image);
+        imageView.setFitHeight(190);
+        imageView.setFitWidth(210);
+        imageView.setPreserveRatio(true);
+        return imageView;
     }
 
     private Label createPlaceholder(ItemReport item) {

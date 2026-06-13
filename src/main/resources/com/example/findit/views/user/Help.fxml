@@ -16,8 +16,8 @@
         <fx:include source="DashboardSidebar.fxml" />
     </left>
    <center>
-      <VBox alignment="TOP_CENTER" spacing="40.0" style="-fx-background-color: #F4F4F6;" BorderPane.alignment="CENTER">
-         <padding><Insets left="40.0" right="40.0" top="60.0" /></padding>
+      <VBox alignment="CENTER" spacing="40.0" style="-fx-background-color: #F4F4F6;" BorderPane.alignment="CENTER">
+         <padding><Insets bottom="60.0" left="40.0" right="40.0" top="60.0" /></padding>
          <children>
             <VBox alignment="CENTER" spacing="10.0">
                <children>

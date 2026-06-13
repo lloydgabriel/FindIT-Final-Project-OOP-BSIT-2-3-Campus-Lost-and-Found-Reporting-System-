@@ -26,6 +26,8 @@ public final class DatabaseBootstrap {
 
             try (Statement stmt = conn.createStatement()) {
                 stmt.executeUpdate("ALTER TABLE items ADD COLUMN IF NOT EXISTS item_name VARCHAR(150)");
+                stmt.executeUpdate("ALTER TABLE items ADD COLUMN IF NOT EXISTS image_path TEXT");
+                stmt.executeUpdate("ALTER TABLE items ALTER COLUMN image_path TYPE TEXT");
                 stmt.executeUpdate("ALTER TABLE claims ADD COLUMN IF NOT EXISTS claimant_name VARCHAR(100)");
                 stmt.executeUpdate("ALTER TABLE claims ADD COLUMN IF NOT EXISTS student_number VARCHAR(30)");
                 stmt.executeUpdate("ALTER TABLE claims ADD COLUMN IF NOT EXISTS contact_info VARCHAR(100)");

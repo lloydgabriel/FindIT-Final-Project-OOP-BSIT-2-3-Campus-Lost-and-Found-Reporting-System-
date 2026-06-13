@@ -1,21 +1,40 @@
 package com.example.findit.controllers.admin;
 
+import com.example.findit.model.AppDataStore;
+import com.example.findit.model.ItemMatch;
+import com.example.findit.model.ItemReport;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
+import javafx.scene.control.Alert;
 import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
 
 import java.net.URL;
-import java.sql.*;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.ResourceBundle;
 
-import com.example.findit.controllers.admin.AdminSidebarController;
-import com.example.findit.util.DBConnection;
+import com.example.findit.util.ImageStorage;
+import com.example.findit.util.ResponsiveTable;
 
 
 public class AdminDashboardController implements Initializable {
@@ -28,10 +47,10 @@ public class AdminDashboardController implements Initializable {
 
     @FXML private ProgressBar pbElectronics, pbWallet, pbDocument;
     @FXML private Label lblElectronics, lblWallet, lblDocument;
+    @FXML private VBox topLocationsBox;
 
     @FXML private TableView<ItemRow> recentItemsTable;
 
-    @FXML private TableColumn<ItemRow, String> colImage;
     @FXML private TableColumn<ItemRow, String> colItem;
     @FXML private TableColumn<ItemRow, String> colCategory;
     @FXML private TableColumn<ItemRow, String> colLocation;
@@ -46,130 +65,206 @@ public class AdminDashboardController implements Initializable {
         }
 
         configureTableColumns();
-        loadDashboardStats();
-        loadRecentItems();
+        ResponsiveTable.fillAvailableWidth(recentItemsTable);
+        refreshDashboard();
+        AppDataStore.getItemReports().addListener((ListChangeListener<ItemReport>) change -> refreshDashboard());
+        AppDataStore.getMatchSuggestions().addListener((ListChangeListener<ItemMatch>) change -> refreshDashboard());
     }
 
     private void configureTableColumns() {
-        colImage.setCellValueFactory(new PropertyValueFactory<>("image"));
         colItem.setCellValueFactory(new PropertyValueFactory<>("itemName"));
         colCategory.setCellValueFactory(new PropertyValueFactory<>("category"));
         colLocation.setCellValueFactory(new PropertyValueFactory<>("location"));
         colStatus.setCellValueFactory(new PropertyValueFactory<>("status"));
         colDate.setCellValueFactory(new PropertyValueFactory<>("date"));
+
+        recentItemsTable.setRowFactory(table -> {
+            TableRow<ItemRow> row = new TableRow<>();
+            row.setOnMouseClicked(event -> {
+                if (!row.isEmpty() && event.getClickCount() == 1) {
+                    showItemDetails(row.getItem().getItem());
+                }
+            });
+            row.setStyle("-fx-cursor: hand;");
+            return row;
+        });
+    }
+
+    private void refreshDashboard() {
+        loadDashboardStats();
+        loadCategoryBreakdown();
+        loadTopLocations();
+        loadRecentItems();
     }
 
     private void loadDashboardStats() {
+        foundItemsCount.setText(String.valueOf(AppDataStore.countItemsByType("Found")));
+        lostReportsCount.setText(String.valueOf(AppDataStore.countItemsByType("Lost")));
+        matchedCount.setText(String.valueOf(AppDataStore.countMatches()));
+    }
 
-        try (Connection conn = DBConnection.connect()) {
+    private void loadCategoryBreakdown() {
+        List<ItemReport> reports = AppDataStore.getItemReports();
+        double total = Math.max(1, reports.size());
+        updateCategoryProgress("Electronics", lblElectronics, pbElectronics, total);
+        updateCategoryProgress("Wallet", lblWallet, pbWallet, total);
+        updateCategoryProgress("Documents", lblDocument, pbDocument, total);
+    }
 
-            String foundSql =
-                    "SELECT COUNT(*) FROM items WHERE status = 'Found'";
+    private void updateCategoryProgress(String category, Label label, ProgressBar progressBar, double total) {
+        long count = AppDataStore.getItemReports().stream()
+                .filter(item -> category.equalsIgnoreCase(safe(item.getCategory())))
+                .count();
+        label.setText(count + (count == 1 ? " item" : " items"));
+        progressBar.setProgress(count / total);
+    }
 
-            String lostSql =
-                    "SELECT COUNT(*) FROM items WHERE status = 'Lost'";
-
-            String matchedSql =
-                    "SELECT COUNT(*) FROM items WHERE status = 'Matched'";
-
-            try (PreparedStatement ps = conn.prepareStatement(
-                    "SELECT COUNT(*) FROM items")) {
-
-                ResultSet rs = ps.executeQuery();
-
-                if (rs.next()) {
-                    System.out.println("TOTAL ITEMS: " + rs.getInt(1));
-                }
-            }
-
-            try (PreparedStatement ps = conn.prepareStatement(foundSql);
-                 ResultSet rs = ps.executeQuery()) {
-
-                if (rs.next()) {
-                    foundItemsCount.setText(String.valueOf(rs.getInt(1)));
-                }
-            }
-
-            try (PreparedStatement ps = conn.prepareStatement(lostSql);
-                 ResultSet rs = ps.executeQuery()) {
-
-                if (rs.next()) {
-                    lostReportsCount.setText(String.valueOf(rs.getInt(1)));
-                }
-            }
-
-            try (PreparedStatement ps = conn.prepareStatement(matchedSql);
-                 ResultSet rs = ps.executeQuery()) {
-
-                if (rs.next()) {
-                    matchedCount.setText(String.valueOf(rs.getInt(1)));
-                }
-            }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-
-            foundItemsCount.setText("0");
-            lostReportsCount.setText("0");
-            matchedCount.setText("0");
+    private void loadTopLocations() {
+        if (topLocationsBox == null) {
+            return;
         }
+
+        topLocationsBox.getChildren().clear();
+        Map<String, Long> topLocations = AppDataStore.getItemReports().stream()
+                .collect(Collectors.groupingBy(
+                        item -> displayValue(item.getLocation(), "Unknown location"),
+                        Collectors.counting()
+                ))
+                .entrySet()
+                .stream()
+                .sorted(Map.Entry.<String, Long>comparingByValue(Comparator.reverseOrder()))
+                .limit(5)
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        Map.Entry::getValue,
+                        (first, second) -> first,
+                        LinkedHashMap::new
+                ));
+
+        if (topLocations.isEmpty()) {
+            Label empty = new Label("No locations yet");
+            empty.setStyle("-fx-text-fill: #777777;");
+            topLocationsBox.getChildren().add(empty);
+            return;
+        }
+
+        topLocations.forEach((location, count) -> {
+            Label locationLabel = new Label(location);
+            locationLabel.setTextFill(javafx.scene.paint.Color.web("#800000"));
+            Label countLabel = new Label(count + (count == 1 ? " item" : " items"));
+            countLabel.setTextFill(javafx.scene.paint.Color.web("#777777"));
+            HBox row = new HBox(locationLabel, new Region(), countLabel);
+            HBox.setHgrow(row.getChildren().get(1), javafx.scene.layout.Priority.ALWAYS);
+            topLocationsBox.getChildren().add(row);
+        });
     }
 
     private void loadRecentItems() {
+        ObservableList<ItemRow> data = FXCollections.observableArrayList(
+                AppDataStore.getItemReports().stream()
+                        .limit(10)
+                        .map(item -> new ItemRow(
+                                item,
+                                displayValue(item.getItemName(), "Unnamed item"),
+                                displayValue(item.getCategory(), "Uncategorized"),
+                                displayValue(item.getLocation(), "Unknown location"),
+                                displayValue(item.getType(), "Unknown"),
+                                displayValue(item.getDate(), "-")
+                        ))
+                        .toList()
+        );
+        recentItemsTable.setItems(data);
+    }
 
-        ObservableList<ItemRow> data = FXCollections.observableArrayList();
-
-        String sql = """
-            SELECT item_name,
-                   category,
-                   location,
-                   status,
-                   date_reported
-            FROM items
-            ORDER BY date_reported DESC
-            LIMIT 10
-            """;
-
-        try (Connection conn = DBConnection.connect();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-
-            while (rs.next()) {
-
-                data.add(new ItemRow(
-                        "",
-                        rs.getString("item_name"),
-                        rs.getString("category"),
-                        rs.getString("location"),
-                        rs.getString("status"),
-                        rs.getString("date_reported")
-                ));
-            }
-
-            recentItemsTable.setItems(data);
-
-        } catch (SQLException e) {
-            e.printStackTrace();
+    private void showItemDetails(ItemReport item) {
+        if (item == null) {
+            return;
         }
+
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Item Details");
+        alert.setHeaderText(item.getItemName());
+
+        HBox content = new HBox(24);
+        content.setAlignment(Pos.TOP_LEFT);
+        content.setPadding(new Insets(8, 0, 0, 0));
+
+        VBox imageBox = new VBox();
+        imageBox.setAlignment(Pos.CENTER);
+        imageBox.setPrefSize(220, 190);
+        imageBox.setMinSize(220, 190);
+        imageBox.setStyle("-fx-background-color: #F1F1F1; -fx-background-radius: 10;");
+
+        Image image = ImageStorage.loadImage(item.getImagePath());
+        if (image == null) {
+            Label placeholder = new Label("No image");
+            placeholder.setStyle("-fx-text-fill: #777777; -fx-font-weight: bold;");
+            imageBox.getChildren().add(placeholder);
+        } else {
+            ImageView imageView = new ImageView(image);
+            imageView.setFitWidth(205);
+            imageView.setFitHeight(175);
+            imageView.setPreserveRatio(true);
+            imageBox.getChildren().add(imageView);
+        }
+
+        GridPane details = new GridPane();
+        details.setHgap(18);
+        details.setVgap(10);
+        details.add(detailBlock("Type", item.getType()), 0, 0);
+        details.add(detailBlock("Category", item.getCategory()), 1, 0);
+        details.add(detailBlock("Date", item.getDate()), 0, 1);
+        details.add(detailBlock("Location", item.getLocation()), 1, 1);
+        details.add(detailBlock("Reported By", item.getReportedBy()), 0, 2);
+        details.add(detailBlock("Contact", item.getContact()), 1, 2);
+        details.add(detailBlock("Description", item.getDescription()), 0, 3, 2, 1);
+
+        content.getChildren().addAll(imageBox, details);
+        alert.getDialogPane().setContent(content);
+        alert.getDialogPane().setPrefWidth(720);
+        alert.setResizable(true);
+        alert.showAndWait();
+    }
+
+    private VBox detailBlock(String label, String value) {
+        Label labelNode = new Label(label);
+        labelNode.setStyle("-fx-text-fill: #888888;");
+        Label valueNode = new Label(displayValue(value, "-"));
+        valueNode.setWrapText(true);
+        valueNode.setStyle("-fx-text-fill: #222222; -fx-font-weight: bold;");
+        VBox box = new VBox(2, labelNode, valueNode);
+        box.setPrefWidth(190);
+        return box;
+    }
+
+    private String displayValue(String value, String fallback) {
+        if (value == null || value.isBlank()) {
+            return fallback;
+        }
+        return value.trim();
+    }
+
+    private String safe(String value) {
+        return value == null ? "" : value.trim().toLowerCase(Locale.ROOT);
     }
 
     public static class ItemRow {
 
-        private final String image;
+        private final ItemReport item;
         private final String itemName;
         private final String category;
         private final String location;
         private final String status;
         private final String date;
 
-        public ItemRow(String image,
+        public ItemRow(ItemReport item,
                        String itemName,
                        String category,
                        String location,
                        String status,
                        String date) {
 
-            this.image = image;
+            this.item = item;
             this.itemName = itemName;
             this.category = category;
             this.location = location;
@@ -177,8 +272,8 @@ public class AdminDashboardController implements Initializable {
             this.date = date;
         }
 
-        public String getImage() {
-            return image;
+        public ItemReport getItem() {
+            return item;
         }
 
         public String getItemName() {

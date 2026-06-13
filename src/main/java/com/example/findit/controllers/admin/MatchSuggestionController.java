@@ -3,12 +3,17 @@ package com.example.findit.controllers.admin;
 import com.example.findit.model.AppDataStore;
 import com.example.findit.model.ItemMatch;
 import com.example.findit.model.ItemReport;
+import com.example.findit.util.ImageStorage;
 
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.geometry.Pos;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 import java.net.URL;
@@ -17,13 +22,21 @@ import java.util.ResourceBundle;
 public class MatchSuggestionController implements Initializable {
     @FXML private Label statusBadge;
     @FXML private Label lostItemName;
+    @FXML private Label lostCategory;
     @FXML private Label lostReportedBy;
+    @FXML private Label lostContact;
     @FXML private Label lostDate;
     @FXML private Label lostLocation;
+    @FXML private Label lostDescription;
+    @FXML private VBox lostImageBox;
     @FXML private Label foundItemName;
+    @FXML private Label foundCategory;
     @FXML private Label foundReportedBy;
+    @FXML private Label foundContact;
     @FXML private Label foundDate;
     @FXML private Label foundLocation;
+    @FXML private Label foundDescription;
+    @FXML private VBox foundImageBox;
     @FXML private Button confirmButton;
 
     private ItemMatch currentMatch;
@@ -41,16 +54,47 @@ public class MatchSuggestionController implements Initializable {
 
     private void populateLostItem(ItemReport item) {
         lostItemName.setText(item.getItemName());
+        lostCategory.setText("Category: " + safe(item.getCategory()));
         lostReportedBy.setText("Reported by: " + safe(item.getReportedBy()));
+        lostContact.setText("Contact: " + safe(item.getContact()));
         lostDate.setText("Date: " + safe(item.getDate()));
         lostLocation.setText("Location: " + safe(item.getLocation()));
+        lostDescription.setText("Description: " + safe(item.getDescription()));
+        renderImage(lostImageBox, item);
     }
 
     private void populateFoundItem(ItemReport item) {
         foundItemName.setText(item.getItemName());
+        foundCategory.setText("Category: " + safe(item.getCategory()));
         foundReportedBy.setText("Reported by: " + safe(item.getReportedBy()));
+        foundContact.setText("Contact: " + safe(item.getContact()));
         foundDate.setText("Date: " + safe(item.getDate()));
         foundLocation.setText("Location: " + safe(item.getLocation()));
+        foundDescription.setText("Description: " + safe(item.getDescription()));
+        renderImage(foundImageBox, item);
+    }
+
+    private void renderImage(VBox imageBox, ItemReport item) {
+        if (imageBox == null) {
+            return;
+        }
+
+        imageBox.getChildren().clear();
+        imageBox.setAlignment(Pos.CENTER);
+
+        Image image = ImageStorage.loadImage(item.getImagePath());
+        if (image == null) {
+            Label placeholder = new Label("No Image Available");
+            placeholder.setStyle("-fx-text-fill: #777777; -fx-font-weight: bold;");
+            imageBox.getChildren().add(placeholder);
+            return;
+        }
+
+        ImageView imageView = new ImageView(image);
+        imageView.setFitWidth(340);
+        imageView.setFitHeight(185);
+        imageView.setPreserveRatio(true);
+        imageBox.getChildren().add(imageView);
     }
 
     @FXML
@@ -107,6 +151,6 @@ public class MatchSuggestionController implements Initializable {
     }
 
     private String safe(String value) {
-        return value == null ? "" : value;
+        return value == null || value.isBlank() ? "N/A" : value;
     }
 }

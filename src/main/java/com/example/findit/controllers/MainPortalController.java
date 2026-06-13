@@ -1,5 +1,7 @@
 package com.example.findit.controllers;
 
+import com.example.findit.util.AppWindow;
+
 import com.example.findit.model.SessionManager;
 
 import javafx.event.ActionEvent;
@@ -7,7 +9,6 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.stage.Stage;
 import java.io.IOException;
 
@@ -30,8 +31,8 @@ public class MainPortalController {
         try {
             Parent root = FXMLLoader.load(getClass().getResource(fxmlPath));
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-            stage.setScene(new Scene(root));
-            stage.show();
+            String title = fxmlPath.contains("AdminLogin") ? "Admin Login" : "Campus Lost and Found System";
+            AppWindow.setRoot(stage, root, title);
         } catch (IOException e) {
             System.err.println("CRITICAL ERROR: Could not load the FXML file at " + fxmlPath);
             e.printStackTrace(); 

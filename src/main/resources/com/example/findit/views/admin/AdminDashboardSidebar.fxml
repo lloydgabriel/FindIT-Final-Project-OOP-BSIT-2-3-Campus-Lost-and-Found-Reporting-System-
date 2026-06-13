@@ -13,7 +13,7 @@
 
 <VBox fx:id="sidebarContainer" prefWidth="220.0" spacing="10.0" style="-fx-background-color: #800000;" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.findit.controllers.admin.AdminSidebarController">
    <children>
-      <HBox alignment="CENTER_LEFT" prefHeight="60.0" spacing="10.0">
+      <HBox fx:id="headerBox" alignment="CENTER_LEFT" prefHeight="60.0" spacing="10.0">
          <children>
             <ImageView fx:id="logoImage" fitHeight="35.0" fitWidth="35.0" pickOnBounds="true" preserveRatio="true">
                <image><Image url="@../../assets/LogoRed.png" /></image>
@@ -22,7 +22,7 @@
                <font> <Font name="System Bold" size="24.0" /> </font>
             </Label>
             
-            <Region HBox.hgrow="ALWAYS" />
+            <Region fx:id="headerSpacer" HBox.hgrow="ALWAYS" />
             
             <Button mnemonicParsing="false" onAction="#toggleSidebar" style="-fx-background-color: transparent; -fx-cursor: hand;" text="≡" textFill="WHITE">
                <font> <Font name="System Bold" size="24.0" /> </font>
@@ -60,7 +60,11 @@
               contentDisplay="LEFT"
               mnemonicParsing="false"
               onAction="#goToMonitoring"
+              prefHeight="45.0"
+              prefWidth="220.0"
+              style="-fx-background-color: transparent;"
               text="Monitoring"
+              textFill="WHITE"
               maxWidth="Infinity">
          <font> <Font size="15.0" /> </font>
          <graphic><ImageView fx:id="imgMonitoring"
@@ -75,7 +79,7 @@
       
       <Button fx:id="btnLogout" alignment="BASELINE_LEFT" contentDisplay="LEFT" mnemonicParsing="false" onAction="#handleLogout" prefHeight="45.0" prefWidth="220.0" style="-fx-background-color: transparent;" text="Logout" textFill="WHITE">
          <font> <Font size="15.0" /> </font>
-         <graphic><ImageView fitHeight="22.0" fitWidth="22.0" pickOnBounds="true" preserveRatio="true"><image><Image url="@../../assets/logout.png" /></image>
+         <graphic><ImageView fx:id="imgLogout" fitHeight="22.0" fitWidth="22.0" pickOnBounds="true" preserveRatio="true"><image><Image url="@../../assets/logout.png" /></image>
                <effect>
                   <ColorAdjust brightness="1.0" />
                </effect></ImageView></graphic>

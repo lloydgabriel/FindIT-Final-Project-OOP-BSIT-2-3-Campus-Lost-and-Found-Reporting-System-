@@ -3,6 +3,7 @@ package com.example.findit.controllers.admin;
 import com.example.findit.dao.UserDAO;
 import com.example.findit.model.SessionManager;
 import com.example.findit.model.User;
+import com.example.findit.util.AppWindow;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -84,9 +85,7 @@ public class AdminLoginController {
                             .getScene()
                             .getWindow();
 
-            stage.getScene().setRoot(root);
-
-            stage.setTitle(title);
+            AppWindow.setRoot(stage, root, title);
 
         } catch (Exception e) {
 

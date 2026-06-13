@@ -1,6 +1,7 @@
 package com.example.findit.controllers.user;
 
 import com.example.findit.model.SessionManager;
+import com.example.findit.util.AppWindow;
 
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
@@ -16,6 +17,7 @@ import javafx.scene.effect.ColorAdjust;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
@@ -23,15 +25,16 @@ import java.io.IOException;
 
 public class UserSidebarController {
 
-    // 1. FIXED: Aligned collapsed width with Admin (75px)
     private static final double EXPANDED_WIDTH = 220.0;
     private static final double COLLAPSED_WIDTH = 75.0;
+    private static final double EXPANDED_ICON_GAP = 15.0;
 
     private static String activePage = "Dashboard";
     private static boolean isSidebarExpanded = true;
 
     @FXML private VBox sidebarContainer;
     @FXML private HBox headerBox;
+    @FXML private Region headerSpacer;
     @FXML private ImageView logoImage;
     @FXML private Label logoText;
     @FXML private Button btnToggleSidebar;
@@ -78,6 +81,8 @@ public class UserSidebarController {
             logoText.setManaged(true);
             logoImage.setVisible(true);
             logoImage.setManaged(true);
+            headerSpacer.setVisible(true);
+            headerSpacer.setManaged(true);
             headerBox.setAlignment(Pos.CENTER_LEFT);
 
             setNavButtonExpanded(btnNavDashboard);
@@ -94,6 +99,8 @@ public class UserSidebarController {
             logoText.setManaged(false);
             logoImage.setVisible(false);
             logoImage.setManaged(false);
+            headerSpacer.setVisible(false);
+            headerSpacer.setManaged(false);
             headerBox.setAlignment(Pos.CENTER);
 
             setNavButtonCollapsed(btnNavDashboard);
@@ -109,17 +116,19 @@ public class UserSidebarController {
     private void setNavButtonExpanded(Button button) {
         button.setContentDisplay(ContentDisplay.LEFT);
         button.setAlignment(Pos.CENTER_LEFT);
-        // 2. FIXED: Button now stretches the full 220px to touch the wall!
-        button.setPrefWidth(EXPANDED_WIDTH); 
-        button.setMaxWidth(Double.MAX_VALUE);
+        button.setGraphicTextGap(EXPANDED_ICON_GAP);
+        button.setPrefWidth(EXPANDED_WIDTH);
+        button.setMinWidth(EXPANDED_WIDTH);
+        button.setMaxWidth(EXPANDED_WIDTH);
     }
 
     private void setNavButtonCollapsed(Button button) {
         button.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
         button.setAlignment(Pos.CENTER);
-        // FIXED: Button now matches collapsed sidebar width
-        button.setPrefWidth(COLLAPSED_WIDTH); 
-        button.setMaxWidth(Double.MAX_VALUE);
+        button.setGraphicTextGap(0);
+        button.setPrefWidth(COLLAPSED_WIDTH);
+        button.setMinWidth(COLLAPSED_WIDTH);
+        button.setMaxWidth(COLLAPSED_WIDTH);
     }
 
     private Image safeLoadImage(String path) {
@@ -132,8 +141,11 @@ public class UserSidebarController {
     }
 
     private void resetSidebarStyles() {
-        // 3. FIXED: Hardcoded standard 20px padding so it never shifts
-        String defaultStyle = "-fx-background-color: transparent; -fx-text-fill: #FFFFFF; -fx-cursor: hand; -fx-border-color: transparent; -fx-padding: 0 0 0 20;";
+        String padding = isSidebarExpanded ? "0 0 0 20" : "0";
+        String defaultStyle = "-fx-background-color: transparent; -fx-background-insets: 0; "
+                + "-fx-text-fill: #FFFFFF; -fx-cursor: hand; -fx-border-color: transparent; "
+                + "-fx-border-insets: 0; -fx-padding: " + padding + "; "
+                + "-fx-focus-color: transparent; -fx-faint-focus-color: transparent;";
         
         btnNavDashboard.setStyle(defaultStyle);
         btnNavItems.setStyle(defaultStyle);
@@ -167,11 +179,11 @@ public class UserSidebarController {
     }
 
     private void applyExpandedActiveStyle() {
-        // 4. FIXED: Preserved the 20px padding and fixed the border thickness
         String activeStyle = "-fx-background-color: transparent; -fx-text-fill: #FFCC00; -fx-cursor: hand; "
-                + "-fx-border-color: transparent transparent transparent #FFCC00; -fx-border-width: 0 0 0 3; -fx-padding: 0 0 0 20;";
+                + "-fx-background-insets: 0; -fx-border-color: transparent transparent transparent #FFCC00; "
+                + "-fx-border-width: 0 0 0 3; -fx-border-insets: 0; -fx-padding: 0 0 0 20; "
+                + "-fx-focus-color: transparent; -fx-faint-focus-color: transparent;";
 
-        // 5. FIXED: Added the critical break; statements!
         switch (activePage) {
             case "Dashboard": 
                 activateTab(btnNavDashboard, imgNavDashboard, "/com/example/findit/assets/yellow_icons/dashboard.png", activeStyle);
@@ -190,8 +202,9 @@ public class UserSidebarController {
     }
 
     private void applyCollapsedActiveStyle() {
-        // Simplified to let the yellow icon do the talking, matching the Admin layout
-        String activeStyle = "-fx-background-color: transparent; -fx-cursor: hand; -fx-border-color: transparent;";
+        String activeStyle = "-fx-background-color: transparent; -fx-background-insets: 0; "
+                + "-fx-cursor: hand; -fx-border-color: transparent; -fx-border-insets: 0; "
+                + "-fx-padding: 0; -fx-focus-color: transparent; -fx-faint-focus-color: transparent;";
 
         switch (activePage) {
             case "Dashboard": 
@@ -251,10 +264,17 @@ public class UserSidebarController {
         try {
             Parent newRoot = FXMLLoader.load(getClass().getResource(fxmlPath));
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-            stage.getScene().setRoot(newRoot);
+            AppWindow.setRoot(stage, newRoot, titleFor(fxmlPath));
         } catch (IOException e) {
             System.err.println("Could not load FXML: " + fxmlPath);
             e.printStackTrace();
         }
+    }
+
+    private String titleFor(String fxmlPath) {
+        int slash = fxmlPath.lastIndexOf('/');
+        int dot = fxmlPath.lastIndexOf('.');
+        String name = fxmlPath.substring(slash + 1, dot > slash ? dot : fxmlPath.length());
+        return name.replaceAll("(?<=[a-z])(?=[A-Z])", " ");
     }
 }

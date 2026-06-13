@@ -12,8 +12,10 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 import com.example.findit.model.AppDataStore;
+import com.example.findit.util.ImageStorage;
 
 import java.io.File;
+import java.io.IOException;
 
 public class LostFormController {
 
@@ -91,7 +93,13 @@ public class LostFormController {
         Stage stage = (Stage) txtItemName.getScene().getWindow();
         File file = chooser.showOpenDialog(stage);
         if (file != null) {
-            selectedImagePath = file.toURI().toString();
+            try {
+                selectedImagePath = ImageStorage.toPortableImagePath(file);
+            } catch (IOException e) {
+                showAlert(Alert.AlertType.ERROR, "Image Error",
+                        "The selected image could not be prepared. Please choose a smaller PNG or JPG file.");
+                return;
+            }
             showAlert(Alert.AlertType.INFORMATION, "Image Selected", "Selected: " + file.getName());
         }
     }

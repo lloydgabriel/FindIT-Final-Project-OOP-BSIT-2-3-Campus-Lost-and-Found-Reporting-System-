@@ -29,7 +29,7 @@
             
             <VBox alignment="CENTER" spacing="5.0">
                <children>
-                  <Label text="Campus Lost and found" textFill="#4A1212">
+                  <Label text="Campus Lost and Found" textFill="#4A1212">
                      <font>
                         <Font name="System Bold" size="40.0" />
                      </font>
