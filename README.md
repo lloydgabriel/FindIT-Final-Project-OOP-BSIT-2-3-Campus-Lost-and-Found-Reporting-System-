@@ -4,8 +4,11 @@ Added Student and Registration Module in the repository
 Status Report: June 12, 2026
 Finished Adding FXMLs and Controllers - procceed with backend and database
 
-Status Report: June 13, 2026 
-Polished System (fixed encountered errors and non-functional buttons); waiting for QA/Testers to test the program before deploying the application.
+Status Report: June 13, 2026 (Midnight)
+Polished System (fixed encountered errors and non-functional buttons); Added Monitoring Tab; waiting for QA/Testers to test the program before deploying the application.
+
+Status Report: June 13, 2026 (Night)
+Another round of fixing encountered errors/delays and non-functional buttons; made the application responsive; waiting for QA/Testers to test the program before deploying the application.
 
 For your Information:
 
