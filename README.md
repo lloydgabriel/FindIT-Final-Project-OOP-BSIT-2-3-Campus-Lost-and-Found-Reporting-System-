@@ -10,6 +10,9 @@ Polished System (fixed encountered errors and non-functional buttons); Added Mon
 Status Report: June 13, 2026 (Night)
 Another round of fixing encountered errors/delays and non-functional buttons; made the application responsive; waiting for QA/Testers to test the program before deploying the application.
 
+Status Report: June 14, 2026 
+Already tested by QA/Testers; will fix minor issues.
+
 For your Information:
 
 * **Language:** Java 17
