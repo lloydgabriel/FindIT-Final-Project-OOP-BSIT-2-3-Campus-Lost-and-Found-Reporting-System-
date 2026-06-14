@@ -1,10 +1,12 @@
 package com.example.findit.controllers.admin;
 
+import com.example.findit.controllers.admin.ClaimsController;
 import com.example.findit.model.AppDataStore;
 import com.example.findit.model.ClaimRequest;
 import com.example.findit.model.ItemReport;
 import com.example.findit.util.ImageStorage;
 import com.example.findit.util.ResponsiveTable;
+import com.example.findit.util.toast;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -35,7 +37,7 @@ public class ClaimsController implements Initializable {
     @FXML private ComboBox<String> statusFilter;
 
     @FXML private TableView<ClaimRow> claimsTable;
-    @FXML private TableColumn<ClaimRow, String> colType, colItemName, colCategory, colDate, colReportedBy, colLocation, colAction;
+    @FXML private TableColumn<ClaimRow, String> colType, colItemName, colCategory, colDate, colReportedBy, colLocation, colStatus, colAction;
 
     private final ObservableList<ClaimRow> masterData = FXCollections.observableArrayList();
     private FilteredList<ClaimRow> filteredData;
@@ -59,42 +61,81 @@ public class ClaimsController implements Initializable {
         colReportedBy.setCellValueFactory(new PropertyValueFactory<>("reportedBy"));
         colLocation.setCellValueFactory(new PropertyValueFactory<>("location"));
         colType.setCellValueFactory(new PropertyValueFactory<>("type"));
+
+        // 1. THE NEW STATUS COLUMN WITH COLORED BADGES
+        colStatus.setCellValueFactory(new PropertyValueFactory<>("claimStatus"));
+        colStatus.setCellFactory(col -> new TableCell<ClaimRow, String>() {
+            private final Label badge = new Label();
+
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setGraphic(null);
+                } else {
+                    badge.setText(item);
+                    if (item.equalsIgnoreCase("Pending")) {
+                        badge.setStyle("-fx-background-color: #FFE0B2; -fx-text-fill: #E65100; -fx-font-weight: bold; -fx-padding: 3 10 3 10; -fx-background-radius: 12;");
+                    } else if (item.equalsIgnoreCase("Approved")) {
+                        badge.setStyle("-fx-background-color: #C8E6C9; -fx-text-fill: #2E7D32; -fx-font-weight: bold; -fx-padding: 3 10 3 10; -fx-background-radius: 12;");
+                    } else if (item.equalsIgnoreCase("Rejected")) {
+                        badge.setStyle("-fx-background-color: #FFCDD2; -fx-text-fill: #C62828; -fx-font-weight: bold; -fx-padding: 3 10 3 10; -fx-background-radius: 12;");
+                    }
+                    setGraphic(badge);
+                }
+            }
+        });
+
+        // 2. THE ACTION COLUMN WITH CONDITIONAL BUTTONS
         colAction.setCellFactory(col -> new TableCell<ClaimRow, String>() {
             private final Button approveBtn = new Button();
             private final Button rejectBtn  = new Button();
             private final Button deleteBtn  = new Button();
+            private final Button viewBtn    = new Button();
 
             {
                 // Load your specific images
                 ImageView checkIcon = createIcon("/com/example/findit/assets/check.png");
                 ImageView ekisIcon  = createIcon("/com/example/findit/assets/ekis.png");
                 ImageView trashIcon = createIcon("/com/example/findit/assets/trash.png");
+                ImageView eyeIcon   = createIcon("/com/example/findit/assets/ViewEye.png");
 
                 // Inject the images into the buttons
                 approveBtn.setGraphic(checkIcon);
                 rejectBtn.setGraphic(ekisIcon);
                 deleteBtn.setGraphic(trashIcon);
+                viewBtn.setGraphic(eyeIcon);
 
-                // Make the button backgrounds completely transparent and add a pointer cursor
+                // Styling
                 String transparentStyle = "-fx-background-color: transparent; -fx-cursor: hand;";
                 approveBtn.setStyle(transparentStyle);
                 rejectBtn.setStyle(transparentStyle);
                 deleteBtn.setStyle(transparentStyle);
+                viewBtn.setStyle(transparentStyle);
 
                 // Wiring the click actions
                 approveBtn.setOnAction(e -> handleApprove(getTableView().getItems().get(getIndex())));
                 rejectBtn.setOnAction(e  -> handleReject(getTableView().getItems().get(getIndex())));
                 deleteBtn.setOnAction(e  -> handleDeleteItem(getTableView().getItems().get(getIndex())));
+                viewBtn.setOnAction(e -> showClaimDetails(getTableView().getItems().get(getIndex()), "Claim Details"));
             }
 
             @Override
             protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
-                if (empty) {
+                if (empty || getTableRow() == null || getTableRow().getItem() == null) {
                     setGraphic(null);
                 } else {
-                    javafx.scene.layout.HBox box = new javafx.scene.layout.HBox(2, approveBtn, rejectBtn, deleteBtn);
+                    ClaimRow row = getTableRow().getItem();
+                    javafx.scene.layout.HBox box = new javafx.scene.layout.HBox(2);
                     box.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+
+                    if ("Pending".equalsIgnoreCase(row.getClaimStatus())) {
+                        box.getChildren().addAll(approveBtn, rejectBtn, deleteBtn);
+                    } else {
+                        box.getChildren().addAll(viewBtn, deleteBtn);
+                    }
+                    
                     setGraphic(box);
                 }
             }
@@ -155,16 +196,16 @@ public class ClaimsController implements Initializable {
     // Button actions
     private void handleApprove(ClaimRow row) {
         AppDataStore.updateClaimStatus(row.getRequest(), "Approved");
-        showClaimDetails(row, "Claim Approved");
         claimsTable.refresh();
         applyFilter();
+        toast.show(claimsTable.getScene().getWindow(), "Claim successfully Approved!", "success");
     }
 
     private void handleReject(ClaimRow row) {
         AppDataStore.updateClaimStatus(row.getRequest(), "Rejected");
-        showClaimDetails(row, "Claim Rejected");
         claimsTable.refresh();
         applyFilter();
+        toast.show(claimsTable.getScene().getWindow(), "Claim has been Rejected.", "error");
     }
 
     private void showClaimDetails(ClaimRow row, String title) {
@@ -172,7 +213,6 @@ public class ClaimsController implements Initializable {
         Dialog<ButtonType> dialog = new Dialog<>();
         dialog.setTitle(title);
         dialog.setHeaderText(row.getItemName() + " - " + row.getClaimStatus());
-        dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
         dialog.getDialogPane().setPrefWidth(820);
 
         HBox content = new HBox(22);
@@ -190,7 +230,38 @@ public class ClaimsController implements Initializable {
 
         content.getChildren().addAll(createImagePanel(claim.getItem()), details);
         dialog.getDialogPane().setContent(content);
-        dialog.showAndWait();
+        ButtonType closeBtn = ButtonType.CLOSE;
+        dialog.getDialogPane().getButtonTypes().add(closeBtn);
+
+        String currentStatus = row.getClaimStatus();
+        
+        ButtonType revertBtn = new ButtonType("Undo / Revert to Pending", ButtonBar.ButtonData.LEFT);
+        ButtonType approveBtn = new ButtonType("Change to Approved", ButtonBar.ButtonData.OTHER);
+        ButtonType rejectBtn = new ButtonType("Change to Rejected", ButtonBar.ButtonData.OTHER);
+
+        if (currentStatus.equalsIgnoreCase("Approved")) {
+            dialog.getDialogPane().getButtonTypes().addAll(revertBtn, rejectBtn);
+        } else if (currentStatus.equalsIgnoreCase("Rejected")) {
+            dialog.getDialogPane().getButtonTypes().addAll(revertBtn, approveBtn);
+        }
+    
+        dialog.showAndWait().ifPresent(response -> {
+            javafx.stage.Window window = claimsTable.getScene().getWindow();
+
+            if (response == revertBtn) {
+                AppDataStore.updateClaimStatus(claim, "Pending");
+                toast.show(window, "Claim reverted to Pending.", "warning");
+            } else if (response == approveBtn) {
+                AppDataStore.updateClaimStatus(claim, "Approved");
+                toast.show(window, "Claim successfully Approved!", "success");
+            } else if (response == rejectBtn) {
+                AppDataStore.updateClaimStatus(claim, "Rejected");
+                toast.show(window, "Claim has been Rejected.", "error");
+            }
+            
+            claimsTable.refresh();
+            applyFilter(); 
+        });
     }
 
     private VBox createImagePanel(ItemReport item) {

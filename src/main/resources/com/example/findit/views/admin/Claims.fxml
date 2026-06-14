@@ -52,6 +52,8 @@
                             <TableColumn fx:id="colReportedBy" prefWidth="140.0" minWidth="100.0" text="Reported by" />
                             <TableColumn fx:id="colLocation" prefWidth="130.0" minWidth="100.0" text="Location" />
                             
+                            <TableColumn fx:id="colStatus" prefWidth="110.0" minWidth="100.0" text="Status" />
+
                             <TableColumn fx:id="colAction" prefWidth="120.0" minWidth="120.0" maxWidth="120.0" text="Action" />
                           </columns>
                            <VBox.margin><Insets bottom="15.0" left="15.0" right="15.0" top="15.0" /></VBox.margin>
