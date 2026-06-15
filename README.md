@@ -1,25 +1,36 @@
-Status Report: June 6, 2026
-Added Student and Registration Module in the repository
+FindIT: A Campus Lost and Found Reporting System is a desktop-based application designed to centralize the reporting, monitoring, and management of lost and found items within the campus. The system aims to replace the inefficient process of relying on scattered social media posts, manual logs, and verbal reporting by providing an organized and accessible platform for students and administrators. 
 
-Status Report: June 12, 2026
-Finished Adding FXMLs and Controllers - procceed with backend and database
-
-Status Report: June 13, 2026 (Midnight)
-Polished System (fixed encountered errors and non-functional buttons); Added Monitoring Tab; waiting for QA/Testers to test the program before deploying the application.
-
-Status Report: June 13, 2026 (Night)
-Another round of fixing encountered errors/delays and non-functional buttons; made the application responsive; waiting for QA/Testers to test the program before deploying the application.
-
-Status Report: June 14, 2026 
-Already tested by QA/Testers; will fix minor issues.
-
-For your Information:
-
+Details about the application: 
 * **Language:** Java 17
 * **GUI Framework:** JavaFX
 * **Build Tool:** Maven
 * **Database:** Supabase / JDBC
 
+Features: 
+1) Report Lost & Found Item
+2) Claim Item 
+3) Shows Lost & Found Item Details
+4) Shows Claim History
+5) Admin Dashboard
+6) Shows History of All Reported Items (Admin Exclusive)
+7) Match Suggestions (Admin Exclusive)
+8) Ingress/Egress Monitoring (Admin Exclusive)
+9) Undo/Revert Claim Changes (Admin Exclusive)
+10) Approve/Reject Claim (Admin Exclusive)
+11) Help Tab
+12) Search Bar and Status Filters
+        
+How to Install? 
+1) Access the application's GitHub link: https://github.com/lloydgabriel/FindIT
+2) Once accessed, click "Code" and then "Download ZIP"
+3) After installation, you can run our application in any IDE that supports Java (IntelliJ, Eclipse, etc.)
+
+How to Run?
+1) Once the folder is opened in any IDE of your choice that supports Java, you can access the application by
+clicking the src folder: src -> main -> java -> com/example/findit -> Launcher.java
+2) Run Launcher.java and you should be able to run FindIT!
+
+PROJECT FLOW:
 ```text
 FindIT-Final-Project-OOP-BSIT/
 ├── pom.xml                               # Maven dependencies and Java 17 compiler config
