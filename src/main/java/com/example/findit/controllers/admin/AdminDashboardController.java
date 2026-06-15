@@ -101,6 +101,9 @@ public class AdminDashboardController implements Initializable {
         foundItemsCount.setText(String.valueOf(AppDataStore.countItemsByType("Found")));
         lostReportsCount.setText(String.valueOf(AppDataStore.countItemsByType("Lost")));
         matchedCount.setText(String.valueOf(AppDataStore.countMatches()));
+        foundItemsCount.setStyle("-fx-text-fill: #4A1515;");
+        lostReportsCount.setStyle("-fx-text-fill: #4A1515;");
+        matchedCount.setStyle("-fx-text-fill: #4A1515;");
     }
 
     private void loadCategoryBreakdown() {
@@ -116,6 +119,7 @@ public class AdminDashboardController implements Initializable {
                 .filter(item -> category.equalsIgnoreCase(safe(item.getCategory())))
                 .count();
         label.setText(count + (count == 1 ? " item" : " items"));
+        label.setStyle("-fx-text-fill: #777777;");
         progressBar.setProgress(count / total);
     }
 
@@ -150,9 +154,9 @@ public class AdminDashboardController implements Initializable {
 
         topLocations.forEach((location, count) -> {
             Label locationLabel = new Label(location);
-            locationLabel.setTextFill(javafx.scene.paint.Color.web("#800000"));
+            locationLabel.setStyle("-fx-text-fill: #800000;");
             Label countLabel = new Label(count + (count == 1 ? " item" : " items"));
-            countLabel.setTextFill(javafx.scene.paint.Color.web("#777777"));
+            countLabel.setStyle("-fx-text-fill: #777777;");
             HBox row = new HBox(locationLabel, new Region(), countLabel);
             HBox.setHgrow(row.getChildren().get(1), javafx.scene.layout.Priority.ALWAYS);
             topLocationsBox.getChildren().add(row);

@@ -5,7 +5,6 @@ import com.example.findit.model.AppDataStore;
 import com.example.findit.model.ClaimRequest;
 import com.example.findit.model.ItemReport;
 import com.example.findit.util.ImageStorage;
-import com.example.findit.util.ResponsiveTable;
 import com.example.findit.util.toast;
 
 import javafx.collections.FXCollections;
@@ -49,7 +48,7 @@ public class ClaimsController implements Initializable {
         statusFilter.getSelectionModel().selectFirst();
         
         configureTableColumns();
-        ResponsiveTable.fillAvailableWidth(claimsTable);
+        claimsTable.setColumnResizePolicy(TableView.UNCONSTRAINED_RESIZE_POLICY);
         loadClaims();
         wireSearchAndFilter();
     }

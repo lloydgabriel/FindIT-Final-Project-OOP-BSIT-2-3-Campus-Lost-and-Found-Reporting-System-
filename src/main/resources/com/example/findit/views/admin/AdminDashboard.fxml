@@ -17,7 +17,7 @@
 <?import javafx.scene.shape.Circle?>
 <?import javafx.scene.text.Font?>
 
-<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="1000.0" style="-fx-background-color: #F4F4F6;" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.findit.controllers.admin.AdminDashboardController">
+<BorderPane prefHeight="600.0" prefWidth="1000.0" style="-fx-background-color: #F4F4F6;" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.findit.controllers.admin.AdminDashboardController">
    
    <left>
       <fx:include fx:id="sidebar" source="AdminDashboardSidebar.fxml" />
@@ -54,8 +54,8 @@
                            <children>
                               <VBox alignment="CENTER_LEFT" HBox.hgrow="ALWAYS">
                                  <children>
-                                    <Label text="Found Items" textFill="#4A1515"><font><Font name="System Bold" size="14.0" /></font></Label>
-                                    <Label fx:id="foundItemsCount" text="0" textFill="#4A1515"><font><Font size="32.0" /></font></Label>
+                                    <Label style="-fx-text-fill: #4A1515; -fx-font-weight: bold;" text="Found Items"><font><Font name="System Bold" size="14.0" /></font></Label>
+                                    <Label fx:id="foundItemsCount" style="-fx-text-fill: #4A1515;" text="0"><font><Font size="32.0" /></font></Label>
                                  </children>
                               </VBox>
                               <ImageView fitHeight="45.0" fitWidth="45.0" pickOnBounds="true" preserveRatio="true"><image><Image url="@../../assets/foundAdmin.jpg" /></image></ImageView>
@@ -66,8 +66,8 @@
                            <children>
                               <VBox alignment="CENTER_LEFT" HBox.hgrow="ALWAYS">
                                  <children>
-                                    <Label text="Lost Reports" textFill="#4A1515"><font><Font name="System Bold" size="14.0" /></font></Label>
-                                    <Label fx:id="lostReportsCount" text="0" textFill="#4A1515"><font><Font size="32.0" /></font></Label>
+                                    <Label style="-fx-text-fill: #4A1515; -fx-font-weight: bold;" text="Lost Reports"><font><Font name="System Bold" size="14.0" /></font></Label>
+                                    <Label fx:id="lostReportsCount" style="-fx-text-fill: #4A1515;" text="0"><font><Font size="32.0" /></font></Label>
                                  </children>
                               </VBox>
                               <ImageView fitHeight="45.0" fitWidth="45.0" pickOnBounds="true" preserveRatio="true"><image><Image url="@../../assets/lostReportsAdmin.jpg" /></image></ImageView>
@@ -78,8 +78,8 @@
                            <children>
                               <VBox alignment="CENTER_LEFT" HBox.hgrow="ALWAYS">
                                  <children>
-                                    <Label text="Matched" textFill="#4A1515"><font><Font name="System Bold" size="14.0" /></font></Label>
-                                    <Label fx:id="matchedCount" text="0" textFill="#4A1515"><font><Font size="32.0" /></font></Label>
+                                    <Label style="-fx-text-fill: #4A1515; -fx-font-weight: bold;" text="Matched"><font><Font name="System Bold" size="14.0" /></font></Label>
+                                    <Label fx:id="matchedCount" style="-fx-text-fill: #4A1515;" text="0"><font><Font size="32.0" /></font></Label>
                                  </children>
                               </VBox>
                               <ImageView fitHeight="45.0" fitWidth="45.0" pickOnBounds="true" preserveRatio="true"><image><Image url="@../../assets/matched.jpg" /></image></ImageView>
@@ -101,22 +101,22 @@
                         <VBox spacing="10.0" style="-fx-background-color: white; -fx-background-radius: 12; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 8, 0, 0, 4);">
                            <padding> <Insets bottom="15.0" left="20.0" right="20.0" top="15.0" /> </padding>
                            <children>
-                              <Label text="Items by category" textFill="#4A1515"><font><Font name="System Bold" size="16.0" /></font></Label>
+                              <Label style="-fx-text-fill: #4A1515; -fx-font-weight: bold;" text="Items by category"><font><Font name="System Bold" size="16.0" /></font></Label>
                               <VBox spacing="2.0">
                                  <children>
-                                    <HBox><children><Label text="Electronics" textFill="#800000" /><Region HBox.hgrow="ALWAYS" /><Label fx:id="lblElectronics" text="0 items" textFill="#777777" /></children></HBox>
+                                    <HBox><children><Label style="-fx-text-fill: #800000;" text="Electronics" /><Region HBox.hgrow="ALWAYS" /><Label fx:id="lblElectronics" style="-fx-text-fill: #777777;" text="0 items" /></children></HBox>
                                     <ProgressBar fx:id="pbElectronics" prefWidth="400.0" progress="0.0" style="-fx-accent: #800000;" />
                                  </children>
                               </VBox>
                               <VBox spacing="2.0">
                                  <children>
-                                    <HBox><children><Label text="Wallet" textFill="#800000" /><Region HBox.hgrow="ALWAYS" /><Label fx:id="lblWallet" text="0 items" textFill="#777777" /></children></HBox>
+                                    <HBox><children><Label style="-fx-text-fill: #800000;" text="Wallet" /><Region HBox.hgrow="ALWAYS" /><Label fx:id="lblWallet" style="-fx-text-fill: #777777;" text="0 items" /></children></HBox>
                                     <ProgressBar fx:id="pbWallet" prefWidth="400.0" progress="0.0" style="-fx-accent: #800000;" />
                                  </children>
                               </VBox>
                               <VBox spacing="2.0">
                                  <children>
-                                    <HBox><children><Label text="Document" textFill="#800000" /><Region HBox.hgrow="ALWAYS" /><Label fx:id="lblDocument" text="0 items" textFill="#777777" /></children></HBox>
+                                    <HBox><children><Label style="-fx-text-fill: #800000;" text="Document" /><Region HBox.hgrow="ALWAYS" /><Label fx:id="lblDocument" style="-fx-text-fill: #777777;" text="0 items" /></children></HBox>
                                     <ProgressBar fx:id="pbDocument" prefWidth="400.0" progress="0.0" style="-fx-accent: #800000;" />
                                  </children>
                               </VBox>
@@ -126,7 +126,7 @@
                         <VBox spacing="12.0" style="-fx-background-color: white; -fx-background-radius: 12; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 8, 0, 0, 4);" GridPane.columnIndex="1">
                            <padding> <Insets bottom="15.0" left="20.0" right="20.0" top="15.0" /> </padding>
                            <children>
-                              <Label text="Item Top Locations" textFill="#4A1515"><font><Font name="System Bold" size="16.0" /></font></Label>
+                              <Label style="-fx-text-fill: #4A1515; -fx-font-weight: bold;" text="Item Top Locations"><font><Font name="System Bold" size="16.0" /></font></Label>
                               <VBox fx:id="topLocationsBox" spacing="8.0" />
                            </children>
                         </VBox>
