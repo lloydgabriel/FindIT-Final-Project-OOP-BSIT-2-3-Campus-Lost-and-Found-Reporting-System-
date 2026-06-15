@@ -21,7 +21,7 @@ Features:
 12) Search Bar and Status Filters
         
 How to Install? 
-1) Access the application's GitHub link: https://github.com/lloydgabriel/FindIT
+1) Access the application's GitHub link: https://github.com/lloydgabriel/FindIT](https://github.com/lloydgabriel/FindIT-Final-Project-OOP-BSIT-2-3-Campus-Lost-and-Found-Reporting-System-
 2) Once accessed, click "Code" and then "Download ZIP"
 3) After installation, you can run our application in any IDE that supports Java (IntelliJ, Eclipse, etc.)
 
