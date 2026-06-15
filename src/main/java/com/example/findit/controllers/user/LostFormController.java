@@ -3,19 +3,27 @@ package com.example.findit.controllers.user;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
+import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import javafx.scene.input.Clipboard;
+import javafx.scene.input.ClipboardContent;
+import javafx.geometry.Pos;
 
 import com.example.findit.model.AppDataStore;
+import com.example.findit.model.ItemReport;
 import com.example.findit.util.ImageStorage;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
 
 public class LostFormController {
 
@@ -60,8 +68,9 @@ public class LostFormController {
             return;
         }
 
+        ItemReport savedItem;
         try {
-            AppDataStore.addItemReport(
+            savedItem = AppDataStore.addItemReport(
                     "Lost",
                     txtItemName.getText().trim(),
                     cmbCategory.getValue(),
@@ -77,8 +86,55 @@ public class LostFormController {
             return;
         }
 
-        showAlert(Alert.AlertType.INFORMATION, "Report Submitted",
-                "Your lost item report has been submitted successfully.");
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Report Submitted");
+        alert.setHeaderText("Success! Your Submission is Saved.");
+        TextField idField = new TextField(savedItem.getTrackingId());
+        idField.setEditable(false);
+        idField.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; -fx-alignment: center; -fx-background-color: #F0F0F0;");
+
+        // Copy Button
+        Button copyBtn = new Button("Copy to Clipboard");
+        copyBtn.setStyle("-fx-cursor: hand; -fx-background-color: #800000; -fx-text-fill: white;");
+        copyBtn.setOnAction(e -> {
+            Clipboard clipboard = Clipboard.getSystemClipboard();
+            ClipboardContent content = new ClipboardContent();
+            content.putString(savedItem.getTrackingId());
+            clipboard.setContent(content);
+            copyBtn.setText("Copied!");
+        });
+
+        // Download Button
+        Button downloadBtn = new Button("Save as .txt File");
+        downloadBtn.setStyle("-fx-cursor: hand; -fx-background-color: #E65100; -fx-text-fill: white;");
+        downloadBtn.setOnAction(e -> {
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setTitle("Save Tracking ID");
+            fileChooser.setInitialFileName("FindIT_Receipt_" + savedItem.getTrackingId() + ".txt");
+            File file = fileChooser.showSaveDialog(null);
+            if (file != null) {
+                try (PrintWriter writer = new PrintWriter(file)) {
+                    writer.println("--- FindIT Tracking Receipt ---");
+                    writer.println("Item: " + savedItem.getItemName());
+                    writer.println("Date: " + savedItem.getDate());
+                    writer.println("Tracking ID: " + savedItem.getTrackingId());
+                    writer.println("-------------------------------");
+                    downloadBtn.setText("Saved!");
+                } catch (IOException ex) {
+                    showAlert(Alert.AlertType.ERROR, "Save Error", "Could not save the file.");
+                }
+            }
+        });
+
+        VBox layout = new VBox(15, 
+            new Label("Keep this ID to edit or delete your report later:"), 
+            idField, 
+            new HBox(10, copyBtn, downloadBtn) {{ setAlignment(Pos.CENTER); }}
+        );
+        layout.setAlignment(Pos.CENTER);
+        alert.getDialogPane().setContent(layout);
+        alert.showAndWait();
+        
         UserSidebarController.setActivePage("Items");
         UserNavigationHelper.switchScene(event, "/com/example/findit/views/user/Items.fxml");
     }

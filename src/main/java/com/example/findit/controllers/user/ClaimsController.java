@@ -242,4 +242,73 @@ public class ClaimsController {
         }
         return "-fx-background-color: #FFE0B2; -fx-background-radius: 12; -fx-text-fill: #E65100; -fx-font-weight: bold; -fx-padding: 3 10 3 10;";
     }
+
+    @FXML
+    public void handleManageClaim(javafx.event.ActionEvent event) {
+        javafx.scene.control.TextInputDialog dialog = new javafx.scene.control.TextInputDialog();
+        dialog.setTitle("Manage Claim Submission");
+        dialog.setHeaderText("Secure Access");
+        dialog.setContentText("Enter your Claim Tracking ID (e.g., CD-5678):");
+
+        dialog.showAndWait().ifPresent(trackingId -> {
+            String sanitizedId = trackingId.trim().toUpperCase();
+
+            if (!sanitizedId.matches("[A-Z]{2}-\\d{4}")) {
+                com.example.findit.util.toast.show(((javafx.scene.Node) event.getSource()).getScene().getWindow(), "Invalid Format. Must be LL-NNNN.", "error");
+                return;
+            }
+
+            // Search for the claim matching the tracking ID
+            com.example.findit.model.ClaimRequest foundClaim = com.example.findit.model.AppDataStore.getClaimRequests().stream()
+                    .filter(claim -> sanitizedId.equals(claim.getTrackingId()))
+                    .findFirst()
+                    .orElse(null);
+
+            if (foundClaim != null) {
+                showClaimManagerWindow(foundClaim, event);
+            } else {
+                com.example.findit.util.toast.show(((javafx.scene.Node) event.getSource()).getScene().getWindow(), "No claim found with ID: " + sanitizedId, "warning");
+            }
+        });
+    }
+
+    private void showClaimManagerWindow(com.example.findit.model.ClaimRequest claim, javafx.event.ActionEvent event) {
+        javafx.scene.control.Dialog<javafx.scene.control.ButtonType> dialog = new javafx.scene.control.Dialog<>();
+        dialog.setTitle("Edit Claim");
+        dialog.setHeaderText("Managing Claim for: " + claim.getItem().getItemName());
+
+        // Create Editable Fields
+        javafx.scene.control.TextField contactField = new javafx.scene.control.TextField(claim.getContactInfo());
+        javafx.scene.control.TextArea proofArea = new javafx.scene.control.TextArea(claim.getProofDescription());
+        proofArea.setPrefRowCount(3);
+
+        // Layout the form
+        javafx.scene.layout.GridPane grid = new javafx.scene.layout.GridPane();
+        grid.setHgap(10); grid.setVgap(10);
+        grid.add(new javafx.scene.control.Label("Contact Info:"), 0, 0); grid.add(contactField, 1, 0);
+        grid.add(new javafx.scene.control.Label("Proof Details:"), 0, 1); grid.add(proofArea, 1, 1);
+        
+        dialog.getDialogPane().setContent(grid);
+
+        // Add Action Buttons
+        javafx.scene.control.ButtonType saveBtn = new javafx.scene.control.ButtonType("Save Changes", javafx.scene.control.ButtonBar.ButtonData.OK_DONE);
+        javafx.scene.control.ButtonType deleteBtn = new javafx.scene.control.ButtonType("Delete Claim", javafx.scene.control.ButtonBar.ButtonData.LEFT);
+        dialog.getDialogPane().getButtonTypes().addAll(saveBtn, deleteBtn, javafx.scene.control.ButtonType.CANCEL);
+
+        dialog.showAndWait().ifPresent(response -> {
+            javafx.stage.Window window = ((javafx.scene.Node) event.getSource()).getScene().getWindow();
+            
+            if (response == saveBtn) {
+                com.example.findit.model.AppDataStore.updateClaimDetails(
+                        claim, 
+                        contactField.getText(), 
+                        proofArea.getText()
+                );
+                com.example.findit.util.toast.show(window, "Claim updated successfully!", "success");
+            } else if (response == deleteBtn) {
+                com.example.findit.model.AppDataStore.deleteClaimRequest(claim);
+                com.example.findit.util.toast.show(window, "Claim withdrawn permanently.", "warning");
+            }
+        });
+    }
 }

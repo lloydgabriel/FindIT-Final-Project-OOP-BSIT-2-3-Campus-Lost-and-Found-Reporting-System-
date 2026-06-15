@@ -18,11 +18,11 @@ public class ClaimRequestDAO {
         List<ClaimRequest> claims = new ArrayList<>();
         String sql = """
                 SELECT cl.claim_id, cl.claim_status, cl.claimant_name, cl.student_number,
-                       cl.contact_info, cl.proof_description,
+                       cl.contact_info, cl.proof_description, cl.tracking_id,
                        claimant.full_name AS claimant_user_name, claimant.id_number AS claimant_id_number,
                        claimant.contact_number AS claimant_contact,
                        i.item_id, i.item_type, i.item_name, i.description, i.date_lost, i.date_found,
-                       i.location, i.image_path, c.category_name,
+                       i.location, i.image_path, i.tracking_id AS item_tracking_id, c.category_name,
                        reporter.full_name AS reporter_name, reporter.contact_number AS reporter_contact
                 FROM claims cl
                 JOIN items i ON i.item_id = cl.item_id
@@ -47,10 +47,12 @@ public class ClaimRequestDAO {
     public ClaimRequest insert(ItemReport item, String claimantName, String studentNumber,
                                String contactInfo, String proofDescription) {
         DatabaseBootstrap.ensureApplicationSchema();
+        
+        String newTicket = com.example.findit.util.TrackingGenerator.generateID();
         String sql = """
                 INSERT INTO claims
-                (item_id, claimant_id, claim_date, claim_status, claimant_name, student_number, contact_info, proof_description)
-                VALUES (?, ?, ?, 'Pending', ?, ?, ?, ?)
+                (item_id, claimant_id, claim_date, claim_status, claimant_name, student_number, contact_info, proof_description, tracking_id)
+                VALUES (?, ?, ?, 'Pending', ?, ?, ?, ?, ?)
                 RETURNING claim_id
                 """;
 
@@ -65,13 +67,18 @@ public class ClaimRequestDAO {
                 stmt.setString(5, studentNumber);
                 stmt.setString(6, contactInfo);
                 stmt.setString(7, proofDescription);
+                
+                // Bind the tracking ticket
+                stmt.setString(8, newTicket);
+                
                 ResultSet rs = stmt.executeQuery();
                 if (!rs.next()) {
                     throw new IllegalStateException("Claim request was not saved.");
                 }
                 claimId = rs.getInt("claim_id");
             }
-            return new ClaimRequest(claimId, item, claimantName, studentNumber, contactInfo, proofDescription, "Pending");
+            // Return the newly constructed object with the ticket attached
+            return new ClaimRequest(claimId, item, claimantName, studentNumber, contactInfo, proofDescription, "Pending", newTicket);
         } catch (Exception e) {
             throw new IllegalStateException("Could not save claim request.", e);
         }
@@ -121,7 +128,8 @@ public class ClaimRequestDAO {
                 rs.getString("reporter_name"),
                 rs.getString("reporter_contact"),
                 rs.getString("description"),
-                rs.getString("image_path")
+                rs.getString("image_path"),
+                rs.getString("item_tracking_id")
         );
 
         String claimantName = firstPresent(rs.getString("claimant_name"), rs.getString("claimant_user_name"));
@@ -135,8 +143,23 @@ public class ClaimRequestDAO {
                 studentNumber,
                 contactInfo,
                 rs.getString("proof_description"),
-                rs.getString("claim_status")
+                rs.getString("claim_status"),
+                rs.getString("tracking_id") 
         );
+    }
+
+    public void updateDetails(ClaimRequest request, String newContact, String newProof) {
+        DatabaseBootstrap.ensureApplicationSchema();
+        String sql = "UPDATE claims SET contact_info = ?, proof_description = ? WHERE claim_id = ?";
+        try (Connection conn = DBConnection.connect();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, newContact);
+            stmt.setString(2, newProof);
+            stmt.setInt(3, request.getId());
+            stmt.executeUpdate();
+        } catch (Exception e) {
+            throw new IllegalStateException("Could not update claim details.", e);
+        }
     }
 
     private String firstPresent(String value, String fallback) {

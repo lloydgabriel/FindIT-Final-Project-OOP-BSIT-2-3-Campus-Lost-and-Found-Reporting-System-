@@ -8,9 +8,11 @@ public class ClaimRequest {
     private final String contactInfo;
     private final String proofDescription;
     private String status;
+    private String trackingId;
+
 
     public ClaimRequest(int id, ItemReport item, String claimantName, String studentNumber,
-                        String contactInfo, String proofDescription, String status) {
+                        String contactInfo, String proofDescription, String status, String trackingId) {
         this.id = id;
         this.item = item;
         this.claimantName = claimantName;
@@ -18,6 +20,7 @@ public class ClaimRequest {
         this.contactInfo = contactInfo;
         this.proofDescription = proofDescription;
         this.status = status;
+        this.trackingId = trackingId;
     }
 
     public int getId() {
@@ -50,5 +53,9 @@ public class ClaimRequest {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public String getTrackingId() {
+        return trackingId;
     }
 }

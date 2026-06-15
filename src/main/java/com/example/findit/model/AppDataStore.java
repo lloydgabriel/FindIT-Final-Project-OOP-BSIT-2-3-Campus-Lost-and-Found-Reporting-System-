@@ -187,4 +187,14 @@ public final class AppDataStore {
     private static String autoMatchStudentNumber(ItemMatch match) {
         return "MATCH-" + match.getLostItem().getId() + "-" + match.getFoundItem().getId();
     }
+
+    public static void updateItemDetails(ItemReport item, String newName, String newLocation, String newDescription) {
+        ITEM_REPORT_DAO.updateDetails(item, newName, newLocation, newDescription);
+        refreshAll(); 
+    }
+
+    public static void updateClaimDetails(ClaimRequest request, String newContact, String newProof) {
+        CLAIM_REQUEST_DAO.updateDetails(request, newContact, newProof);
+        refreshAll();
+    }
 }

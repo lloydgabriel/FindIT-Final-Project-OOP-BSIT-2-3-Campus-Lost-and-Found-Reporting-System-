@@ -7,6 +7,7 @@
 <?import javafx.scene.layout.FlowPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.Button?>
 
 <BorderPane prefHeight="600.0" prefWidth="1000.0" style="-fx-background-color: #F8F9FA;" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.findit.controllers.user.ClaimsController">
 
@@ -29,6 +30,8 @@
                      <children>
                         <TextField fx:id="searchField" promptText="Search claims ..." style="-fx-background-color: transparent; -fx-border-color: #CCCCCC; -fx-border-radius: 8; -fx-padding: 8;" HBox.hgrow="ALWAYS" />
                         <ComboBox fx:id="statusFilter" prefWidth="240.0" promptText="All Status" style="-fx-background-color: transparent; -fx-border-color: #CCCCCC; -fx-border-radius: 8; -fx-padding: 5;" />
+                        
+                        <Button mnemonicParsing="false" onAction="#handleManageClaim" prefHeight="40.0" style="-fx-background-color: transparent; -fx-border-color: #800000; -fx-text-fill: #800000; -fx-border-radius: 8; -fx-border-width: 2; -fx-font-weight: bold; -fx-cursor: hand; -fx-padding: 0 20 0 20;" text="Manage My Claim" />
                      </children>
                   </HBox>
 

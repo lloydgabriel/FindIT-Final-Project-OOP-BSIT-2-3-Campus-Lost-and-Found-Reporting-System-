@@ -54,6 +54,8 @@ public class ItemsController {
         searchField.textProperty().addListener((obs, oldValue, newValue) -> renderItems());
         categoryFilter.valueProperty().addListener((obs, oldValue, newValue) -> renderItems());
         statusFilter.valueProperty().addListener((obs, oldValue, newValue) -> renderItems());
+        
+        // This existing listener is what powers your auto-refresh!
         AppDataStore.getItemReports().addListener((javafx.collections.ListChangeListener<ItemReport>) change -> renderItems());
         itemsGrid.widthProperty().addListener((obs, oldWidth, newWidth) -> updateColumnsAndRender(newWidth.doubleValue()));
         renderItems();
@@ -242,6 +244,52 @@ public class ItemsController {
             System.err.println("Could not open item details");
             e.printStackTrace();
         }
+    }
+
+    @FXML
+    public void handleManageItem(javafx.event.ActionEvent event) {
+        javafx.scene.control.TextInputDialog dialog = new javafx.scene.control.TextInputDialog();
+        dialog.setTitle("Manage Item Submission");
+        dialog.setHeaderText("Secure Access");
+        dialog.setContentText("Enter your Item Tracking ID (e.g., AB-1234):");
+
+        dialog.showAndWait().ifPresent(trackingId -> {
+            String sanitizedId = trackingId.trim().toUpperCase();
+
+            if (!sanitizedId.matches("[A-Z]{2}-\\d{4}")) {
+                com.example.findit.util.toast.show(((javafx.scene.Node) event.getSource()).getScene().getWindow(), "Invalid Format. Must be LL-NNNN.", "error");
+                return;
+            }
+
+            com.example.findit.model.ItemReport foundItem = com.example.findit.model.AppDataStore.getItemReports().stream()
+                    .filter(item -> sanitizedId.equals(item.getTrackingId()))
+                    .findFirst()
+                    .orElse(null);
+
+            if (foundItem != null) {
+                try {
+                    javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource("/com/example/findit/views/user/ItemDetails.fxml"));
+                    javafx.scene.Parent root = loader.load();
+                    
+                    ItemDetailsController controller = loader.getController();
+                    controller.setItem(foundItem);
+                    controller.enableManagerMode();
+                    
+                    // UPDATED: Now blocks the background and waits for close before refreshing!
+                    javafx.stage.Stage stage = new javafx.stage.Stage();
+                    stage.initModality(Modality.APPLICATION_MODAL);
+                    stage.initOwner(((Node) event.getSource()).getScene().getWindow());
+                    stage.setTitle("Manage Submission");
+                    stage.setScene(new javafx.scene.Scene(root));
+                    stage.showAndWait(); 
+                    
+                } catch (java.io.IOException e) {
+                    e.printStackTrace();
+                }
+            } else {
+                com.example.findit.util.toast.show(((javafx.scene.Node) event.getSource()).getScene().getWindow(), "No item found with ID: " + sanitizedId, "warning");
+            }
+        });
     }
 
     private String safe(String value) {

@@ -16,7 +16,7 @@ public class ItemReportDAO {
         List<ItemReport> reports = new ArrayList<>();
         String sql = """
                 SELECT i.item_id, i.item_type, i.item_name, i.description,
-                       i.date_lost, i.date_found, i.location, i.image_path,
+                       i.date_lost, i.date_found, i.location, i.image_path, i.tracking_id,
                        c.category_name, u.full_name, u.contact_number
                 FROM items i
                 JOIN categories c ON c.category_id = i.category_id
@@ -40,11 +40,14 @@ public class ItemReportDAO {
                              String location, String reportedBy, String contact,
                              String description, String imagePath) {
         DatabaseBootstrap.ensureApplicationSchema();
+        
+        // Generate the tracking ticket
+        String newTicket = com.example.findit.util.TrackingGenerator.generateID();
         String sql = """
                 INSERT INTO items
-                (item_type, item_name, description, date_lost, date_found, location, image_path, status, reporter_id, category_id)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                RETURNING item_id, item_type, item_name, description, date_lost, date_found, location, image_path,
+                (item_type, item_name, description, date_lost, date_found, location, image_path, status, reporter_id, category_id, tracking_id)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                RETURNING item_id, item_type, item_name, description, date_lost, date_found, location, image_path, tracking_id,
                           (SELECT category_name FROM categories WHERE category_id = ?) AS category_name,
                           (SELECT full_name FROM users WHERE user_id = ?) AS full_name,
                           (SELECT contact_number FROM users WHERE user_id = ?) AS contact_number
@@ -75,9 +78,11 @@ public class ItemReportDAO {
                 stmt.setString(8, "Unclaimed");
                 stmt.setInt(9, reporterId);
                 stmt.setInt(10, categoryId);
-                stmt.setInt(11, categoryId);
-                stmt.setInt(12, reporterId);
+                stmt.setString(11, newTicket);
+                
+                stmt.setInt(12, categoryId);
                 stmt.setInt(13, reporterId);
+                stmt.setInt(14, reporterId);
                 ResultSet rs = stmt.executeQuery();
                 if (rs.next()) {
                     return mapReport(rs);
@@ -88,6 +93,21 @@ public class ItemReportDAO {
         }
 
         throw new IllegalStateException("Item report was not saved.");
+    }
+
+    public void updateDetails(ItemReport item, String newName, String newLocation, String newDescription) {
+        DatabaseBootstrap.ensureApplicationSchema();
+        String sql = "UPDATE items SET item_name = ?, location = ?, description = ? WHERE item_id = ?";
+        try (Connection conn = DBConnection.connect();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, newName);
+            stmt.setString(2, newLocation);
+            stmt.setString(3, newDescription);
+            stmt.setInt(4, item.getId());
+            stmt.executeUpdate();
+        } catch (Exception e) {
+            throw new IllegalStateException("Could not update item details.", e);
+        }
     }
 
     private String generatedReporterId(String contact) {
@@ -124,7 +144,7 @@ public class ItemReportDAO {
             itemName = rs.getString("description");
         }
 
-        return new ItemReport(
+       return new ItemReport(
                 rs.getInt("item_id"),
                 rs.getString("item_type"),
                 itemName,
@@ -134,7 +154,8 @@ public class ItemReportDAO {
                 rs.getString("full_name"),
                 rs.getString("contact_number"),
                 rs.getString("description"),
-                rs.getString("image_path")
+                rs.getString("image_path"),
+                rs.getString("tracking_id") 
         );
     }
 }

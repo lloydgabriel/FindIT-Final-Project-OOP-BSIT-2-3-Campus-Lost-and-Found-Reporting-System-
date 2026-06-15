@@ -36,6 +36,10 @@
                         <TextField fx:id="searchField" prefHeight="40.0" prefWidth="280.0" promptText="Search items ..." style="-fx-background-color: #FFFFFF; -fx-border-color: #CCCCCC; -fx-border-radius: 8;" />
                         <ComboBox fx:id="categoryFilter" prefHeight="40.0" prefWidth="240.0" promptText="All Categories" style="-fx-background-color: #FFFFFF; -fx-border-color: #CCCCCC; -fx-border-radius: 8;" />
                         <ComboBox fx:id="statusFilter" prefHeight="40.0" prefWidth="240.0" promptText="All Status" style="-fx-background-color: #FFFFFF; -fx-border-color: #CCCCCC; -fx-border-radius: 8;" />
+                        
+                        <Region HBox.hgrow="ALWAYS" />
+                        
+                        <Button mnemonicParsing="false" onAction="#handleManageItem" prefHeight="40.0" style="-fx-background-color: transparent; -fx-border-color: #800000; -fx-text-fill: #800000; -fx-border-radius: 8; -fx-border-width: 2; -fx-font-weight: bold; -fx-cursor: hand; -fx-padding: 0 20 0 20;" text="Manage My Item" />
                      </children>
                   </HBox>
                   
