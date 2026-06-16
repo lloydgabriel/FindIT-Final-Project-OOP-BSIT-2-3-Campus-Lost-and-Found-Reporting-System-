@@ -8,7 +8,11 @@ import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -16,9 +20,14 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public final class AppDataStore {
     private static final long REALTIME_REFRESH_SECONDS = 2;
+    private static final Set<String> MATCH_STOP_WORDS = Set.of(
+            "a", "an", "and", "at", "for", "from", "in", "is", "it", "lost", "found",
+            "my", "near", "of", "on", "or", "the", "this", "to", "with"
+    );
     private static final ObservableList<ItemReport> ITEM_REPORTS = FXCollections.observableArrayList();
     private static final ObservableList<ClaimRequest> CLAIM_REQUESTS = FXCollections.observableArrayList();
     private static final ObservableList<ItemMatch> MATCH_SUGGESTIONS = FXCollections.observableArrayList();
+    private static final Set<Integer> DECLINED_MATCH_IDS = new HashSet<>();
     private static final ItemReportDAO ITEM_REPORT_DAO = new ItemReportDAO();
     private static final ClaimRequestDAO CLAIM_REQUEST_DAO = new ClaimRequestDAO();
     private static final ValidationDAO VALIDATION_DAO = new ValidationDAO();
@@ -188,9 +197,14 @@ public final class AppDataStore {
                 if (!"Found".equalsIgnoreCase(foundItem.getType())) {
                     continue;
                 }
-                if (isIdenticalReport(lostItem, foundItem)) {
+                if (isPotentialMatch(lostItem, foundItem)) {
+                    int matchId = matchId(lostItem, foundItem);
+                    if (DECLINED_MATCH_IDS.contains(matchId)) {
+                        continue;
+                    }
+
                     ItemMatch match = new ItemMatch(
-                            matchId(lostItem, foundItem),
+                            matchId,
                             lostItem,
                             foundItem,
                             "Pending"
@@ -205,16 +219,73 @@ public final class AppDataStore {
         MATCH_SUGGESTIONS.setAll(matches);
     }
 
-    private static boolean isIdenticalReport(ItemReport lostItem, ItemReport foundItem) {
-        return normalized(lostItem.getItemName()).equals(normalized(foundItem.getItemName()))
-                && normalized(lostItem.getCategory()).equals(normalized(foundItem.getCategory()));
+    public static void declineMatch(ItemMatch match) {
+        if (match == null) {
+            return;
+        }
+
+        DECLINED_MATCH_IDS.add(match.getId());
+        MATCH_SUGGESTIONS.removeIf(existingMatch -> existingMatch.getId() == match.getId());
+    }
+
+    private static boolean isPotentialMatch(ItemReport lostItem, ItemReport foundItem) {
+        Set<String> lostNameKeywords = keywordsFrom(lostItem.getItemName());
+        Set<String> foundNameKeywords = keywordsFrom(foundItem.getItemName());
+        int matchingNameKeywords = countMatchingKeywords(lostNameKeywords, foundNameKeywords);
+
+        return matchingNameKeywords >= 2 || hasStrongMatchingKeyword(lostNameKeywords, foundNameKeywords);
+    }
+
+    private static Set<String> keywordsFrom(String value) {
+        Set<String> keywords = new HashSet<>();
+        if (value == null || value.isBlank()) {
+            return keywords;
+        }
+
+        Arrays.stream(value.toLowerCase(Locale.ROOT).split("[^a-z0-9]+"))
+                .map(String::trim)
+                .filter(word -> word.length() >= 2)
+                .filter(word -> !MATCH_STOP_WORDS.contains(word))
+                .forEach(keywords::add);
+        return keywords;
+    }
+
+    private static int countMatchingKeywords(Set<String> lostKeywords, Set<String> foundKeywords) {
+        int count = 0;
+        for (String lostKeyword : lostKeywords) {
+            for (String foundKeyword : foundKeywords) {
+                if (areSimilarKeywords(lostKeyword, foundKeyword)) {
+                    count++;
+                    break;
+                }
+            }
+        }
+        return count;
+    }
+
+    private static boolean hasStrongMatchingKeyword(Set<String> lostKeywords, Set<String> foundKeywords) {
+        for (String lostKeyword : lostKeywords) {
+            for (String foundKeyword : foundKeywords) {
+                if (Math.max(lostKeyword.length(), foundKeyword.length()) >= 4
+                        && areSimilarKeywords(lostKeyword, foundKeyword)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private static boolean areSimilarKeywords(String first, String second) {
+        return first.equals(second)
+                || first.contains(second)
+                || second.contains(first);
     }
 
     private static String normalized(String value) {
         if (value == null) {
             return "";
         }
-        return value.trim().replaceAll("\\s+", " ").toLowerCase();
+        return value.trim().replaceAll("\\s+", " ").toLowerCase(Locale.ROOT);
     }
 
     private static int matchId(ItemReport lostItem, ItemReport foundItem) {

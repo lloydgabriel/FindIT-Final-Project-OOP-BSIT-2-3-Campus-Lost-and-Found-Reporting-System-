@@ -38,6 +38,7 @@ public class MatchSuggestionController implements Initializable {
     @FXML private Label foundDescription;
     @FXML private VBox foundImageBox;
     @FXML private Button confirmButton;
+    @FXML private Button declineButton;
 
     private ItemMatch currentMatch;
 
@@ -116,6 +117,18 @@ public class MatchSuggestionController implements Initializable {
     }
 
     @FXML
+    private void handleDeclineMatch() {
+        if (currentMatch == null) {
+            return;
+        }
+
+        AppDataStore.declineMatch(currentMatch);
+        showAlert(Alert.AlertType.INFORMATION, "Match Declined",
+                "This match suggestion has been removed.");
+        closeDialog();
+    }
+
+    @FXML
     private void handleClose() {
         closeDialog();
     }
@@ -128,11 +141,17 @@ public class MatchSuggestionController implements Initializable {
                 confirmButton.setDisable(true);
                 confirmButton.setText("Match Confirmed");
             }
+            if (declineButton != null) {
+                declineButton.setDisable(true);
+            }
         } else {
             statusBadge.setStyle("-fx-background-color: #FFE0B2; -fx-background-radius: 12; -fx-text-fill: #E65100; -fx-font-weight: bold;");
             if (confirmButton != null) {
                 confirmButton.setDisable(false);
                 confirmButton.setText("Confirm Match");
+            }
+            if (declineButton != null) {
+                declineButton.setDisable(false);
             }
         }
     }
