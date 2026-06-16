@@ -71,8 +71,7 @@
                       style="-fx-background-color: white; -fx-background-radius: 12;
                              -fx-padding: 20; -fx-effect: dropshadow(gaussian,#0001,8,0,0,2);">
                     <HBox alignment="CENTER_LEFT" spacing="12">
-                        <Label text="Ingress / Egress Log"
-                               style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1A1A2E;"/>
+                        <Label text="Check In / Check Out Log" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1A1A2E;"/>
                         <Region HBox.hgrow="ALWAYS"/>
                         <TextField fx:id="ieSearch" promptText="Search…" prefWidth="180"
                                    style="-fx-background-radius: 6; -fx-border-radius: 6;
