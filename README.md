@@ -61,7 +61,6 @@ FindIT-Final-Project-OOP-BSIT/
 │       │       └── DBConnection.java     # JDBC connection credentials
 │       │
 │       └── resources/com/example/findit/
-│           ├── Registration.fxml
 │           ├── assets/                   # ALL IMAGES & ICONS (png, jpg)
 │           │   └── yellow_icons/         # Active-state dynamic UI icons
 │           │
