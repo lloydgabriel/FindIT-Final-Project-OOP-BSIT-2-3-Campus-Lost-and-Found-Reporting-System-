@@ -11,10 +11,10 @@ import java.util.List;
 public class ActivityLogDAO {
     public void log(int userId, String action, String description) {
         String sql = """
-                INSERT INTO activity_logs
-                (user_id, action, description)
-                VALUES (?, ?, ?)
-                """;
+        INSERT INTO activity_logs
+        (user_id, action, description, created_at)
+        VALUES (?, ?, ?, ?)
+        """;
 
         try {
             DatabaseBootstrap.ensureApplicationSchema();
@@ -28,6 +28,9 @@ public class ActivityLogDAO {
             ps.setInt(1, userId);
             ps.setString(2, action);
             ps.setString(3, description);
+            ps.setTimestamp(4, java.sql.Timestamp.valueOf(
+                    java.time.LocalDateTime.now(java.time.ZoneId.of("Asia/Manila"))
+            ));
             ps.executeUpdate();
         } catch (Exception e) {
             e.printStackTrace();
@@ -55,7 +58,9 @@ public class ActivityLogDAO {
                 log.setUserId(rs.getInt("user_id"));
                 log.setAction(rs.getString("action"));
                 log.setDescription(rs.getString("description"));
-                log.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
+                log.setCreatedAt(rs.getTimestamp("created_at").toInstant()
+                        .atZone(java.time.ZoneId.of("Asia/Manila"))
+                        .toLocalDateTime());
                 list.add(log);
             }
 
