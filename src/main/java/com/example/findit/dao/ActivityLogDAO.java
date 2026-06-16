@@ -29,7 +29,7 @@ public class ActivityLogDAO {
             ps.setString(2, action);
             ps.setString(3, description);
             ps.setTimestamp(4, java.sql.Timestamp.valueOf(
-                    java.time.LocalDateTime.now(java.time.ZoneId.of("Asia/Philippines"))
+                    java.time.LocalDateTime.now(java.time.ZoneId.of("Asia/Manila"))
             ));
             ps.executeUpdate();
         } catch (Exception e) {
