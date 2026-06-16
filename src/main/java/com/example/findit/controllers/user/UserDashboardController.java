@@ -36,6 +36,8 @@ public class UserDashboardController {
         if (txtSearch != null) {
             txtSearch.setOnAction(e -> goToItemsFromSearch());
             txtSearch.textProperty().addListener((obs, oldValue, newValue) -> updateSearchSuggestions(newValue));
+            AppDataStore.getItemReports().addListener((javafx.collections.ListChangeListener<ItemReport>) change ->
+                    updateSearchSuggestions(txtSearch.getText()));
         }
         if (searchSuggestions != null) {
             searchSuggestions.setCellFactory(list -> new ListCell<>() {
