@@ -2,6 +2,7 @@ package com.example.findit.model;
 
 import com.example.findit.dao.ClaimRequestDAO;
 import com.example.findit.dao.ItemReportDAO;
+import com.example.findit.dao.ValidationDAO;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -12,6 +13,7 @@ public final class AppDataStore {
     private static final ObservableList<ItemMatch> MATCH_SUGGESTIONS = FXCollections.observableArrayList();
     private static final ItemReportDAO ITEM_REPORT_DAO = new ItemReportDAO();
     private static final ClaimRequestDAO CLAIM_REQUEST_DAO = new ClaimRequestDAO();
+    private static final ValidationDAO VALIDATION_DAO = new ValidationDAO();
 
     static {
         refreshAll();
@@ -61,6 +63,7 @@ public final class AppDataStore {
             if (!"Approved".equalsIgnoreCase(existing.getStatus())) {
                 CLAIM_REQUEST_DAO.updateStatus(existing, "Approved");
                 existing.setStatus("Approved");
+                logClaimValidation(existing, "Approved");
             }
             match.setStatus("Confirmed");
             refreshMatchSuggestions();
@@ -81,6 +84,7 @@ public final class AppDataStore {
         );
         CLAIM_REQUEST_DAO.updateStatus(request, "Approved");
         request.setStatus("Approved");
+        logClaimValidation(request, "Approved");
         CLAIM_REQUESTS.add(0, request);
         match.setStatus("Confirmed");
         refreshMatchSuggestions();
@@ -97,6 +101,7 @@ public final class AppDataStore {
     public static void updateClaimStatus(ClaimRequest request, String status) {
         CLAIM_REQUEST_DAO.updateStatus(request, status);
         request.setStatus(status);
+        logClaimValidation(request, status);
         refreshMatchSuggestions();
     }
 
@@ -196,5 +201,51 @@ public final class AppDataStore {
     public static void updateClaimDetails(ClaimRequest request, String newContact, String newProof) {
         CLAIM_REQUEST_DAO.updateDetails(request, newContact, newProof);
         refreshAll();
+    }
+
+    private static void logClaimValidation(ClaimRequest request, String status) {
+        User admin = SessionManager.getCurrentUser();
+        if (request == null || request.getItem() == null || admin == null || !SessionManager.isCurrentUserAdmin()) {
+            return;
+        }
+
+        String validationType = normalizeValidationType(status);
+        String remarks = buildClaimValidationRemarks(request, status, admin);
+
+        try {
+            VALIDATION_DAO.logValidation(
+                    request.getItem().getId(),
+                    admin.getUserId(),
+                    validationType,
+                    remarks
+            );
+        } catch (RuntimeException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static String normalizeValidationType(String status) {
+        if ("Approved".equalsIgnoreCase(status)) {
+            return "APPROVED";
+        }
+        if ("Rejected".equalsIgnoreCase(status)) {
+            return "REJECTED";
+        }
+        return "PENDING";
+    }
+
+    private static String buildClaimValidationRemarks(ClaimRequest request, String status, User admin) {
+        String remarks = "Admin " + safe(admin.getFullName())
+                + " set claim #" + request.getId()
+                + " for item \"" + safe(request.getItem().getItemName()) + "\""
+                + " to " + safe(status)
+                + ". Claimant: " + safe(request.getClaimantName())
+                + " (" + safe(request.getStudentNumber()) + ").";
+
+        return remarks.length() > 500 ? remarks.substring(0, 500) : remarks;
+    }
+
+    private static String safe(String value) {
+        return value == null || value.isBlank() ? "N/A" : value.trim();
     }
 }

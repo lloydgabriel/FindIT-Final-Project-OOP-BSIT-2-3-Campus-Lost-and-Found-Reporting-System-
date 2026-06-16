@@ -73,4 +73,12 @@ public final class SessionManager {
         checkedIn = false;
         currentUser = null;
     }
+
+    public static User getCurrentUser() {
+        return currentUser;
+    }
+
+    public static boolean isCurrentUserAdmin() {
+        return currentUser != null && "Admin".equalsIgnoreCase(currentUser.getRole());
+    }
 }
