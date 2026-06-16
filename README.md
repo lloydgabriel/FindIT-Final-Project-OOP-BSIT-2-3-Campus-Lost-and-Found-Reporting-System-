@@ -23,7 +23,7 @@ Features:
 How to Install? 
 1) Access the application's GitHub link: https://github.com/lloydgabriel/FindIT-Final-Project-OOP-BSIT-2-3-Campus-Lost-and-Found-Reporting-System-
 2) Once accessed, click "Code" and then "Download ZIP"
-3) After installation, you can run our application in any IDE that supports Java (IntelliJ, Eclipse, etc.)
+3) After installation, you can run our application in any IDE that supports Java (IntelliJ, VSCode with Java extension, etc.)
 
 How to Run?
 1) Once the folder is opened in any IDE of your choice that supports Java, you can access the application by
