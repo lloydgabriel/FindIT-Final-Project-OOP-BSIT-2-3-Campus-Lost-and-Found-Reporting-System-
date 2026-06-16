@@ -52,7 +52,7 @@ public class MonitoringController implements Initializable {
     private FilteredList<ValRow> valFiltered;
 
     private static final DateTimeFormatter FMT =
-            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss a");
 
     private record MonitoringSnapshot(
             List<IERow> ieRows,
