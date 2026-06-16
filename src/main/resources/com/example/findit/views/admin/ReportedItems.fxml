@@ -45,6 +45,7 @@
                         <TableView fx:id="itemsTable" style="-fx-background-color: transparent; -fx-base: #FFFFFF;" VBox.vgrow="ALWAYS">
                           <columns>
                             <TableColumn fx:id="colType" prefWidth="95.0" text="Type" />
+                            <TableColumn fx:id="colTrackingId" prefWidth="120.0" text="Tracking ID" />
                             <TableColumn fx:id="colItemName" prefWidth="140.0" text="Item Name" />
                               <TableColumn fx:id="colCategory" prefWidth="130.0" text="Category" />
                               <TableColumn fx:id="colDate" prefWidth="120.0" text="Date" />

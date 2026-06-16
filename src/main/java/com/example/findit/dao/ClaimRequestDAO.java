@@ -46,13 +46,18 @@ public class ClaimRequestDAO {
 
     public ClaimRequest insert(ItemReport item, String claimantName, String studentNumber,
                                String contactInfo, String proofDescription) {
+        return insert(item, claimantName, studentNumber, contactInfo, proofDescription, "Pending");
+    }
+
+    public ClaimRequest insert(ItemReport item, String claimantName, String studentNumber,
+                               String contactInfo, String proofDescription, String status) {
         DatabaseBootstrap.ensureApplicationSchema();
         
         String newTicket = com.example.findit.util.TrackingGenerator.generateID();
         String sql = """
                 INSERT INTO claims
                 (item_id, claimant_id, claim_date, claim_status, claimant_name, student_number, contact_info, proof_description, tracking_id)
-                VALUES (?, ?, ?, 'Pending', ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                 RETURNING claim_id
                 """;
 
@@ -63,13 +68,14 @@ public class ClaimRequestDAO {
                 stmt.setInt(1, item.getId());
                 stmt.setInt(2, claimantId);
                 stmt.setDate(3, Date.valueOf(LocalDate.now()));
-                stmt.setString(4, claimantName);
-                stmt.setString(5, studentNumber);
-                stmt.setString(6, contactInfo);
-                stmt.setString(7, proofDescription);
+                stmt.setString(4, status);
+                stmt.setString(5, claimantName);
+                stmt.setString(6, studentNumber);
+                stmt.setString(7, contactInfo);
+                stmt.setString(8, proofDescription);
                 
                 // Bind the tracking ticket
-                stmt.setString(8, newTicket);
+                stmt.setString(9, newTicket);
                 
                 ResultSet rs = stmt.executeQuery();
                 if (!rs.next()) {
@@ -78,7 +84,7 @@ public class ClaimRequestDAO {
                 claimId = rs.getInt("claim_id");
             }
             // Return the newly constructed object with the ticket attached
-            return new ClaimRequest(claimId, item, claimantName, studentNumber, contactInfo, proofDescription, "Pending", newTicket);
+            return new ClaimRequest(claimId, item, claimantName, studentNumber, contactInfo, proofDescription, status, newTicket);
         } catch (Exception e) {
             throw new IllegalStateException("Could not save claim request.", e);
         }

@@ -36,7 +36,7 @@ public class ClaimsController implements Initializable {
     @FXML private ComboBox<String> statusFilter;
 
     @FXML private TableView<ClaimRow> claimsTable;
-    @FXML private TableColumn<ClaimRow, String> colType, colItemName, colCategory, colDate, colReportedBy, colLocation, colStatus, colAction;
+    @FXML private TableColumn<ClaimRow, String> colType, colClaimTrackingId, colItemTrackingId, colItemName, colCategory, colDate, colReportedBy, colLocation, colStatus, colAction;
 
     private final ObservableList<ClaimRow> masterData = FXCollections.observableArrayList();
     private FilteredList<ClaimRow> filteredData;
@@ -60,6 +60,8 @@ public class ClaimsController implements Initializable {
         colReportedBy.setCellValueFactory(new PropertyValueFactory<>("reportedBy"));
         colLocation.setCellValueFactory(new PropertyValueFactory<>("location"));
         colType.setCellValueFactory(new PropertyValueFactory<>("type"));
+        colClaimTrackingId.setCellValueFactory(new PropertyValueFactory<>("claimTrackingId"));
+        colItemTrackingId.setCellValueFactory(new PropertyValueFactory<>("itemTrackingId"));
 
         // 1. THE NEW STATUS COLUMN WITH COLORED BADGES
         colStatus.setCellValueFactory(new PropertyValueFactory<>("claimStatus"));
@@ -181,6 +183,8 @@ public class ClaimsController implements Initializable {
         filteredData.setPredicate(row -> {
             boolean matchesSearch = search.isEmpty()
                     || row.getItemName().toLowerCase().contains(search)
+                    || row.getClaimTrackingId().toLowerCase().contains(search)
+                    || row.getItemTrackingId().toLowerCase().contains(search)
                     || row.getCategory().toLowerCase().contains(search)
                     || row.getLocation().toLowerCase().contains(search)
                     || row.getReportedBy().toLowerCase().contains(search);
@@ -300,22 +304,24 @@ public class ClaimsController implements Initializable {
 
     private GridPane createClaimGrid(ClaimRequest claim) {
         GridPane grid = createDetailsGrid();
-        addDetailRow(grid, 0, "Claimant", claim.getClaimantName());
-        addDetailRow(grid, 1, "Student Number", claim.getStudentNumber());
-        addDetailRow(grid, 2, "Contact", claim.getContactInfo());
-        addDetailRow(grid, 3, "Status", claim.getStatus());
+        addDetailRow(grid, 0, "Claim Tracking ID", claim.getTrackingId());
+        addDetailRow(grid, 1, "Claimant", claim.getClaimantName());
+        addDetailRow(grid, 2, "Student Number", claim.getStudentNumber());
+        addDetailRow(grid, 3, "Contact", claim.getContactInfo());
+        addDetailRow(grid, 4, "Status", claim.getStatus());
         return grid;
     }
 
     private GridPane createItemGrid(ItemReport item) {
         GridPane grid = createDetailsGrid();
-        addDetailRow(grid, 0, "Type", item.getType());
-        addDetailRow(grid, 1, "Category", item.getCategory());
-        addDetailRow(grid, 2, "Date", item.getDate());
-        addDetailRow(grid, 3, "Location", item.getLocation());
-        addDetailRow(grid, 4, "Reported By", item.getReportedBy());
-        addDetailRow(grid, 5, "Reporter Contact", item.getContact());
-        addDetailRow(grid, 6, "Description", item.getDescription());
+        addDetailRow(grid, 0, "Item Tracking ID", item.getTrackingId());
+        addDetailRow(grid, 1, "Type", item.getType());
+        addDetailRow(grid, 2, "Category", item.getCategory());
+        addDetailRow(grid, 3, "Date", item.getDate());
+        addDetailRow(grid, 4, "Location", item.getLocation());
+        addDetailRow(grid, 5, "Reported By", item.getReportedBy());
+        addDetailRow(grid, 6, "Reporter Contact", item.getContact());
+        addDetailRow(grid, 7, "Description", item.getDescription());
         return grid;
     }
 
@@ -389,7 +395,13 @@ public class ClaimsController implements Initializable {
         public String getContactInfo() { return request.getContactInfo(); }
         public String getProofDescription() { return request.getProofDescription(); }
         public String getClaimStatus() { return request.getStatus(); }
+        public String getClaimTrackingId() { return display(request.getTrackingId()); }
+        public String getItemTrackingId() { return display(request.getItem().getTrackingId()); }
         public void setClaimStatus(String s) { request.setStatus(s); }
+
+        private static String display(String value) {
+            return value == null || value.isBlank() ? "N/A" : value;
+        }
     }
 
 

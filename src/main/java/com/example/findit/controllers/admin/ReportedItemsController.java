@@ -33,7 +33,7 @@ public class ReportedItemsController implements Initializable {
     @FXML private ComboBox<String> typeFilter;
 
     @FXML private TableView<ItemReport> itemsTable;
-    @FXML private TableColumn<ItemReport, String> colType, colItemName, colCategory, colDate, colReportedBy, colLocation, colAction;
+    @FXML private TableColumn<ItemReport, String> colType, colTrackingId, colItemName, colCategory, colDate, colReportedBy, colLocation, colAction;
 
     private FilteredList<ItemReport> filteredData;
 
@@ -55,7 +55,9 @@ public class ReportedItemsController implements Initializable {
         colReportedBy.setCellValueFactory(new PropertyValueFactory<>("reportedBy"));
         colLocation.setCellValueFactory(new PropertyValueFactory<>("location"));
         colType.setCellValueFactory(new PropertyValueFactory<>("type"));
+        colTrackingId.setCellValueFactory(new PropertyValueFactory<>("trackingId"));
         colType.setStyle("-fx-alignment: CENTER;");
+        colTrackingId.setStyle("-fx-alignment: CENTER;");
         colAction.setStyle("-fx-alignment: CENTER;");
         colType.setCellFactory(col -> new TableCell<ItemReport, String>() {
             private final Label badge = new Label();
@@ -146,6 +148,7 @@ public class ReportedItemsController implements Initializable {
         filteredData.setPredicate(item -> {
             boolean matchesSearch = search.isEmpty()
                     || item.getItemName().toLowerCase().contains(search)
+                    || safe(item.getTrackingId()).toLowerCase().contains(search)
                     || item.getCategory().toLowerCase().contains(search)
                     || item.getLocation().toLowerCase().contains(search)
                     || item.getReportedBy().toLowerCase().contains(search);
@@ -220,12 +223,13 @@ public class ReportedItemsController implements Initializable {
         valueColumn.setHgrow(Priority.ALWAYS);
         grid.getColumnConstraints().addAll(labelColumn, valueColumn);
 
-        addDetailRow(grid, 0, "Type", item.getType());
-        addDetailRow(grid, 1, "Category", item.getCategory());
-        addDetailRow(grid, 2, "Date", item.getDate());
-        addDetailRow(grid, 3, "Reported By", item.getReportedBy());
-        addDetailRow(grid, 4, "Contact", item.getContact());
-        addDetailRow(grid, 5, "Location", item.getLocation());
+        addDetailRow(grid, 0, "Tracking ID", item.getTrackingId());
+        addDetailRow(grid, 1, "Type", item.getType());
+        addDetailRow(grid, 2, "Category", item.getCategory());
+        addDetailRow(grid, 3, "Date", item.getDate());
+        addDetailRow(grid, 4, "Reported By", item.getReportedBy());
+        addDetailRow(grid, 5, "Contact", item.getContact());
+        addDetailRow(grid, 6, "Location", item.getLocation());
         return grid;
     }
 

@@ -122,9 +122,9 @@ public class MatchSuggestionController implements Initializable {
             return;
         }
 
-        AppDataStore.declineMatch(currentMatch);
+        AppDataStore.rejectMatch(currentMatch);
         showAlert(Alert.AlertType.INFORMATION, "Match Declined",
-                "This match suggestion has been removed.");
+                "This match suggestion has been recorded as a rejected claim.");
         closeDialog();
     }
 

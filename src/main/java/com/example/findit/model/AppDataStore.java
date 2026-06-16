@@ -120,6 +120,43 @@ public final class AppDataStore {
         return request;
     }
 
+    public static ClaimRequest rejectMatch(ItemMatch match) {
+        if (match == null) {
+            return null;
+        }
+
+        ClaimRequest existing = findAutoMatchClaim(match);
+        if (existing != null) {
+            if (!"Rejected".equalsIgnoreCase(existing.getStatus())) {
+                CLAIM_REQUEST_DAO.updateStatus(existing, "Rejected");
+                existing.setStatus("Rejected");
+                logClaimValidation(existing, "Rejected");
+                markLocalChange();
+            }
+            declineMatch(match);
+            return existing;
+        }
+
+        ItemReport lostItem = match.getLostItem();
+        ItemReport foundItem = match.getFoundItem();
+        String proof = "Auto-generated rejected match suggestion between lost report #"
+                + lostItem.getId() + " and found report #" + foundItem.getId() + ".";
+
+        ClaimRequest request = CLAIM_REQUEST_DAO.insert(
+                foundItem,
+                lostItem.getReportedBy(),
+                autoMatchStudentNumber(match),
+                lostItem.getContact(),
+                proof,
+                "Rejected"
+        );
+        logClaimValidation(request, "Rejected");
+        CLAIM_REQUESTS.add(0, request);
+        markLocalChange();
+        declineMatch(match);
+        return request;
+    }
+
     public static void deleteItemReport(ItemReport item) {
         ITEM_REPORT_DAO.delete(item);
         ITEM_REPORTS.remove(item);
@@ -209,7 +246,11 @@ public final class AppDataStore {
                             foundItem,
                             "Pending"
                     );
-                    if (findAutoMatchClaim(match) != null) {
+                    ClaimRequest autoMatchClaim = findAutoMatchClaim(match);
+                    if (autoMatchClaim != null && "Rejected".equalsIgnoreCase(autoMatchClaim.getStatus())) {
+                        continue;
+                    }
+                    if (autoMatchClaim != null && "Approved".equalsIgnoreCase(autoMatchClaim.getStatus())) {
                         match.setStatus("Confirmed");
                     }
                     matches.add(match);

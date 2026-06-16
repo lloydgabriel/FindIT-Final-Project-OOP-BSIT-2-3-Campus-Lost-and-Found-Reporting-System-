@@ -48,6 +48,8 @@
                               <TableView fx:id="claimsTable" styleClass="claims-table" VBox.vgrow="ALWAYS">
                                 <columns>
                                   <TableColumn fx:id="colType" prefWidth="115.0" minWidth="115.0" text="Type" />
+                                  <TableColumn fx:id="colClaimTrackingId" prefWidth="130.0" minWidth="120.0" text="Claim Tracking ID" />
+                                  <TableColumn fx:id="colItemTrackingId" prefWidth="130.0" minWidth="120.0" text="Item Tracking ID" />
 
                                   <TableColumn fx:id="colItemName" prefWidth="140.0" minWidth="100.0" text="Item Name" />
                                   <TableColumn fx:id="colCategory" prefWidth="120.0" minWidth="90.0" text="Category" />
