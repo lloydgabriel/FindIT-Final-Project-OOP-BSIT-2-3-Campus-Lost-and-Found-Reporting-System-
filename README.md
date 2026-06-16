@@ -18,7 +18,8 @@ Features:
 9) Undo/Revert Claim Changes (Admin Exclusive)
 10) Approve/Reject Claim (Admin Exclusive)
 11) Help Tab
-12) Search Bar and Status Filters
+12) Search Bar and Status Filters for Easy Access
+13) Item and Claim Tracking ID for Editing & Deleting Item/Claim Reports
         
 How to Install? 
 1) Access the application's GitHub link: https://github.com/lloydgabriel/FindIT-Final-Project-OOP-BSIT-2-3-Campus-Lost-and-Found-Reporting-System-
