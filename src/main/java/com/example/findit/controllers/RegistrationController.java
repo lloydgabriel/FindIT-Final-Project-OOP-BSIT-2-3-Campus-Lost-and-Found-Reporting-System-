@@ -2,6 +2,7 @@ package com.example.findit.controllers;
 
 import com.example.findit.dao.UserDAO;
 import com.example.findit.model.User;
+import com.example.findit.util.InputValidator;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 
@@ -32,6 +33,21 @@ public class RegistrationController {
 
         if (!password.equals(confirmPass)) {
             showMessage("Passwords do not match.", "error");
+            return;
+        }
+
+        if (!InputValidator.isValidStudentNumber(idNumber)) {
+            showMessage("Please use the correct student ID format, for example 2024-00000-SR-0.", "error");
+            return;
+        }
+
+        if (!InputValidator.isValidNameText(fullName)) {
+            showMessage("Please remove unsupported special characters from your name.", "error");
+            return;
+        }
+
+        if (!InputValidator.isValidContact(contactNumber)) {
+            showMessage("Please enter a valid 11-digit phone number or email address.", "error");
             return;
         }
 

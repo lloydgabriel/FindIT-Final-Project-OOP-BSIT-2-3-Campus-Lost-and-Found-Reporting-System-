@@ -5,10 +5,16 @@ import com.example.findit.util.DBConnection;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 
 public class ActivityLogDAO {
+    private static final ZoneId APP_ZONE = ZoneId.of("Asia/Manila");
+
     public void log(int userId, String action, String description) {
         String sql = """
         INSERT INTO activity_logs
@@ -29,7 +35,7 @@ public class ActivityLogDAO {
             ps.setString(2, action);
             ps.setString(3, description);
             ps.setTimestamp(4, java.sql.Timestamp.valueOf(
-                    java.time.LocalDateTime.now(java.time.ZoneId.of("Asia/Manila"))
+                    LocalDateTime.now(APP_ZONE)
             ));
             ps.executeUpdate();
         } catch (Exception e) {
@@ -58,9 +64,8 @@ public class ActivityLogDAO {
                 log.setUserId(rs.getInt("user_id"));
                 log.setAction(rs.getString("action"));
                 log.setDescription(rs.getString("description"));
-                log.setCreatedAt(rs.getTimestamp("created_at").toInstant()
-                        .atZone(java.time.ZoneId.of("Asia/Manila"))
-                        .toLocalDateTime());
+                Timestamp createdAt = rs.getTimestamp("created_at");
+                log.setCreatedAt(createdAt != null ? createdAt.toLocalDateTime() : null);
                 list.add(log);
             }
 
@@ -74,12 +79,16 @@ public class ActivityLogDAO {
         String sql = """
                 SELECT COUNT(*) FROM activity_logs
                 WHERE action = ?
-                  AND DATE(created_at) = CURRENT_DATE
+                  AND created_at >= ?
+                  AND created_at < ?
                 """;
         try (Connection conn = DBConnection.connect();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
+            LocalDate today = LocalDate.now(APP_ZONE);
             ps.setString(1, action);
+            ps.setTimestamp(2, Timestamp.valueOf(today.atStartOfDay()));
+            ps.setTimestamp(3, Timestamp.valueOf(today.plusDays(1).atStartOfDay()));
             ResultSet rs = ps.executeQuery();
             if (rs.next()) return rs.getInt(1);
 

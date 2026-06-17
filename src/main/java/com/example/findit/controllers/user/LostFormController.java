@@ -20,6 +20,7 @@ import javafx.geometry.Pos;
 import com.example.findit.model.AppDataStore;
 import com.example.findit.model.ItemReport;
 import com.example.findit.util.ImageStorage;
+import com.example.findit.util.InputValidator;
 
 import java.io.File;
 import java.io.IOException;
@@ -65,6 +66,26 @@ public class LostFormController {
                 || txtReporterName.getText().isBlank() || txtContact.getText().isBlank()
                 || txtDescription.getText().isBlank()) {
             showAlert(Alert.AlertType.WARNING, "Missing Fields", "Please fill in all required fields.");
+            return;
+        }
+
+        if (InputValidator.isFutureDate(dpDate.getValue())) {
+            showAlert(Alert.AlertType.WARNING, "Invalid Date", "The report date cannot be later than today.");
+            return;
+        }
+
+        if (!InputValidator.isValidContact(txtContact.getText())) {
+            showAlert(Alert.AlertType.WARNING, "Invalid Contact",
+                    "Please enter a valid 11-digit phone number or email address.");
+            return;
+        }
+
+        if (!InputValidator.isValidNameText(txtItemName.getText())
+                || !InputValidator.isValidNameText(txtLocation.getText())
+                || !InputValidator.isValidNameText(txtReporterName.getText())
+                || !InputValidator.isValidDescriptionText(txtDescription.getText())) {
+            showAlert(Alert.AlertType.WARNING, "Invalid Characters",
+                    "Please remove unsupported special characters from the report.");
             return;
         }
 

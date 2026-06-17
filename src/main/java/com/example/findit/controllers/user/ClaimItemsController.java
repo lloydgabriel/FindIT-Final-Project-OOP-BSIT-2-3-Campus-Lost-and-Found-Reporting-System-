@@ -2,6 +2,7 @@ package com.example.findit.controllers.user;
 
 import com.example.findit.model.AppDataStore;
 import com.example.findit.model.ItemReport;
+import com.example.findit.util.InputValidator;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -39,6 +40,25 @@ public class ClaimItemsController {
         if (txtClaimantName.getText().isBlank() || txtStudentNumber.getText().isBlank()
                 || txtContact.getText().isBlank() || txtProofDescription.getText().isBlank()) {
             showAlert(Alert.AlertType.WARNING, "Missing Fields", "Please fill in all required fields.");
+            return;
+        }
+
+        if (!InputValidator.isValidStudentNumber(txtStudentNumber.getText())) {
+            showAlert(Alert.AlertType.WARNING, "Invalid Student Number",
+                    "Please use the correct student number format, for example 2024-00000-SR-0.");
+            return;
+        }
+
+        if (!InputValidator.isValidContact(txtContact.getText())) {
+            showAlert(Alert.AlertType.WARNING, "Invalid Contact",
+                    "Please enter a valid 11-digit phone number or email address.");
+            return;
+        }
+
+        if (!InputValidator.isValidNameText(txtClaimantName.getText())
+                || !InputValidator.isValidDescriptionText(txtProofDescription.getText())) {
+            showAlert(Alert.AlertType.WARNING, "Invalid Characters",
+                    "Please remove unsupported special characters from the claim.");
             return;
         }
 
