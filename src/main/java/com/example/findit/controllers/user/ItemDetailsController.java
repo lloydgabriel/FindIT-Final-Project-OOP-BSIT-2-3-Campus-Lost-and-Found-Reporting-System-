@@ -140,21 +140,19 @@ public class ItemDetailsController {
     @FXML
     public void handleDeleteItem(ActionEvent event) {
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
-        confirm.setTitle("Delete Item");
-        confirm.setHeaderText("Warning: Permanent Action");
-        confirm.setContentText("Are you sure you want to completely delete this submission?");
+        confirm.setTitle("Archive Item");
+        confirm.setHeaderText("Dispose / Archive this Record");
+        confirm.setContentText("Are you sure you want to archive this item? It will be removed from the public board but kept in the database history.");
         
         if (confirm.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
-            AppDataStore.deleteItemReport(item);
             
-            // Close the Details Window
+            AppDataStore.archiveItemReport(item); 
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
             stage.close();
             
-            // NOTE: The main table will auto-refresh if AppDataStore.deleteItemReport triggers a ListChangeListener!
+            // NOTE: The main table will still auto-refresh because we remove it from the ObservableList in AppDataStore!
         }
     }
-    // -----------------------------
 
     private ImageView createImageView(String imagePath) {
         Image image = ImageStorage.loadImage(imagePath);

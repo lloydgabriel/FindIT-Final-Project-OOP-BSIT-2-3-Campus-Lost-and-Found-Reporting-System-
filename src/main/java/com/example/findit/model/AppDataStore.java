@@ -17,6 +17,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 
 public final class AppDataStore {
     private static final long REALTIME_REFRESH_SECONDS = 2;
@@ -31,6 +34,8 @@ public final class AppDataStore {
     private static final ItemReportDAO ITEM_REPORT_DAO = new ItemReportDAO();
     private static final ClaimRequestDAO CLAIM_REQUEST_DAO = new ClaimRequestDAO();
     private static final ValidationDAO VALIDATION_DAO = new ValidationDAO();
+    public static final ObservableList<ItemReport> ARCHIVED_ITEMS = FXCollections.observableArrayList();
+    public static final javafx.collections.ObservableList<ClaimRequest> ARCHIVED_CLAIMS = javafx.collections.FXCollections.observableArrayList();
     private static final ScheduledExecutorService REALTIME_REFRESHER = Executors.newSingleThreadScheduledExecutor(r -> {
         Thread thread = new Thread(r, "findit-realtime-refresh");
         thread.setDaemon(true);
@@ -42,6 +47,8 @@ public final class AppDataStore {
     static {
         refreshAll();
         startRealtimeUpdates();
+        disposeUnclaimedItems();
+        refreshArchivedItems();
     }
 
     private AppDataStore() {
@@ -498,6 +505,63 @@ public final class AppDataStore {
             return "REJECTED";
         }
         return "PENDING";
+    }
+    //archive logic
+    public static void archiveItemReport(ItemReport item) {
+        ITEM_REPORT_DAO.archiveItem(item);
+        ITEM_REPORTS.remove(item);  
+        if (!ARCHIVED_ITEMS.contains(item)) {
+            ARCHIVED_ITEMS.add(item);          
+        }
+        CLAIM_REQUESTS.removeIf(claim -> claim.getItem().getId() == item.getId());
+        refreshMatchSuggestions();
+    }
+
+    public static void archiveClaimRequest(ClaimRequest claim) {
+        CLAIM_REQUEST_DAO.archiveClaim(claim); 
+        CLAIM_REQUESTS.remove(claim);          
+        
+        if (!ARCHIVED_CLAIMS.contains(claim)) {
+            ARCHIVED_CLAIMS.add(claim);        
+        }
+        refreshMatchSuggestions();
+    }
+
+    public static int disposeUnclaimedItems() {
+        int archivedCount = 0;
+        LocalDate today = LocalDate.now();
+        List<ItemReport> itemsToDispose = new ArrayList<>();
+
+        for (ItemReport item : ITEM_REPORTS) {
+            if ("Found".equalsIgnoreCase(item.getType())) {
+                try {
+                    LocalDate itemDate = LocalDate.parse(item.getDate());
+                    long daysOld = ChronoUnit.DAYS.between(itemDate, today);
+
+                    if (daysOld > 60) {
+                        boolean isClaimed = CLAIM_REQUESTS.stream()
+                                .anyMatch(claim -> claim.getItem().getId() == item.getId() 
+                                                && "Approved".equalsIgnoreCase(claim.getStatus()));
+
+                        if (!isClaimed) {
+                            itemsToDispose.add(item);
+                        }
+                    }
+                } catch (Exception e) {
+                    System.err.println("Date parse error for item: " + item.getId());
+                }
+            }
+        }
+
+        for (ItemReport item : itemsToDispose) {
+            archiveItemReport(item); 
+            archivedCount++;
+        }
+        return archivedCount;
+    }
+
+    public static void refreshArchivedItems() {
+        ARCHIVED_ITEMS.setAll(ITEM_REPORT_DAO.getArchivedItems());
     }
 
     private static String buildClaimValidationRemarks(ClaimRequest request, String status, User admin) {

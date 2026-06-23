@@ -3,7 +3,6 @@ package com.example.findit.controllers.user;
 import com.example.findit.model.SessionManager;
 import com.example.findit.util.AppWindow;
 
-import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;

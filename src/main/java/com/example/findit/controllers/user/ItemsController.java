@@ -25,6 +25,8 @@ import javafx.stage.Stage;
 import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 
 public class ItemsController {
     private static final double CARD_MIN_WIDTH = 185.0;
@@ -47,6 +49,17 @@ public class ItemsController {
         initialStatus = status == null || status.isBlank() ? "All Status" : status;
     }
 
+    private boolean isExpired(ItemReport item) {
+        try {
+            LocalDate itemDate = LocalDate.parse(item.getDate());
+            LocalDate today = LocalDate.now();
+            long daysBetween = ChronoUnit.DAYS.between(itemDate, today);
+            return daysBetween > 60; 
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    
     @FXML
     public void initialize() {
         UserSidebarController.setActivePage("Items");
@@ -163,6 +176,10 @@ public class ItemsController {
                 : searchField.getText().trim().toLowerCase(Locale.ROOT);
         String category = categoryFilter.getValue();
         String status = statusFilter.getValue();
+
+        if (isExpired(item)) {
+            return false; 
+        }
 
         boolean matchesSearch = search.isEmpty()
                 || safe(item.getItemName()).toLowerCase(Locale.ROOT).contains(search)

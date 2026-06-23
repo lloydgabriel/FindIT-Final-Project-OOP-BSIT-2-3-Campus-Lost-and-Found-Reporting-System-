@@ -1,6 +1,5 @@
 package com.example.findit.controllers.admin;
 
-import com.example.findit.controllers.admin.ClaimsController;
 import com.example.findit.model.AppDataStore;
 import com.example.findit.model.ClaimRequest;
 import com.example.findit.model.ItemReport;
@@ -34,6 +33,7 @@ public class ClaimsController implements Initializable {
 
     @FXML private TextField searchField;
     @FXML private ComboBox<String> statusFilter;
+    @FXML private ComboBox<String> viewToggle; // NEW: The Archive Toggle
 
     @FXML private TableView<ClaimRow> claimsTable;
     @FXML private TableColumn<ClaimRow, String> colType, colClaimTrackingId, colItemTrackingId, colItemName, colCategory, colDate, colReportedBy, colLocation, colStatus, colAction;
@@ -44,13 +44,37 @@ public class ClaimsController implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         if (sidebarController != null) { sidebarController.setActiveTab("Claims"); }
+        
         statusFilter.setItems(FXCollections.observableArrayList("All Status", "Pending", "Approved", "Rejected"));
         statusFilter.getSelectionModel().selectFirst();
         
+        // Setup View Toggle
+        if (viewToggle != null) {
+            viewToggle.setItems(FXCollections.observableArrayList("Active Claims", "Archived History"));
+            viewToggle.getSelectionModel().selectFirst();
+            
+            viewToggle.valueProperty().addListener((obs, oldVal, newVal) -> {
+                refreshTableData(); // Reload data when toggle changes!
+                if ("Archived History".equals(newVal)) {
+                    claimsTable.setStyle("-fx-control-inner-background: #f4f4f4;"); 
+                } else {
+                    claimsTable.setStyle("-fx-control-inner-background: #ffffff;");
+                }
+                claimsTable.refresh();
+            });
+        }
+        
         configureTableColumns();
         claimsTable.setColumnResizePolicy(TableView.UNCONSTRAINED_RESIZE_POLICY);
-        loadClaims();
+        refreshTableData();
         wireSearchAndFilter();
+        
+        // Listen for live updates on the active list
+        AppDataStore.getClaimRequests().addListener((javafx.collections.ListChangeListener<ClaimRequest>) change -> {
+            if (viewToggle == null || "Active Claims".equals(viewToggle.getValue())) {
+                refreshTableData();
+            }
+        });
     }
 
     private void configureTableColumns() {
@@ -63,7 +87,6 @@ public class ClaimsController implements Initializable {
         colClaimTrackingId.setCellValueFactory(new PropertyValueFactory<>("claimTrackingId"));
         colItemTrackingId.setCellValueFactory(new PropertyValueFactory<>("itemTrackingId"));
 
-        // 1. THE NEW STATUS COLUMN WITH COLORED BADGES
         colStatus.setCellValueFactory(new PropertyValueFactory<>("claimStatus"));
         colStatus.setCellFactory(col -> new TableCell<ClaimRow, String>() {
             private final Label badge = new Label();
@@ -87,37 +110,28 @@ public class ClaimsController implements Initializable {
             }
         });
 
-        // 2. THE ACTION COLUMN WITH CONDITIONAL BUTTONS
+        // ACTION COLUMN: Smart rendering based on Active vs Archived
         colAction.setCellFactory(col -> new TableCell<ClaimRow, String>() {
             private final Button approveBtn = new Button();
             private final Button rejectBtn  = new Button();
-            private final Button deleteBtn  = new Button();
+            private final Button archiveBtn = new Button(); 
             private final Button viewBtn    = new Button();
 
             {
-                // Load your specific images
-                ImageView checkIcon = createIcon("/com/example/findit/assets/check.png");
-                ImageView ekisIcon  = createIcon("/com/example/findit/assets/ekis.png");
-                ImageView trashIcon = createIcon("/com/example/findit/assets/trash.png");
-                ImageView eyeIcon   = createIcon("/com/example/findit/assets/ViewEye.png");
+                approveBtn.setGraphic(createIcon("/com/example/findit/assets/check.png"));
+                rejectBtn.setGraphic(createIcon("/com/example/findit/assets/ekis.png"));
+                archiveBtn.setGraphic(createIcon("/com/example/findit/assets/trash.png"));
+                viewBtn.setGraphic(createIcon("/com/example/findit/assets/ViewEye.png"));
 
-                // Inject the images into the buttons
-                approveBtn.setGraphic(checkIcon);
-                rejectBtn.setGraphic(ekisIcon);
-                deleteBtn.setGraphic(trashIcon);
-                viewBtn.setGraphic(eyeIcon);
-
-                // Styling
                 String transparentStyle = "-fx-background-color: transparent; -fx-cursor: hand;";
                 approveBtn.setStyle(transparentStyle);
                 rejectBtn.setStyle(transparentStyle);
-                deleteBtn.setStyle(transparentStyle);
+                archiveBtn.setStyle(transparentStyle);
                 viewBtn.setStyle(transparentStyle);
 
-                // Wiring the click actions
                 approveBtn.setOnAction(e -> handleApprove(getTableView().getItems().get(getIndex())));
                 rejectBtn.setOnAction(e  -> handleReject(getTableView().getItems().get(getIndex())));
-                deleteBtn.setOnAction(e  -> handleDeleteItem(getTableView().getItems().get(getIndex())));
+                archiveBtn.setOnAction(e -> handleArchiveClaim(getTableView().getItems().get(getIndex())));
                 viewBtn.setOnAction(e -> showClaimDetails(getTableView().getItems().get(getIndex()), "Claim Details"));
             }
 
@@ -131,10 +145,17 @@ public class ClaimsController implements Initializable {
                     javafx.scene.layout.HBox box = new javafx.scene.layout.HBox(2);
                     box.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
 
-                    if ("Pending".equalsIgnoreCase(row.getClaimStatus())) {
-                        box.getChildren().addAll(approveBtn, rejectBtn, deleteBtn);
+                    boolean isArchived = viewToggle != null && "Archived History".equals(viewToggle.getValue());
+
+                    if (isArchived) {
+                        box.getChildren().addAll(viewBtn);
                     } else {
-                        box.getChildren().addAll(viewBtn, deleteBtn);
+                        // In Active Tab: Show actions based on status
+                        if ("Pending".equalsIgnoreCase(row.getClaimStatus())) {
+                            box.getChildren().addAll(approveBtn, rejectBtn, archiveBtn);
+                        } else {
+                            box.getChildren().addAll(viewBtn, archiveBtn);
+                        }
                     }
                     
                     setGraphic(box);
@@ -143,27 +164,29 @@ public class ClaimsController implements Initializable {
         });
     }
 
-    private void loadClaims() {
-        masterData.setAll(AppDataStore.getClaimRequests().stream()
+    // Refreshes the masterData list based on the Toggle!
+    private void refreshTableData() {
+        boolean isArchived = viewToggle != null && "Archived History".equals(viewToggle.getValue());
+        ObservableList<ClaimRequest> sourceList = isArchived ? AppDataStore.ARCHIVED_CLAIMS : AppDataStore.getClaimRequests();
+        
+        masterData.setAll(sourceList.stream()
                 .map(ClaimRow::new)
                 .toList());
-        AppDataStore.getClaimRequests().addListener((javafx.collections.ListChangeListener<ClaimRequest>) change -> {
-            masterData.setAll(AppDataStore.getClaimRequests().stream()
-                    .map(ClaimRow::new)
-                    .toList());
+                
+        if (filteredData != null) {
             applyFilter();
-        });
+        }
     }
 
-    private void handleDeleteItem(ClaimRow item) {
+    private void handleArchiveClaim(ClaimRow item) {
         Alert confirmDialog = new Alert(Alert.AlertType.CONFIRMATION);
-        confirmDialog.setTitle("Delete Claim Confirmation");
-        confirmDialog.setHeaderText("Delete Claim: " + item.getItemName());
-        confirmDialog.setContentText("Are you sure you want to permanently delete this claim request?");
+        confirmDialog.setTitle("Archive Claim Confirmation");
+        confirmDialog.setHeaderText("Dispose / Archive Claim: " + item.getItemName());
+        confirmDialog.setContentText("Are you sure you want to archive this claim request? It will be moved to the history logs.");
         confirmDialog.showAndWait().ifPresent(response -> {
             if (response == ButtonType.OK) {
-                AppDataStore.deleteClaimRequest(item.getRequest());
-                masterData.remove(item);
+                AppDataStore.archiveClaimRequest(item.getRequest());
+                refreshTableData();
             }
         });
     }
@@ -177,8 +200,8 @@ public class ClaimsController implements Initializable {
     }
 
     private void applyFilter() {
-        String search = searchField.getText().toLowerCase().trim();
-        String statusValue = statusFilter.getValue();
+        String search = searchField.getText() == null ? "" : searchField.getText().toLowerCase().trim();
+        String statusValue = statusFilter.getValue() == null ? "All Status" : statusFilter.getValue();
 
         filteredData.setPredicate(row -> {
             boolean matchesSearch = search.isEmpty()
@@ -196,14 +219,12 @@ public class ClaimsController implements Initializable {
         });
     }
 
-    // Button actions
     private void handleApprove(ClaimRow row) {
         if (!confirmStatusChange("Approve Claim", "Are you sure about approving this claim?")) {
             return;
         }
         AppDataStore.updateClaimStatus(row.getRequest(), "Approved");
-        claimsTable.refresh();
-        applyFilter();
+        refreshTableData();
         toast.show(claimsTable.getScene().getWindow(), "Claim successfully Approved!", "success");
     }
 
@@ -212,8 +233,7 @@ public class ClaimsController implements Initializable {
             return;
         }
         AppDataStore.updateClaimStatus(row.getRequest(), "Rejected");
-        claimsTable.refresh();
-        applyFilter();
+        refreshTableData();
         toast.show(claimsTable.getScene().getWindow(), "Claim has been Rejected.", "error");
     }
 
@@ -256,10 +276,15 @@ public class ClaimsController implements Initializable {
         ButtonType approveBtn = new ButtonType("Change to Approved", ButtonBar.ButtonData.OTHER);
         ButtonType rejectBtn = new ButtonType("Change to Rejected", ButtonBar.ButtonData.OTHER);
 
-        if (currentStatus.equalsIgnoreCase("Approved")) {
-            dialog.getDialogPane().getButtonTypes().addAll(revertBtn, rejectBtn);
-        } else if (currentStatus.equalsIgnoreCase("Rejected")) {
-            dialog.getDialogPane().getButtonTypes().addAll(revertBtn, approveBtn);
+        // Only show status change buttons if it's an ACTIVE claim
+        boolean isArchived = viewToggle != null && "Archived History".equals(viewToggle.getValue());
+        
+        if (!isArchived) {
+            if (currentStatus.equalsIgnoreCase("Approved")) {
+                dialog.getDialogPane().getButtonTypes().addAll(revertBtn, rejectBtn);
+            } else if (currentStatus.equalsIgnoreCase("Rejected")) {
+                dialog.getDialogPane().getButtonTypes().addAll(revertBtn, approveBtn);
+            }
         }
     
         dialog.showAndWait().ifPresent(response -> {
@@ -282,8 +307,7 @@ public class ClaimsController implements Initializable {
                 toast.show(window, "Claim has been Rejected.", "error");
             }
             
-            claimsTable.refresh();
-            applyFilter(); 
+            refreshTableData(); 
         });
     }
 
@@ -388,14 +412,15 @@ public class ClaimsController implements Initializable {
         java.io.InputStream stream = getClass().getResourceAsStream(path);
         if (stream == null) {
             System.err.println("❌ Missing table icon: " + path);
-            return new ImageView(); // Returns empty view to prevent crashes
+            return new ImageView(); 
         }
         ImageView imgView = new ImageView(new Image(stream));
-        imgView.setFitWidth(20);  // Size of the icon
+        imgView.setFitWidth(20);  
         imgView.setFitHeight(20);
         imgView.setPreserveRatio(true);
         return imgView;
     }
+    
     public static class ClaimRow {
         private final ClaimRequest request;
 
@@ -423,6 +448,4 @@ public class ClaimsController implements Initializable {
             return value == null || value.isBlank() ? "N/A" : value;
         }
     }
-
-
 }

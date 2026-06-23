@@ -12,9 +12,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ItemReportDAO {
+    
     public List<ItemReport> findAll() {
         DatabaseBootstrap.ensureApplicationSchema();
         List<ItemReport> reports = new ArrayList<>();
+        // FIX 1: Added the WHERE clause to filter out Archived items!
         String sql = """
                 SELECT i.item_id, i.item_type, i.item_name, i.description,
                        i.date_lost, i.date_found, i.location, i.image_path, i.tracking_id,
@@ -22,6 +24,7 @@ public class ItemReportDAO {
                 FROM items i
                 JOIN categories c ON c.category_id = i.category_id
                 JOIN users u ON u.user_id = i.reporter_id
+                WHERE i.record_status = 'Active' OR i.record_status IS NULL
                 ORDER BY i.created_at DESC NULLS LAST, i.item_id DESC
                 """;
 
@@ -118,6 +121,55 @@ public class ItemReportDAO {
         } catch (Exception e) {
             throw new IllegalStateException("Could not update item details.", e);
         }
+    }
+
+    public void archiveItem(ItemReport item) {
+        // FIX 3: Now it archives the item AND its orphaned claims!
+        String archiveItemSql = "UPDATE items SET record_status = 'Archived' WHERE item_id = ?";
+        String archiveClaimsSql = "UPDATE claims SET record_status = 'Archived' WHERE item_id = ?";
+        
+        try (java.sql.Connection conn = DBConnection.connect();
+             java.sql.PreparedStatement itemStmt = conn.prepareStatement(archiveItemSql);
+             java.sql.PreparedStatement claimsStmt = conn.prepareStatement(archiveClaimsSql)) {
+            
+            // Execute Item Archive
+            itemStmt.setInt(1, item.getId());
+            itemStmt.executeUpdate();
+            
+            // Execute Claims Archive
+            claimsStmt.setInt(1, item.getId());
+            claimsStmt.executeUpdate();
+            
+        } catch (Exception e) {
+            System.err.println("Could not archive item and its claims: " + e.getMessage());
+        }
+    }
+
+    public List<ItemReport> getArchivedItems() {
+        List<ItemReport> archivedList = new ArrayList<>();
+        // FIX 2: Added the JOINs so mapReport doesn't crash!
+        String sql = """
+                SELECT i.item_id, i.item_type, i.item_name, i.description,
+                       i.date_lost, i.date_found, i.location, i.image_path, i.tracking_id,
+                       c.category_name, u.full_name, u.contact_number
+                FROM items i
+                JOIN categories c ON c.category_id = i.category_id
+                JOIN users u ON u.user_id = i.reporter_id
+                WHERE i.record_status = 'Archived'
+                ORDER BY i.created_at DESC NULLS LAST, i.item_id DESC
+                """;
+        
+        try (Connection conn = DBConnection.connect();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            
+            while (rs.next()) {
+                archivedList.add(mapReport(rs)); 
+            }
+        } catch (Exception e) {
+            System.err.println("Error fetching archived items: " + e.getMessage());
+        }
+        return archivedList;
     }
 
     private String generatedReporterId(String contact) {

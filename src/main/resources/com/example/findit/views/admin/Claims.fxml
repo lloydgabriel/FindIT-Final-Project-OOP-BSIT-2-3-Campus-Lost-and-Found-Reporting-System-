@@ -40,6 +40,7 @@
                            <children>
                               <TextField fx:id="searchField" prefHeight="38.0" promptText="Search claims ..." style="-fx-background-color: #FFFFFF; -fx-border-color: #CCCCCC; -fx-border-radius: 8;" HBox.hgrow="ALWAYS" />
                               <ComboBox fx:id="statusFilter" prefHeight="38.0" prefWidth="260.0" promptText="All Status" style="-fx-background-color: #FFFFFF; -fx-border-color: #CCCCCC; -fx-border-radius: 8;" />
+                              <ComboBox fx:id="viewToggle" prefHeight="38.0" prefWidth="200.0" promptText="View Records" style="-fx-background-color: #FFFFFF; -fx-border-color: #CCCCCC; -fx-border-radius: 8;" />
                            </children>
                         </HBox>
                         

@@ -15,6 +15,8 @@ public class ClaimRequestDAO {
     public List<ClaimRequest> findAll() {
         DatabaseBootstrap.ensureApplicationSchema();
         List<ClaimRequest> claims = new ArrayList<>();
+        
+        // FIX 1: Added the WHERE clause to hide Archived claims from the main feed
         String sql = """
                 SELECT cl.claim_id, cl.claim_status, cl.claimant_name, cl.student_number,
                        cl.contact_info, cl.proof_description, cl.tracking_id,
@@ -28,6 +30,7 @@ public class ClaimRequestDAO {
                 JOIN categories c ON c.category_id = i.category_id
                 JOIN users reporter ON reporter.user_id = i.reporter_id
                 JOIN users claimant ON claimant.user_id = cl.claimant_id
+                WHERE cl.record_status = 'Active' OR cl.record_status IS NULL
                 ORDER BY cl.claim_date DESC NULLS LAST, cl.claim_id DESC
                 """;
 
@@ -71,8 +74,6 @@ public class ClaimRequestDAO {
                 stmt.setString(5, studentNumber);
                 stmt.setString(6, contactInfo);
                 stmt.setString(7, proofDescription);
-                
-                // Bind the tracking ticket
                 stmt.setString(8, newTicket);
                 
                 ResultSet rs = stmt.executeQuery();
@@ -81,7 +82,6 @@ public class ClaimRequestDAO {
                 }
                 claimId = rs.getInt("claim_id");
             }
-            // Return the newly constructed object with the ticket attached
             return new ClaimRequest(claimId, item, claimantName, studentNumber, contactInfo, proofDescription, status, newTicket);
         } catch (Exception e) {
             throw new IllegalStateException("Could not save claim request.", e);
@@ -101,6 +101,20 @@ public class ClaimRequestDAO {
         }
     }
 
+    public void updateDetails(ClaimRequest request, String newContact, String newProof) {
+        DatabaseBootstrap.ensureApplicationSchema();
+        String sql = "UPDATE claims SET contact_info = ?, proof_description = ? WHERE claim_id = ?";
+        try (Connection conn = DBConnection.connect();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, newContact);
+            stmt.setString(2, newProof);
+            stmt.setInt(3, request.getId());
+            stmt.executeUpdate();
+        } catch (Exception e) {
+            throw new IllegalStateException("Could not update claim details.", e);
+        }
+    }
+
     public void delete(ClaimRequest request) {
         DatabaseBootstrap.ensureApplicationSchema();
         String sql = "DELETE FROM claims WHERE claim_id = ?";
@@ -112,6 +126,53 @@ public class ClaimRequestDAO {
             throw new IllegalStateException("Could not delete claim request.", e);
         }
     }
+
+    public void archiveClaim(ClaimRequest claim) {
+        String sql = "UPDATE claims SET record_status = 'Archived' WHERE claim_id = ?";
+        try (java.sql.Connection conn = DBConnection.connect();
+             java.sql.PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, claim.getId());
+            stmt.executeUpdate();
+        } catch (Exception e) {
+            System.err.println("Could not archive claim: " + e.getMessage());
+        }
+    }
+
+    public List<ClaimRequest> getArchivedClaims() {
+        List<ClaimRequest> archivedList = new java.util.ArrayList<>();
+        
+        // FIX 2: Replicated the exact JOIN structure from findAll() so mapClaim() doesn't crash!
+        String sql = """
+                SELECT cl.claim_id, cl.claim_status, cl.claimant_name, cl.student_number,
+                       cl.contact_info, cl.proof_description, cl.tracking_id,
+                       claimant.full_name AS claimant_user_name, claimant.id_number AS claimant_id_number,
+                       claimant.contact_number AS claimant_contact,
+                       i.item_id, i.item_type, i.item_name, i.description, i.date_lost, i.date_found,
+                       i.location, i.image_path, i.tracking_id AS item_tracking_id, c.category_name,
+                       reporter.full_name AS reporter_name, reporter.contact_number AS reporter_contact
+                FROM claims cl
+                JOIN items i ON i.item_id = cl.item_id
+                JOIN categories c ON c.category_id = i.category_id
+                JOIN users reporter ON reporter.user_id = i.reporter_id
+                JOIN users claimant ON claimant.user_id = cl.claimant_id
+                WHERE cl.record_status = 'Archived'
+                ORDER BY cl.claim_date DESC NULLS LAST, cl.claim_id DESC
+                """;
+        
+        try (java.sql.Connection conn = DBConnection.connect();
+             java.sql.PreparedStatement stmt = conn.prepareStatement(sql);
+             java.sql.ResultSet rs = stmt.executeQuery()) {
+            
+            while (rs.next()) {
+                archivedList.add(mapClaim(rs));
+            }
+        } catch (Exception e) {
+            System.err.println("Error fetching archived claims: " + e.getMessage());
+        }
+        return archivedList;
+    }
+
+    // --- MAPPER ---
 
     private ClaimRequest mapClaim(ResultSet rs) throws Exception {
         Date dateLost = rs.getDate("date_lost");
@@ -150,20 +211,6 @@ public class ClaimRequestDAO {
                 rs.getString("claim_status"),
                 rs.getString("tracking_id") 
         );
-    }
-
-    public void updateDetails(ClaimRequest request, String newContact, String newProof) {
-        DatabaseBootstrap.ensureApplicationSchema();
-        String sql = "UPDATE claims SET contact_info = ?, proof_description = ? WHERE claim_id = ?";
-        try (Connection conn = DBConnection.connect();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, newContact);
-            stmt.setString(2, newProof);
-            stmt.setInt(3, request.getId());
-            stmt.executeUpdate();
-        } catch (Exception e) {
-            throw new IllegalStateException("Could not update claim details.", e);
-        }
     }
 
     private String firstPresent(String value, String fallback) {

@@ -46,7 +46,7 @@
 
                         <Region HBox.hgrow="ALWAYS" />
 
-                        <Button mnemonicParsing="false" onAction="#handleManageClaim" prefHeight="40.0" style="-fx-background-color: transparent; -fx-border-color: #800000; -fx-text-fill: #800000; -fx-border-radius: 8; -fx-border-width: 2; -fx-font-weight: bold; -fx-cursor: hand; -fx-padding: 0 20 0 20;" text="Manage My Claim" />
+                        <Button mnemonicParsing="false" onAction="#handleManageClaim" prefHeight="40.0" style="-fx-background-color: transparent; -fx-border-color: #800000; -fx-text-fill: #800000; -fx-border-radius: 8; -fx-border-width: 2; -fx-font-weight: bold; -fx-cursor: hand; -fx-padding: 0 20 0 20;" text="Manage Claims" />
                      </children>
                   </HBox>
 

@@ -5,7 +5,11 @@ import com.example.findit.model.ItemReport;
 import com.example.findit.util.ImageStorage;
 import com.example.findit.util.ResponsiveTable;
 
+import javafx.animation.Animation;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -13,9 +17,6 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
-import java.net.URL;
-import java.util.ResourceBundle;
-
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.ColumnConstraints;
@@ -23,6 +24,12 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.util.Duration;
+
+import java.net.URL;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ResourceBundle;
 
 public class ReportedItemsController implements Initializable {
 
@@ -31,8 +38,10 @@ public class ReportedItemsController implements Initializable {
 
     @FXML private TextField searchField;
     @FXML private ComboBox<String> typeFilter;
-
+    @FXML private ComboBox<String> viewToggle;
+    @FXML private Label lblTimestamp; // NEW: The Live Clock Label
     @FXML private TableView<ItemReport> itemsTable;
+    
     @FXML private TableColumn<ItemReport, String> colType, colTrackingId, colItemName, colCategory, colDate, colReportedBy, colLocation, colAction;
 
     private FilteredList<ItemReport> filteredData;
@@ -41,11 +50,43 @@ public class ReportedItemsController implements Initializable {
     public void initialize(URL location, ResourceBundle resources) {
         if (sidebarController != null) { sidebarController.setActiveTab("Reported"); }
         
+        // 1. LIVE CLOCK SETUP
+        Timeline clock = new Timeline(new KeyFrame(Duration.ZERO, e -> {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM dd, yyyy  hh:mm:ss a");
+            if (lblTimestamp != null) {
+                lblTimestamp.setText(LocalDateTime.now().format(formatter));
+            }
+        }), new KeyFrame(Duration.seconds(1)));
+        clock.setCycleCount(Animation.INDEFINITE);
+        clock.play();
+
+        // 2. SETUP DROPDOWNS
         typeFilter.setItems(FXCollections.observableArrayList("All", "Lost", "Found"));
         typeFilter.getSelectionModel().selectFirst();
+        
+        // Setup the new View Toggle
+        if (viewToggle != null) {
+            viewToggle.setItems(FXCollections.observableArrayList("Active Records", "Archived History"));
+            viewToggle.getSelectionModel().selectFirst();
+        }
+
         configureTableColumns();
         ResponsiveTable.fillAvailableWidth(itemsTable);
         wireSearchAndFilter();
+        
+        // 3. LISTEN FOR TOGGLE CHANGES (Active vs Archived)
+        if (viewToggle != null) {
+            viewToggle.valueProperty().addListener((obs, oldVal, newVal) -> {
+                wireSearchAndFilter(); // Re-wire the table to the new list
+                
+                if ("Archived History".equals(newVal)) {
+                    // Make the table slightly grey to indicate it's the archive
+                    itemsTable.setStyle("-fx-control-inner-background: #f4f4f4;"); 
+                } else {
+                    itemsTable.setStyle("-fx-control-inner-background: #ffffff;");
+                }
+            });
+        }
     }
 
     private void configureTableColumns() {
@@ -59,6 +100,7 @@ public class ReportedItemsController implements Initializable {
         colType.setStyle("-fx-alignment: CENTER;");
         colTrackingId.setStyle("-fx-alignment: CENTER;");
         colAction.setStyle("-fx-alignment: CENTER;");
+        
         colType.setCellFactory(col -> new TableCell<ItemReport, String>() {
             private final Label badge = new Label();
             
@@ -111,9 +153,17 @@ public class ReportedItemsController implements Initializable {
                 if (empty) {
                     setGraphic(null);
                 } else {
-                    javafx.scene.layout.HBox actionBox = new javafx.scene.layout.HBox(8, viewBtn, deleteBtn);
+                    javafx.scene.layout.HBox actionBox = new javafx.scene.layout.HBox(8);
                     actionBox.setAlignment(javafx.geometry.Pos.CENTER);
                     actionBox.setMaxWidth(Double.MAX_VALUE);
+                    
+                    actionBox.getChildren().add(viewBtn);
+                    boolean isArchived = viewToggle != null && "Archived History".equals(viewToggle.getValue());
+                    
+                    if (!isArchived) {
+                        actionBox.getChildren().add(deleteBtn);
+                    }
+
                     setGraphic(actionBox);
                     setStyle("-fx-alignment: CENTER;");
                 }
@@ -133,16 +183,25 @@ public class ReportedItemsController implements Initializable {
         imgView.setPreserveRatio(true);
         return imgView;
     }
+
     private void wireSearchAndFilter() {
-        filteredData = new FilteredList<>(AppDataStore.getItemReports(), p -> true);
+        // Determine which list to use based on the viewToggle!
+        boolean isArchived = viewToggle != null && "Archived History".equals(viewToggle.getValue());
+        ObservableList<ItemReport> sourceList = isArchived ? AppDataStore.ARCHIVED_ITEMS : AppDataStore.getItemReports();
+
+        // Wrap the selected list in a FilteredList
+        filteredData = new FilteredList<>(sourceList, p -> true);
         itemsTable.setItems(filteredData);
 
+        // Clear old listeners and add new ones
         searchField.textProperty().addListener((obs, oldVal, newVal) -> applyFilter());
         typeFilter.valueProperty().addListener((obs, oldVal, newVal) -> applyFilter());
+        
+        applyFilter(); // Apply immediately to refresh
     }
 
     private void applyFilter() {
-        String search = searchField.getText().toLowerCase().trim();
+        String search = searchField.getText() == null ? "" : searchField.getText().toLowerCase().trim();
         String typeValue = typeFilter.getValue();
 
         filteredData.setPredicate(item -> {
@@ -262,16 +321,21 @@ public class ReportedItemsController implements Initializable {
     }
 
     private void handleDeleteItem(ItemReport item) {
-        // CONFIRMATION DIALOG BEFORE DELETION
+        if (viewToggle != null && "Archived History".equals(viewToggle.getValue())) {
+            System.out.println("Item is already archived. Action blocked.");
+            return; // Instantly stops the method!
+        }
         Alert confirmDialog = new Alert(Alert.AlertType.CONFIRMATION);
-        confirmDialog.setTitle("Delete Confirmation");
-        confirmDialog.setHeaderText("Delete Report: " + item.getItemName());
-        confirmDialog.setContentText("Are you sure you want to delete this report? This action cannot be undone.");
+        confirmDialog.setTitle("Archive Confirmation");
+        confirmDialog.setHeaderText("Dispose / Archive Report: " + item.getItemName());
+        confirmDialog.setContentText("Are you sure you want to archive this item? It will be removed from the active board but kept in the database history.");
+        
         confirmDialog.showAndWait().ifPresent(response -> {
             if (response == ButtonType.OK) {
-                AppDataStore.deleteItemReport(item);
+                AppDataStore.archiveItemReport(item);
+                
+                wireSearchAndFilter(); 
             }
         });
     }
 }
-
