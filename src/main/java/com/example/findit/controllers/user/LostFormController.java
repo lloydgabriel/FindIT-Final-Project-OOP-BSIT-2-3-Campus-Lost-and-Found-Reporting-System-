@@ -1,20 +1,19 @@
 package com.example.findit.controllers.user;
 
 import javafx.event.ActionEvent;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import javafx.scene.input.Clipboard;
-import javafx.scene.input.ClipboardContent;
 import javafx.geometry.Pos;
 
 import com.example.findit.model.AppDataStore;
@@ -24,7 +23,6 @@ import com.example.findit.util.InputValidator;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintWriter;
 
 public class LostFormController {
 
@@ -46,6 +44,7 @@ public class LostFormController {
         if (uploadArea != null) {
             uploadArea.setOnMouseClicked(e -> handleUploadImage());
         }
+        Platform.runLater(() -> PrivacyPolicyDialog.show(txtItemName.getScene().getWindow()));
     }
 
     @FXML
@@ -62,25 +61,27 @@ public class LostFormController {
     @FXML
     public void handleSubmit(ActionEvent event) {
         if (txtItemName.getText().isBlank() || cmbCategory.getValue() == null
-                || dpDate.getValue() == null || txtLocation.getText().isBlank()
+                || txtLocation.getText().isBlank()
                 || txtReporterName.getText().isBlank() || txtContact.getText().isBlank()
                 || txtDescription.getText().isBlank()) {
             showAlert(Alert.AlertType.WARNING, "Missing Fields", "Please fill in all required fields.");
             return;
         }
 
-        boolean futureDate;
-        try {
-            futureDate = InputValidator.isFutureDate(dpDate.getValue());
-        } catch (IllegalStateException e) {
-            showAlert(Alert.AlertType.ERROR, "Date Check Error",
-                    "The current Philippine date could not be verified. Please try again later.");
-            return;
-        }
+        if (dpDate.getValue() != null) {
+            boolean futureDate;
+            try {
+                futureDate = InputValidator.isFutureDate(dpDate.getValue());
+            } catch (IllegalStateException e) {
+                showAlert(Alert.AlertType.ERROR, "Date Check Error",
+                        "The current Philippine date could not be verified. Please try again later.");
+                return;
+            }
 
-        if (futureDate) {
-            showAlert(Alert.AlertType.WARNING, "Invalid Date", "The report date cannot be later than today.");
-            return;
+            if (futureDate) {
+                showAlert(Alert.AlertType.WARNING, "Invalid Date", "The report date cannot be later than today.");
+                return;
+            }
         }
 
         if (!InputValidator.isValidContact(txtContact.getText())) {
@@ -104,7 +105,7 @@ public class LostFormController {
                     "Lost",
                     txtItemName.getText().trim(),
                     cmbCategory.getValue(),
-                    dpDate.getValue().toString(),
+                    dpDate.getValue() == null ? "" : dpDate.getValue().toString(),
                     txtLocation.getText().trim(),
                     txtReporterName.getText().trim(),
                     txtContact.getText().trim(),
@@ -119,50 +120,22 @@ public class LostFormController {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("Report Submitted");
         alert.setHeaderText("Success! Your Submission is Saved.");
+        ButtonType doneButton = new ButtonType("Done");
+        alert.getButtonTypes().setAll(doneButton);
+
         TextField idField = new TextField(savedItem.getTrackingId());
         idField.setEditable(false);
         idField.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; -fx-alignment: center; -fx-background-color: #F0F0F0;");
 
-        // Copy Button
-        Button copyBtn = new Button("Copy to Clipboard");
-        copyBtn.setStyle("-fx-cursor: hand; -fx-background-color: #800000; -fx-text-fill: white;");
-        copyBtn.setOnAction(e -> {
-            Clipboard clipboard = Clipboard.getSystemClipboard();
-            ClipboardContent content = new ClipboardContent();
-            content.putString(savedItem.getTrackingId());
-            clipboard.setContent(content);
-            copyBtn.setText("Copied!");
-        });
-
-        // Download Button
-        Button downloadBtn = new Button("Save as .txt File");
-        downloadBtn.setStyle("-fx-cursor: hand; -fx-background-color: #E65100; -fx-text-fill: white;");
-        downloadBtn.setOnAction(e -> {
-            FileChooser fileChooser = new FileChooser();
-            fileChooser.setTitle("Save Tracking ID");
-            fileChooser.setInitialFileName("FindIT_Receipt_" + savedItem.getTrackingId() + ".txt");
-            File file = fileChooser.showSaveDialog(null);
-            if (file != null) {
-                try (PrintWriter writer = new PrintWriter(file)) {
-                    writer.println("--- FindIT Tracking Receipt ---");
-                    writer.println("Item: " + savedItem.getItemName());
-                    writer.println("Date: " + savedItem.getDate());
-                    writer.println("Tracking ID: " + savedItem.getTrackingId());
-                    writer.println("-------------------------------");
-                    downloadBtn.setText("Saved!");
-                } catch (IOException ex) {
-                    showAlert(Alert.AlertType.ERROR, "Save Error", "Could not save the file.");
-                }
-            }
-        });
-
         VBox layout = new VBox(15, 
-            new Label("Keep this ID to edit or delete your report later:"), 
-            idField, 
-            new HBox(10, copyBtn, downloadBtn) {{ setAlignment(Pos.CENTER); }}
+            new Label("Keep this ID to edit or delete your report later."),
+            new Label("Please screenshot or take a picture of this tracking ID before tapping Done."),
+            idField
         );
         layout.setAlignment(Pos.CENTER);
         alert.getDialogPane().setContent(layout);
+        Button done = (Button) alert.getDialogPane().lookupButton(doneButton);
+        done.setStyle("-fx-cursor: hand; -fx-background-color: #800000; -fx-text-fill: white; -fx-font-weight: bold;");
         alert.showAndWait();
         
         UserSidebarController.setActivePage("Items");

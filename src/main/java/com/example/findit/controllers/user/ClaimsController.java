@@ -3,8 +3,6 @@ package com.example.findit.controllers.user;
 import com.example.findit.model.AppDataStore;
 import com.example.findit.model.ClaimRequest;
 import com.example.findit.model.ItemReport;
-import com.example.findit.util.ImageStorage;
-
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
@@ -14,8 +12,6 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
@@ -102,7 +98,7 @@ public class ClaimsController {
         claimant.setWrapText(true);
         claimant.setStyle("-fx-text-fill: #555555;");
 
-        Label location = new Label(claim.getItem().getLocation());
+        Label location = new Label("Item details hidden");
         location.setWrapText(true);
         location.setStyle("-fx-text-fill: #777777;");
 
@@ -147,18 +143,9 @@ public class ClaimsController {
         imageFrame.setPrefSize(260, 240);
         imageFrame.setStyle("-fx-background-color: #F0F0F3; -fx-background-radius: 10;");
 
-        Image image = ImageStorage.loadImage(item.getImagePath());
-        if (image == null) {
-            Label placeholder = new Label("No Image Available");
-            placeholder.setStyle("-fx-text-fill: #777777; -fx-font-weight: bold;");
-            imageFrame.getChildren().add(placeholder);
-        } else {
-            ImageView imageView = new ImageView(image);
-            imageView.setFitWidth(240);
-            imageView.setFitHeight(220);
-            imageView.setPreserveRatio(true);
-            imageFrame.getChildren().add(imageView);
-        }
+        Label placeholder = new Label("Image hidden");
+        placeholder.setStyle("-fx-text-fill: #777777; -fx-font-weight: bold;");
+        imageFrame.getChildren().add(placeholder);
 
         Label imageLabel = new Label(item.getItemName());
         imageLabel.setWrapText(true);
@@ -184,13 +171,9 @@ public class ClaimsController {
 
     private GridPane createItemGrid(ItemReport item) {
         GridPane grid = createDetailsGrid();
-        addDetailRow(grid, 0, "Type", item.getType());
-        addDetailRow(grid, 1, "Category", item.getCategory());
-        addDetailRow(grid, 2, "Date", item.getDate());
-        addDetailRow(grid, 3, "Location", item.getLocation());
-        addDetailRow(grid, 4, "Reported By", item.getReportedBy());
-        addDetailRow(grid, 5, "Reporter Contact", item.getContact());
-        addDetailRow(grid, 6, "Description", item.getDescription());
+        addDetailRow(grid, 0, "Item Name", item.getItemName());
+        addDetailRow(grid, 1, "Status", item.getType());
+        addDetailRow(grid, 2, "Details", "Hidden from users to prevent false claims.");
         return grid;
     }
 

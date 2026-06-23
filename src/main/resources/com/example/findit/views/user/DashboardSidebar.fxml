@@ -26,7 +26,7 @@
                         <ColorAdjust brightness="0.01" />
                     </effect>
                 </ImageView>
-                <Label fx:id="logoText" text="FindIT" textFill="WHITE">
+                <Label fx:id="logoText" text="findIT" textFill="WHITE">
                     <font>
                         <Font name="System Bold" size="24.0" />
                     </font>
@@ -60,7 +60,7 @@
                     </graphic>
                 </Button>
 
-                <Button fx:id="btnNavItems" alignment="CENTER_LEFT" contentDisplay="LEFT" graphicTextGap="15.0" mnemonicParsing="false" onAction="#goToItems" prefHeight="45.0" prefWidth="200.0" style="-fx-background-color: transparent; -fx-text-fill: #FFFFFF; -fx-cursor: hand;" text="Items">
+                <Button fx:id="btnNavItems" alignment="CENTER_LEFT" contentDisplay="LEFT" graphicTextGap="15.0" mnemonicParsing="false" onAction="#goToItems" prefHeight="45.0" prefWidth="200.0" style="-fx-background-color: transparent; -fx-text-fill: #FFFFFF; -fx-cursor: hand;" text="Item History">
                     <font>
                         <Font name="System Bold" size="16.0" />
                     </font>

@@ -247,10 +247,11 @@ public final class AppDataStore {
                             "Pending"
                     );
                     ClaimRequest autoMatchClaim = findAutoMatchClaim(match);
+                    ClaimRequest relatedClaim = autoMatchClaim != null ? autoMatchClaim : findLatestClaimForItem(foundItem);
                     if (autoMatchClaim != null && "Rejected".equalsIgnoreCase(autoMatchClaim.getStatus())) {
                         continue;
                     }
-                    if (autoMatchClaim != null && "Approved".equalsIgnoreCase(autoMatchClaim.getStatus())) {
+                    if (relatedClaim != null && "Approved".equalsIgnoreCase(relatedClaim.getStatus())) {
                         match.setStatus("Confirmed");
                     }
                     matches.add(match);
@@ -338,6 +339,13 @@ public final class AppDataStore {
         return CLAIM_REQUESTS.stream()
                 .filter(claim -> claim.getItem().getId() == match.getFoundItem().getId())
                 .filter(claim -> autoStudentNumber.equals(claim.getStudentNumber()))
+                .findFirst()
+                .orElse(null);
+    }
+
+    private static ClaimRequest findLatestClaimForItem(ItemReport item) {
+        return CLAIM_REQUESTS.stream()
+                .filter(claim -> claim.getItem().getId() == item.getId())
                 .findFirst()
                 .orElse(null);
     }

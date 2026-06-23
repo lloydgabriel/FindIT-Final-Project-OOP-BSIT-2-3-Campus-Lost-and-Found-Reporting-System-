@@ -55,8 +55,8 @@
                         </VBox>
                         <VBox spacing="6.0" GridPane.columnIndex="2">
                            <children>
-                              <HBox><children><Label text="Date " textFill="#333333"><font><Font name="System Bold" size="15.0" /></font></Label><Label text="*" textFill="RED"><font><Font name="System Bold" size="15.0" /></font></Label></children></HBox>
-                              <DatePicker fx:id="dpDate" maxWidth="1.7976931348623157E308" prefHeight="46.0" promptText="mm/dd/yyyy" style="-fx-background-color: #FFFFFF; -fx-border-color: #CCCCCC; -fx-border-radius: 8; -fx-font-size: 15;" />
+                              <HBox><children><Label text="Date Lost" textFill="#333333"><font><Font name="System Bold" size="15.0" /></font></Label></children></HBox>
+                              <DatePicker fx:id="dpDate" maxWidth="1.7976931348623157E308" prefHeight="46.0" promptText="mm/dd/yyyy (optional)" style="-fx-background-color: #FFFFFF; -fx-border-color: #CCCCCC; -fx-border-radius: 8; -fx-font-size: 15;" />
                            </children>
                         </VBox>
                         <VBox spacing="6.0" GridPane.rowIndex="1">

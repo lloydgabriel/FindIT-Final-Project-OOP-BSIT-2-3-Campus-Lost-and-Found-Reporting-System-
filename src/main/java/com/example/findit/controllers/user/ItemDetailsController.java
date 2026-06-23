@@ -30,6 +30,7 @@ public class ItemDetailsController {
     @FXML private Button btnDeleteItem;
 
     private ItemReport item;
+    private boolean managerMode;
 
     public void setItem(ItemReport item) {
         this.item = item;
@@ -48,7 +49,9 @@ public class ItemDetailsController {
         }
 
         imageBox.getChildren().clear();
-        if (item.getImagePath() != null && !item.getImagePath().isBlank()) {
+        if (!managerMode) {
+            imageBox.getChildren().add(createProtectedPlaceholder());
+        } else if (item.getImagePath() != null && !item.getImagePath().isBlank()) {
             ImageView imageView = createImageView(item.getImagePath());
             if (imageView != null) {
                 imageBox.getChildren().add(imageView);
@@ -62,16 +65,29 @@ public class ItemDetailsController {
 
     private void refreshLabels() {
         lblItemName.setText(safe(item.getItemName()));
-        lblCategory.setText(safe(item.getCategory()));
-        lblStatus.setText(safe(item.getType()));
-        lblDate.setText(safe(item.getDate()));
-        lblLocation.setText(safe(item.getLocation()));
-        lblReportedBy.setText(safe(item.getReportedBy()));
-        lblDescription.setText(safe(item.getDescription()));
+        if (managerMode) {
+            lblCategory.setText(safe(item.getCategory()));
+            lblStatus.setText(safe(item.getType()));
+            lblDate.setText(safe(item.getDate()));
+            lblLocation.setText(safe(item.getLocation()));
+            lblReportedBy.setText(safe(item.getReportedBy()));
+            lblDescription.setText(safe(item.getDescription()));
+        } else {
+            lblCategory.setText("Hidden");
+            lblStatus.setText(safe(item.getType()));
+            lblDate.setText("Hidden");
+            lblLocation.setText("Hidden");
+            lblReportedBy.setText("Hidden");
+            lblDescription.setText("Details are hidden from public users to prevent false claims.");
+        }
     }
 
     // --- NEW: THE MANAGER MODE ---
     public void enableManagerMode() {
+        managerMode = true;
+        if (item != null) {
+            setItem(item);
+        }
         // Hide the claim button
         if (btnClaimItem != null) {
             btnClaimItem.setVisible(false);
@@ -152,6 +168,12 @@ public class ItemDetailsController {
 
     private Label createPlaceholder(ItemReport item) {
         Label placeholder = new Label(safe(item.getType()) + " Item");
+        placeholder.setStyle("-fx-text-fill: #999999; -fx-font-weight: bold;");
+        return placeholder;
+    }
+
+    private Label createProtectedPlaceholder() {
+        Label placeholder = new Label("Image hidden");
         placeholder.setStyle("-fx-text-fill: #999999; -fx-font-weight: bold;");
         return placeholder;
     }

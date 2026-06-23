@@ -48,7 +48,7 @@
             <VBox alignment="CENTER" fillWidth="false" prefWidth="420.0" spacing="18.0">
                <children>
                   
-                  <Button mnemonicParsing="false" onAction="#goToUserDashboard" prefHeight="50.0" prefWidth="380.0" style="-fx-background-color: #800000; -fx-background-radius: 25; -fx-border-color: #FFCC00; -fx-border-radius: 25; -fx-border-width: 2;" text="USER" textFill="WHITE">
+                  <Button mnemonicParsing="false" onAction="#goToUserDashboard" prefHeight="50.0" prefWidth="380.0" style="-fx-background-color: #800000; -fx-background-radius: 25; -fx-border-color: #FFCC00; -fx-border-radius: 25; -fx-border-width: 2;" text="STUDENT/STAFF" textFill="WHITE">
                      <font>
                         <Font name="System Bold" size="20.0" />
                      </font>

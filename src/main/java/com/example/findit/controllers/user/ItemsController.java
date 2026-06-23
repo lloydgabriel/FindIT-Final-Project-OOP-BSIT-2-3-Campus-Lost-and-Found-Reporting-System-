@@ -2,8 +2,6 @@ package com.example.findit.controllers.user;
 
 import com.example.findit.model.AppDataStore;
 import com.example.findit.model.ItemReport;
-import com.example.findit.util.ImageStorage;
-
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -15,8 +13,6 @@ import javafx.scene.Scene;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.ColumnConstraints;
@@ -39,7 +35,17 @@ public class ItemsController {
     @FXML private ComboBox<String> statusFilter;
     @FXML private GridPane itemsGrid;
 
+    private static String initialSearch = "";
+    private static String initialCategory = "All Categories";
+    private static String initialStatus = "All Status";
+
     private int currentColumnCount = 4;
+
+    public static void openWithFilters(String search, String category, String status) {
+        initialSearch = search == null ? "" : search;
+        initialCategory = category == null || category.isBlank() ? "All Categories" : category;
+        initialStatus = status == null || status.isBlank() ? "All Status" : status;
+    }
 
     @FXML
     public void initialize() {
@@ -54,11 +60,30 @@ public class ItemsController {
         searchField.textProperty().addListener((obs, oldValue, newValue) -> renderItems());
         categoryFilter.valueProperty().addListener((obs, oldValue, newValue) -> renderItems());
         statusFilter.valueProperty().addListener((obs, oldValue, newValue) -> renderItems());
+        applyInitialFilters();
         
         // This existing listener is what powers your auto-refresh!
         AppDataStore.getItemReports().addListener((javafx.collections.ListChangeListener<ItemReport>) change -> renderItems());
         itemsGrid.widthProperty().addListener((obs, oldWidth, newWidth) -> updateColumnsAndRender(newWidth.doubleValue()));
         renderItems();
+    }
+
+    private void applyInitialFilters() {
+        searchField.setText(initialSearch);
+        selectFilterValue(categoryFilter, initialCategory);
+        selectFilterValue(statusFilter, initialStatus);
+
+        initialSearch = "";
+        initialCategory = "All Categories";
+        initialStatus = "All Status";
+    }
+
+    private void selectFilterValue(ComboBox<String> filter, String value) {
+        if (filter.getItems().contains(value)) {
+            filter.getSelectionModel().select(value);
+        } else {
+            filter.getSelectionModel().selectFirst();
+        }
     }
 
     @FXML
@@ -164,17 +189,13 @@ public class ItemsController {
         card.setOnMouseClicked(this::handleItemClick);
         GridPane.setHgrow(card, Priority.ALWAYS);
 
-        Region imageBox = createImageBox(item);
         Label name = new Label(item.getItemName());
         name.setWrapText(true);
         name.setStyle("-fx-text-fill: #4A1515; -fx-font-weight: bold; -fx-font-size: 14;");
 
-        Label category = new Label(item.getCategory());
-        category.setStyle("-fx-text-fill: #777777;");
-
-        Label location = new Label(item.getLocation());
-        location.setWrapText(true);
-        location.setStyle("-fx-text-fill: #555555;");
+        Label protectedDetails = new Label("Details hidden until admin verification");
+        protectedDetails.setWrapText(true);
+        protectedDetails.setStyle("-fx-text-fill: #777777; -fx-font-size: 12;");
 
         Label badge = new Label(item.getType());
         badge.setAlignment(Pos.CENTER);
@@ -185,47 +206,20 @@ public class ItemsController {
             badge.setStyle("-fx-background-color: #C8E6C9; -fx-background-radius: 12; -fx-text-fill: #2E7D32; -fx-font-weight: bold; -fx-padding: 3 10 3 10;");
         }
 
-        card.getChildren().addAll(imageBox, name, category, location, badge);
+        card.getChildren().addAll(createProtectedImageBox(), name, badge, protectedDetails);
         return card;
     }
 
-    private Region createImageBox(ItemReport item) {
+    private Region createProtectedImageBox() {
         VBox imageBox = new VBox();
         imageBox.setAlignment(Pos.CENTER);
         imageBox.setPrefHeight(92);
         imageBox.setStyle("-fx-background-color: #EFEFEF; -fx-background-radius: 10;");
-
-        if (item.getImagePath() != null && !item.getImagePath().isBlank()) {
-            ImageView imageView = createImageView(item.getImagePath(), 88, 160);
-            if (imageView != null) {
-                imageBox.getChildren().add(imageView);
-            } else {
-                imageBox.getChildren().add(createPlaceholder(item));
-            }
-        } else {
-            imageBox.getChildren().add(createPlaceholder(item));
-        }
+        Label placeholder = new Label("Image hidden");
+        placeholder.setStyle("-fx-text-fill: #999999; -fx-font-weight: bold;");
+        imageBox.getChildren().add(placeholder);
 
         return imageBox;
-    }
-
-    private ImageView createImageView(String imagePath, double height, double width) {
-        Image image = ImageStorage.loadImage(imagePath);
-        if (image == null) {
-            return null;
-        }
-
-        ImageView imageView = new ImageView(image);
-        imageView.setFitHeight(height);
-        imageView.setFitWidth(width);
-        imageView.setPreserveRatio(true);
-        return imageView;
-    }
-
-    private Label createPlaceholder(ItemReport item) {
-        Label placeholder = new Label(safe(item.getType()));
-        placeholder.setStyle("-fx-text-fill: #999999; -fx-font-weight: bold;");
-        return placeholder;
     }
 
     private void openItemDetails(MouseEvent event, ItemReport item) {

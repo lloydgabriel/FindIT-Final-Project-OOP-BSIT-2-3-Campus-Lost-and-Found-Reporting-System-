@@ -198,6 +198,9 @@ public class ClaimsController implements Initializable {
 
     // Button actions
     private void handleApprove(ClaimRow row) {
+        if (!confirmStatusChange("Approve Claim", "Are you sure about approving this claim?")) {
+            return;
+        }
         AppDataStore.updateClaimStatus(row.getRequest(), "Approved");
         claimsTable.refresh();
         applyFilter();
@@ -205,10 +208,21 @@ public class ClaimsController implements Initializable {
     }
 
     private void handleReject(ClaimRow row) {
+        if (!confirmStatusChange("Reject Claim", "Are you sure about rejecting this claim?")) {
+            return;
+        }
         AppDataStore.updateClaimStatus(row.getRequest(), "Rejected");
         claimsTable.refresh();
         applyFilter();
         toast.show(claimsTable.getScene().getWindow(), "Claim has been Rejected.", "error");
+    }
+
+    private boolean confirmStatusChange(String title, String message) {
+        Alert confirmDialog = new Alert(Alert.AlertType.CONFIRMATION);
+        confirmDialog.setTitle(title);
+        confirmDialog.setHeaderText(null);
+        confirmDialog.setContentText(message);
+        return confirmDialog.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK;
     }
 
     private void showClaimDetails(ClaimRow row, String title) {
@@ -255,9 +269,15 @@ public class ClaimsController implements Initializable {
                 AppDataStore.updateClaimStatus(claim, "Pending");
                 toast.show(window, "Claim reverted to Pending.", "warning");
             } else if (response == approveBtn) {
+                if (!confirmStatusChange("Approve Claim", "Are you sure about approving this claim?")) {
+                    return;
+                }
                 AppDataStore.updateClaimStatus(claim, "Approved");
                 toast.show(window, "Claim successfully Approved!", "success");
             } else if (response == rejectBtn) {
+                if (!confirmStatusChange("Reject Claim", "Are you sure about rejecting this claim?")) {
+                    return;
+                }
                 AppDataStore.updateClaimStatus(claim, "Rejected");
                 toast.show(window, "Claim has been Rejected.", "error");
             }

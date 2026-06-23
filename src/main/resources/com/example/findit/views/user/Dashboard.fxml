@@ -89,6 +89,11 @@
                                     <ComboBox fx:id="statusFilter" prefHeight="36.0" prefWidth="185.0" promptText="All Status" style="-fx-background-color: #FFFFFF; -fx-border-color: #CCCCCC; -fx-border-radius: 8;" />
                                  </children>
                               </HBox>
+                              <Label text="Press Enter to proceed with your search or selected filters." textFill="#777777">
+                                 <font>
+                                    <Font size="12.0" />
+                                 </font>
+                              </Label>
                            </children>
                         </VBox>
 

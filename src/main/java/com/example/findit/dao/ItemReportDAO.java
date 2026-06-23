@@ -7,6 +7,7 @@ import java.sql.Connection;
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -66,12 +67,21 @@ public class ItemReportDAO {
                 stmt.setString(1, type);
                 stmt.setString(2, itemName);
                 stmt.setString(3, description);
+                boolean hasDate = date != null && !date.isBlank();
                 if ("Lost".equalsIgnoreCase(type)) {
-                    stmt.setDate(4, Date.valueOf(date));
-                    stmt.setDate(5, null);
+                    if (hasDate) {
+                        stmt.setDate(4, Date.valueOf(date));
+                    } else {
+                        stmt.setNull(4, Types.DATE);
+                    }
+                    stmt.setNull(5, Types.DATE);
                 } else {
-                    stmt.setDate(4, null);
-                    stmt.setDate(5, Date.valueOf(date));
+                    stmt.setNull(4, Types.DATE);
+                    if (hasDate) {
+                        stmt.setDate(5, Date.valueOf(date));
+                    } else {
+                        stmt.setNull(5, Types.DATE);
+                    }
                 }
                 stmt.setString(6, location);
                 stmt.setString(7, imagePath);

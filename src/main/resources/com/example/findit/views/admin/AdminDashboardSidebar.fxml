@@ -18,7 +18,7 @@
             <ImageView fx:id="logoImage" fitHeight="35.0" fitWidth="35.0" pickOnBounds="true" preserveRatio="true">
                <image><Image url="@../../assets/LogoRed.png" /></image>
             </ImageView>
-            <Label fx:id="logoText" text="FindIT" textFill="WHITE">
+            <Label fx:id="logoText" text="findIT" textFill="WHITE">
                <font> <Font name="System Bold" size="24.0" /> </font>
             </Label>
             

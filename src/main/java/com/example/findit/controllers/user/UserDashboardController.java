@@ -13,6 +13,7 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
+import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.stage.Modality;
@@ -39,6 +40,8 @@ public class UserDashboardController {
             AppDataStore.getItemReports().addListener((javafx.collections.ListChangeListener<ItemReport>) change ->
                     updateSearchSuggestions(txtSearch.getText()));
         }
+        configureEnterSearch(categoryFilter);
+        configureEnterSearch(statusFilter);
         if (searchSuggestions != null) {
             searchSuggestions.setCellFactory(list -> new ListCell<>() {
                 @Override
@@ -80,9 +83,27 @@ public class UserDashboardController {
 
     private void goToItemsFromSearch() {
         UserSidebarController.setActivePage("Items");
+        ItemsController.openWithFilters(
+                txtSearch == null ? "" : txtSearch.getText(),
+                categoryFilter == null ? "All Categories" : categoryFilter.getValue(),
+                statusFilter == null ? "All Status" : statusFilter.getValue()
+        );
         if (txtSearch != null && txtSearch.getScene() != null) {
             UserNavigationHelper.switchScene(txtSearch, "/com/example/findit/views/user/Items.fxml");
         }
+    }
+
+    private void configureEnterSearch(ComboBox<String> filter) {
+        if (filter == null) {
+            return;
+        }
+
+        filter.setOnKeyPressed(event -> {
+            if (event.getCode() == KeyCode.ENTER) {
+                goToItemsFromSearch();
+                event.consume();
+            }
+        });
     }
 
     private void updateSearchSuggestions(String query) {

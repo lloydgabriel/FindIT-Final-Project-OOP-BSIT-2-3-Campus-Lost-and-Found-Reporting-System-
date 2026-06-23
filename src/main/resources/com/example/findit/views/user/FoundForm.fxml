@@ -58,10 +58,10 @@
                         </VBox>
                         <VBox spacing="6.0" GridPane.columnIndex="2">
                            <children>
-                              <Label text="Date *">
+                              <Label text="Date Found">
                                  <font>
                                     <Font name="System Bold" size="15.0" />
-                                 </font></Label><DatePicker fx:id="dpDate" maxWidth="1.7976931348623157E308" prefHeight="46.0" promptText="mm/dd/yyyy" style="-fx-background-color: #FFFFFF; -fx-border-color: #CCCCCC; -fx-border-radius: 8; -fx-font-size: 15;" />
+                                 </font></Label><DatePicker fx:id="dpDate" maxWidth="1.7976931348623157E308" prefHeight="46.0" promptText="mm/dd/yyyy (optional)" style="-fx-background-color: #FFFFFF; -fx-border-color: #CCCCCC; -fx-border-radius: 8; -fx-font-size: 15;" />
                            </children>
                         </VBox>
                         <VBox spacing="6.0" GridPane.rowIndex="1">
@@ -71,12 +71,12 @@
                         </VBox>
                         <VBox spacing="6.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
                            <children>
-                              <Label text="Name of Reporter *"><font><Font name="System Bold" size="15.0" /></font></Label><TextField fx:id="txtReporterName" maxWidth="1.7976931348623157E308" prefHeight="46.0" promptText="Full name" style="-fx-background-color: #FFFFFF; -fx-border-color: #CCCCCC; -fx-border-radius: 8; -fx-font-size: 15;" />
+                              <Label text="Name of Reporter"><font><Font name="System Bold" size="15.0" /></font></Label><TextField fx:id="txtReporterName" maxWidth="1.7976931348623157E308" prefHeight="46.0" promptText="Full name (optional)" style="-fx-background-color: #FFFFFF; -fx-border-color: #CCCCCC; -fx-border-radius: 8; -fx-font-size: 15;" />
                            </children>
                         </VBox>
                         <VBox spacing="6.0" GridPane.columnIndex="2" GridPane.rowIndex="1">
                            <children>
-                              <Label text="Contact Information *"><font><Font name="System Bold" size="15.0" /></font></Label><TextField fx:id="txtContact" maxWidth="1.7976931348623157E308" prefHeight="46.0" promptText="Email or phone number" style="-fx-background-color: #FFFFFF; -fx-border-color: #CCCCCC; -fx-border-radius: 8; -fx-font-size: 15;" />
+                              <Label text="Contact Information"><font><Font name="System Bold" size="15.0" /></font></Label><TextField fx:id="txtContact" maxWidth="1.7976931348623157E308" prefHeight="46.0" promptText="Email or phone number (optional)" style="-fx-background-color: #FFFFFF; -fx-border-color: #CCCCCC; -fx-border-radius: 8; -fx-font-size: 15;" />
                            </children>
                         </VBox>
                      </children>
