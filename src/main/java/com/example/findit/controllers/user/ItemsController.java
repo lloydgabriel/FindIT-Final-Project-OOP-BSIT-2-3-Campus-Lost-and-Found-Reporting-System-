@@ -210,20 +210,28 @@ public class ItemsController {
         name.setWrapText(true);
         name.setStyle("-fx-text-fill: #4A1515; -fx-font-weight: bold; -fx-font-size: 14;");
 
-        Label protectedDetails = new Label("Details hidden until admin verification");
-        protectedDetails.setWrapText(true);
-        protectedDetails.setStyle("-fx-text-fill: #777777; -fx-font-size: 12;");
-
         Label badge = new Label(item.getType());
         badge.setAlignment(Pos.CENTER);
         badge.setMinWidth(62);
+        
+        Label detailsLabel = new Label();
+        detailsLabel.setWrapText(true);
+        Region imageNode;
+
+        // SECURITY LOGIC: Split UI based on Type!
         if ("Lost".equalsIgnoreCase(item.getType())) {
             badge.setStyle("-fx-background-color: #FFCDD2; -fx-background-radius: 12; -fx-text-fill: #C62828; -fx-font-weight: bold; -fx-padding: 3 10 3 10;");
+            detailsLabel.setText(item.getDescription()); 
+            detailsLabel.setStyle("-fx-text-fill: #555555; -fx-font-size: 12;");
+            imageNode = createRealImageBox(item);        
         } else {
             badge.setStyle("-fx-background-color: #C8E6C9; -fx-background-radius: 12; -fx-text-fill: #2E7D32; -fx-font-weight: bold; -fx-padding: 3 10 3 10;");
+            detailsLabel.setText("Details hidden until admin verification");
+            detailsLabel.setStyle("-fx-text-fill: #888888; -fx-font-style: italic; -fx-font-size: 12;");
+            imageNode = createProtectedImageBox();      
         }
 
-        card.getChildren().addAll(createProtectedImageBox(), name, badge, protectedDetails);
+        card.getChildren().addAll(imageNode, name, badge, detailsLabel);
         return card;
     }
 
@@ -236,6 +244,27 @@ public class ItemsController {
         placeholder.setStyle("-fx-text-fill: #999999; -fx-font-weight: bold;");
         imageBox.getChildren().add(placeholder);
 
+        return imageBox;
+    }
+    
+    private Region createRealImageBox(ItemReport item) {
+        VBox imageBox = new VBox();
+        imageBox.setAlignment(Pos.CENTER);
+        imageBox.setPrefHeight(92);
+        
+        javafx.scene.image.Image img = com.example.findit.util.ImageStorage.loadImage(item.getImagePath());
+        if (img != null) {
+            javafx.scene.image.ImageView imageView = new javafx.scene.image.ImageView(img);
+            imageView.setFitWidth(160);
+            imageView.setFitHeight(90);
+            imageView.setPreserveRatio(true);
+            imageBox.getChildren().add(imageView);
+        } else {
+            Label placeholder = new Label("No Image");
+            placeholder.setStyle("-fx-text-fill: #999999; -fx-font-weight: bold;");
+            imageBox.setStyle("-fx-background-color: #EFEFEF; -fx-background-radius: 10;");
+            imageBox.getChildren().add(placeholder);
+        }
         return imageBox;
     }
 

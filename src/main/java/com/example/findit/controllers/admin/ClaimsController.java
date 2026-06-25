@@ -28,15 +28,16 @@ import javafx.scene.layout.VBox;
 
 public class ClaimsController implements Initializable {
 
-    // INJECTS THE SIDEBAR CONTROLLER!
     @FXML private AdminSidebarController sidebarController;
 
     @FXML private TextField searchField;
     @FXML private ComboBox<String> statusFilter;
-    @FXML private ComboBox<String> viewToggle; // NEW: The Archive Toggle
+    @FXML private ComboBox<String> viewToggle;
 
     @FXML private TableView<ClaimRow> claimsTable;
-    @FXML private TableColumn<ClaimRow, String> colType, colClaimTrackingId, colItemTrackingId, colItemName, colCategory, colDate, colReportedBy, colLocation, colStatus, colAction;
+    
+    // Updated to exactly match the clean 5-column layout in FXML
+    @FXML private TableColumn<ClaimRow, String> colItemName, colDate, colClaimant, colStatus, colAction;
 
     private final ObservableList<ClaimRow> masterData = FXCollections.observableArrayList();
     private FilteredList<ClaimRow> filteredData;
@@ -48,13 +49,12 @@ public class ClaimsController implements Initializable {
         statusFilter.setItems(FXCollections.observableArrayList("All Status", "Pending", "Approved", "Rejected"));
         statusFilter.getSelectionModel().selectFirst();
         
-        // Setup View Toggle
         if (viewToggle != null) {
             viewToggle.setItems(FXCollections.observableArrayList("Active Claims", "Archived History"));
             viewToggle.getSelectionModel().selectFirst();
             
             viewToggle.valueProperty().addListener((obs, oldVal, newVal) -> {
-                refreshTableData(); // Reload data when toggle changes!
+                refreshTableData();
                 if ("Archived History".equals(newVal)) {
                     claimsTable.setStyle("-fx-control-inner-background: #f4f4f4;"); 
                 } else {
@@ -69,7 +69,6 @@ public class ClaimsController implements Initializable {
         refreshTableData();
         wireSearchAndFilter();
         
-        // Listen for live updates on the active list
         AppDataStore.getClaimRequests().addListener((javafx.collections.ListChangeListener<ClaimRequest>) change -> {
             if (viewToggle == null || "Active Claims".equals(viewToggle.getValue())) {
                 refreshTableData();
@@ -78,16 +77,12 @@ public class ClaimsController implements Initializable {
     }
 
     private void configureTableColumns() {
+        // Matches the properties in ClaimRow class
         colItemName.setCellValueFactory(new PropertyValueFactory<>("itemName"));
-        colCategory.setCellValueFactory(new PropertyValueFactory<>("category"));
         colDate.setCellValueFactory(new PropertyValueFactory<>("date"));
-        colReportedBy.setCellValueFactory(new PropertyValueFactory<>("reportedBy"));
-        colLocation.setCellValueFactory(new PropertyValueFactory<>("location"));
-        colType.setCellValueFactory(new PropertyValueFactory<>("type"));
-        colClaimTrackingId.setCellValueFactory(new PropertyValueFactory<>("claimTrackingId"));
-        colItemTrackingId.setCellValueFactory(new PropertyValueFactory<>("itemTrackingId"));
-
+        colClaimant.setCellValueFactory(new PropertyValueFactory<>("claimantName")); 
         colStatus.setCellValueFactory(new PropertyValueFactory<>("claimStatus"));
+
         colStatus.setCellFactory(col -> new TableCell<ClaimRow, String>() {
             private final Label badge = new Label();
 
@@ -110,11 +105,10 @@ public class ClaimsController implements Initializable {
             }
         });
 
-        // ACTION COLUMN: Smart rendering based on Active vs Archived
         colAction.setCellFactory(col -> new TableCell<ClaimRow, String>() {
             private final Button approveBtn = new Button();
             private final Button rejectBtn  = new Button();
-            private final Button archiveBtn = new Button(); 
+            private final Button archiveBtn = new Button();
             private final Button viewBtn    = new Button();
 
             {
@@ -150,21 +144,18 @@ public class ClaimsController implements Initializable {
                     if (isArchived) {
                         box.getChildren().addAll(viewBtn);
                     } else {
-                        // In Active Tab: Show actions based on status
                         if ("Pending".equalsIgnoreCase(row.getClaimStatus())) {
                             box.getChildren().addAll(approveBtn, rejectBtn, archiveBtn);
                         } else {
                             box.getChildren().addAll(viewBtn, archiveBtn);
                         }
                     }
-                    
                     setGraphic(box);
                 }
             }
         });
     }
 
-    // Refreshes the masterData list based on the Toggle!
     private void refreshTableData() {
         boolean isArchived = viewToggle != null && "Archived History".equals(viewToggle.getValue());
         ObservableList<ClaimRequest> sourceList = isArchived ? AppDataStore.ARCHIVED_CLAIMS : AppDataStore.getClaimRequests();
@@ -206,11 +197,11 @@ public class ClaimsController implements Initializable {
         filteredData.setPredicate(row -> {
             boolean matchesSearch = search.isEmpty()
                     || row.getItemName().toLowerCase().contains(search)
+                    || row.getClaimantName().toLowerCase().contains(search)
                     || row.getClaimTrackingId().toLowerCase().contains(search)
                     || row.getItemTrackingId().toLowerCase().contains(search)
                     || row.getCategory().toLowerCase().contains(search)
-                    || row.getLocation().toLowerCase().contains(search)
-                    || row.getReportedBy().toLowerCase().contains(search);
+                    || row.getLocation().toLowerCase().contains(search);
 
             boolean matchesStatus = "All Status".equals(statusValue)
                     || row.getClaimStatus().equalsIgnoreCase(statusValue);
@@ -276,7 +267,6 @@ public class ClaimsController implements Initializable {
         ButtonType approveBtn = new ButtonType("Change to Approved", ButtonBar.ButtonData.OTHER);
         ButtonType rejectBtn = new ButtonType("Change to Rejected", ButtonBar.ButtonData.OTHER);
 
-        // Only show status change buttons if it's an ACTIVE claim
         boolean isArchived = viewToggle != null && "Archived History".equals(viewToggle.getValue());
         
         if (!isArchived) {
@@ -359,13 +349,12 @@ public class ClaimsController implements Initializable {
     private GridPane createItemGrid(ItemReport item) {
         GridPane grid = createDetailsGrid();
         addDetailRow(grid, 0, "Item Tracking ID", item.getTrackingId());
-        addDetailRow(grid, 1, "Type", item.getType());
-        addDetailRow(grid, 2, "Category", item.getCategory());
-        addDetailRow(grid, 3, "Date", item.getDate());
-        addDetailRow(grid, 4, "Location", item.getLocation());
-        addDetailRow(grid, 5, "Reported By", item.getReportedBy());
-        addDetailRow(grid, 6, "Reporter Contact", item.getContact());
-        addDetailRow(grid, 7, "Description", item.getDescription());
+        addDetailRow(grid, 1, "Category", item.getCategory());
+        addDetailRow(grid, 2, "Date", item.getDate());
+        addDetailRow(grid, 3, "Location", item.getLocation());
+        addDetailRow(grid, 4, "Reported By", item.getReportedBy());
+        addDetailRow(grid, 5, "Reporter Contact", item.getContact());
+        addDetailRow(grid, 6, "Description", item.getDescription());
         return grid;
     }
 
@@ -433,7 +422,6 @@ public class ClaimsController implements Initializable {
         public String getItemName() { return request.getItem().getItemName(); }
         public String getCategory() { return request.getItem().getCategory(); }
         public String getDate() { return request.getItem().getDate(); }
-        public String getReportedBy() { return request.getItem().getReportedBy(); }
         public String getLocation() { return request.getItem().getLocation(); }
         public String getClaimantName() { return request.getClaimantName(); }
         public String getStudentNumber() { return request.getStudentNumber(); }

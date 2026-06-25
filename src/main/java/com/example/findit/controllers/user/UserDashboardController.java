@@ -29,7 +29,7 @@ public class UserDashboardController {
     @FXML private HBox filterPanel;
     @FXML private ComboBox<String> categoryFilter;
     @FXML private ComboBox<String> statusFilter;
-
+    
     @FXML
     public void initialize() {
         UserSidebarController.setActivePage("Dashboard");

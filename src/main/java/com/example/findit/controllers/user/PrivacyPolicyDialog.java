@@ -12,9 +12,9 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Window;
 
-final class PrivacyPolicyDialog {
+public class PrivacyPolicyDialog {
 
-    private static final String POLICY_TEXT = """
+    public static final String POLICY_TEXT = """
             PRIVACY POLICY
 
             Last Updated: 6/23/2026
@@ -117,10 +117,10 @@ final class PrivacyPolicyDialog {
             By using the application, you consent to the collection, processing, storage, and disclosure of your personal information in accordance with this Privacy Policy.
             """;
 
-    private PrivacyPolicyDialog() {
+    public PrivacyPolicyDialog() {
     }
 
-    static void show(Window owner) {
+    public static void show(Window owner) {
         Dialog<ButtonType> dialog = new Dialog<>();
         dialog.setTitle("Privacy Policy");
         dialog.setHeaderText(null);

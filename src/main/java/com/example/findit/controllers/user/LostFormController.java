@@ -1,7 +1,6 @@
 package com.example.findit.controllers.user;
 
 import javafx.event.ActionEvent;
-import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
@@ -44,7 +43,6 @@ public class LostFormController {
         if (uploadArea != null) {
             uploadArea.setOnMouseClicked(e -> handleUploadImage());
         }
-        Platform.runLater(() -> PrivacyPolicyDialog.show(txtItemName.getScene().getWindow()));
     }
 
     @FXML

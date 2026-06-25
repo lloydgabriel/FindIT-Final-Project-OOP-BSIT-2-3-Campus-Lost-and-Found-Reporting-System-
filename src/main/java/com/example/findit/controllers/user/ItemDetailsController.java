@@ -48,8 +48,12 @@ public class ItemDetailsController {
             btnClaimItem.setManaged(canClaim);
         }
 
+        // SECURITY LOGIC: Show image if Manager OR if it's a Lost item
+        boolean isLost = "Lost".equalsIgnoreCase(item.getType());
+        boolean showDetails = managerMode || isLost;
+
         imageBox.getChildren().clear();
-        if (!managerMode) {
+        if (!showDetails) {
             imageBox.getChildren().add(createProtectedPlaceholder());
         } else if (item.getImagePath() != null && !item.getImagePath().isBlank()) {
             ImageView imageView = createImageView(item.getImagePath());
@@ -65,20 +69,24 @@ public class ItemDetailsController {
 
     private void refreshLabels() {
         lblItemName.setText(safe(item.getItemName()));
-        if (managerMode) {
+        lblStatus.setText(safe(item.getType()));
+
+        // SECURITY LOGIC: Show labels if Manager OR if it's a Lost item
+        boolean isLost = "Lost".equalsIgnoreCase(item.getType());
+        boolean showDetails = managerMode || isLost;
+
+        if (showDetails) {
             lblCategory.setText(safe(item.getCategory()));
-            lblStatus.setText(safe(item.getType()));
             lblDate.setText(safe(item.getDate()));
             lblLocation.setText(safe(item.getLocation()));
             lblReportedBy.setText(safe(item.getReportedBy()));
             lblDescription.setText(safe(item.getDescription()));
         } else {
             lblCategory.setText("Hidden");
-            lblStatus.setText(safe(item.getType()));
             lblDate.setText("Hidden");
             lblLocation.setText("Hidden");
             lblReportedBy.setText("Hidden");
-            lblDescription.setText("Details are hidden from public users to prevent false claims.");
+            lblDescription.setText("Details are hidden from public users to prevent false claims. You must describe this item accurately in your claim request.");
         }
     }
 
