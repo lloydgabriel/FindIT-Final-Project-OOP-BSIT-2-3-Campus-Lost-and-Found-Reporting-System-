@@ -59,7 +59,6 @@ public class LostFormController {
     @FXML
     public void handleSubmit(ActionEvent event) {
         if (txtItemName.getText().isBlank() || cmbCategory.getValue() == null
-                || txtLocation.getText().isBlank()
                 || txtReporterName.getText().isBlank() || txtContact.getText().isBlank()
                 || txtDescription.getText().isBlank()) {
             showAlert(Alert.AlertType.WARNING, "Missing Fields", "Please fill in all required fields.");
@@ -89,7 +88,7 @@ public class LostFormController {
         }
 
         if (!InputValidator.isValidNameText(txtItemName.getText())
-                || !InputValidator.isValidNameText(txtLocation.getText())
+                || (!txtLocation.getText().isBlank() && !InputValidator.isValidNameText(txtLocation.getText()))
                 || !InputValidator.isValidNameText(txtReporterName.getText())
                 || !InputValidator.isValidDescriptionText(txtDescription.getText())) {
             showAlert(Alert.AlertType.WARNING, "Invalid Characters",
