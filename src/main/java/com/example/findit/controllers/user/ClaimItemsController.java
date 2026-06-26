@@ -12,7 +12,6 @@ import javafx.scene.Node;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.RadioButton;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.input.Clipboard;
@@ -29,25 +28,9 @@ import java.io.PrintWriter;
 public class ClaimItemsController {
 
     @FXML private TextField txtClaimantName;
-    @FXML private TextField txtStudentNumber;
     @FXML private TextField txtContact;
     @FXML private TextArea txtProofDescription;
-    @FXML private RadioButton rbStudent;
-    @FXML private RadioButton rbStaff;
-    @FXML private VBox studentNumberGroup;
     private ItemReport item;
-
-    @FXML
-    public void initialize() {
-        if (rbStudent != null) {
-            rbStudent.setSelected(true);
-            rbStudent.selectedProperty().addListener((obs, oldValue, newValue) -> updateClaimantType());
-        }
-        if (rbStaff != null) {
-            rbStaff.selectedProperty().addListener((obs, oldValue, newValue) -> updateClaimantType());
-        }
-        updateClaimantType();
-    }
 
     public void setItem(ItemReport item) {
         this.item = item;
@@ -66,22 +49,9 @@ public class ClaimItemsController {
             return;
         }
 
-        boolean staffClaim = rbStaff != null && rbStaff.isSelected();
-
-        if (txtClaimantName.getText().isBlank() || (!staffClaim && txtStudentNumber.getText().isBlank())
-                || txtContact.getText().isBlank() || txtProofDescription.getText().isBlank()) {
+        if (txtClaimantName.getText().isBlank() || txtContact.getText().isBlank()
+                || txtProofDescription.getText().isBlank()) {
             showAlert(Alert.AlertType.WARNING, "Missing Fields", "Please fill in all required fields.");
-            return;
-        }
-
-        String studentNumber = staffClaim ? "STAFF" : InputValidator.formatStudentNumber(txtStudentNumber.getText());
-        if (!staffClaim) {
-            txtStudentNumber.setText(studentNumber);
-        }
-
-        if (!staffClaim && !InputValidator.isValidStudentNumber(studentNumber)) {
-            showAlert(Alert.AlertType.WARNING, "Invalid Student Number",
-                    "Please use the correct student number format, for example 2024-00000-SR-0.");
             return;
         }
 
@@ -103,7 +73,7 @@ public class ClaimItemsController {
             savedClaim = AppDataStore.addClaimRequest(
                     item,
                     txtClaimantName.getText().trim(),
-                    studentNumber,
+                    "",
                     txtContact.getText().trim(),
                     txtProofDescription.getText().trim()
             );
@@ -124,17 +94,6 @@ public class ClaimItemsController {
     private void closeWindow(ActionEvent event) {
         Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
         stage.close();
-    }
-
-    private void updateClaimantType() {
-        boolean staffClaim = rbStaff != null && rbStaff.isSelected();
-        if (studentNumberGroup != null) {
-            studentNumberGroup.setVisible(!staffClaim);
-            studentNumberGroup.setManaged(!staffClaim);
-        }
-        if (staffClaim && txtStudentNumber != null) {
-            txtStudentNumber.clear();
-        }
     }
 
     private void showAlert(Alert.AlertType type, String title, String message) {
