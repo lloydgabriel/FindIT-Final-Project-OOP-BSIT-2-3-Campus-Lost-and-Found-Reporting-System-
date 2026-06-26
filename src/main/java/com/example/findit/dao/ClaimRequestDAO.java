@@ -64,14 +64,18 @@ public class ClaimRequestDAO {
                 """;
 
         try (Connection conn = DBConnection.connect()) {
-            int claimantId = DatabaseBootstrap.ensureUser(conn, studentNumber, claimantName, contactInfo);
+            String storedStudentNumber = studentNumber == null ? "" : studentNumber.trim();
+            String claimantIdNumber = storedStudentNumber.isBlank()
+                    ? generatedClaimantId(contactInfo)
+                    : storedStudentNumber;
+            int claimantId = DatabaseBootstrap.ensureUser(conn, claimantIdNumber, claimantName, contactInfo);
             int claimId;
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
                 stmt.setInt(1, item.getId());
                 stmt.setInt(2, claimantId);
                 stmt.setString(3, status);
                 stmt.setString(4, claimantName);
-                stmt.setString(5, studentNumber);
+                stmt.setString(5, storedStudentNumber);
                 stmt.setString(6, contactInfo);
                 stmt.setString(7, proofDescription);
                 stmt.setString(8, newTicket);
@@ -82,7 +86,7 @@ public class ClaimRequestDAO {
                 }
                 claimId = rs.getInt("claim_id");
             }
-            return new ClaimRequest(claimId, item, claimantName, studentNumber, contactInfo, proofDescription, status, newTicket);
+            return new ClaimRequest(claimId, item, claimantName, storedStudentNumber, contactInfo, proofDescription, status, newTicket);
         } catch (Exception e) {
             throw new IllegalStateException("Could not save claim request.", e);
         }
@@ -215,5 +219,14 @@ public class ClaimRequestDAO {
 
     private String firstPresent(String value, String fallback) {
         return value == null || value.isBlank() ? fallback : value;
+    }
+
+    private String generatedClaimantId(String contact) {
+        String timestamp = String.valueOf(System.currentTimeMillis());
+        String suffix = String.valueOf(Math.abs(contact.hashCode()));
+        if (suffix.length() > 4) {
+            suffix = suffix.substring(0, 4);
+        }
+        return "CLM" + timestamp.substring(Math.max(0, timestamp.length() - 13)) + suffix;
     }
 }
