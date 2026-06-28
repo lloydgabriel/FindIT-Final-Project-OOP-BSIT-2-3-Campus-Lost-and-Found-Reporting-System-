@@ -15,7 +15,7 @@ public class ClaimRequestDAO {
     public List<ClaimRequest> findAll() {
         DatabaseBootstrap.ensureApplicationSchema();
         List<ClaimRequest> claims = new ArrayList<>();
-
+        
         // FIX 1: Added the WHERE clause to hide Archived claims from the main feed
         String sql = """
                 SELECT cl.claim_id, cl.claim_status, cl.claimant_name, cl.student_number,
@@ -54,7 +54,7 @@ public class ClaimRequestDAO {
     public ClaimRequest insert(ItemReport item, String claimantName, String studentNumber,
                                String contactInfo, String proofDescription, String status) {
         DatabaseBootstrap.ensureApplicationSchema();
-
+        
         String newTicket = com.example.findit.util.TrackingGenerator.generateID();
         String sql = """
                 INSERT INTO claims
@@ -79,7 +79,7 @@ public class ClaimRequestDAO {
                 stmt.setString(6, contactInfo);
                 stmt.setString(7, proofDescription);
                 stmt.setString(8, newTicket);
-
+                
                 ResultSet rs = stmt.executeQuery();
                 if (!rs.next()) {
                     throw new IllegalStateException("Claim request was not saved.");
@@ -142,9 +142,20 @@ public class ClaimRequestDAO {
         }
     }
 
+    public void restoreClaim(ClaimRequest claim) {
+        String sql = "UPDATE claims SET record_status = 'Active' WHERE claim_id = ?";
+        try (Connection conn = DBConnection.connect();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, claim.getId());
+            stmt.executeUpdate();
+        } catch (Exception e) {
+            throw new IllegalStateException("Could not restore claim request.", e);
+        }
+    }
+
     public List<ClaimRequest> getArchivedClaims() {
         List<ClaimRequest> archivedList = new java.util.ArrayList<>();
-
+        
         // FIX 2: Replicated the exact JOIN structure from findAll() so mapClaim() doesn't crash!
         String sql = """
                 SELECT cl.claim_id, cl.claim_status, cl.claimant_name, cl.student_number,
@@ -162,11 +173,11 @@ public class ClaimRequestDAO {
                 WHERE cl.record_status = 'Archived'
                 ORDER BY cl.claim_date DESC NULLS LAST, cl.claim_id DESC
                 """;
-
+        
         try (java.sql.Connection conn = DBConnection.connect();
              java.sql.PreparedStatement stmt = conn.prepareStatement(sql);
              java.sql.ResultSet rs = stmt.executeQuery()) {
-
+            
             while (rs.next()) {
                 archivedList.add(mapClaim(rs));
             }
@@ -213,7 +224,7 @@ public class ClaimRequestDAO {
                 contactInfo,
                 rs.getString("proof_description"),
                 rs.getString("claim_status"),
-                rs.getString("tracking_id")
+                rs.getString("tracking_id") 
         );
     }
 
