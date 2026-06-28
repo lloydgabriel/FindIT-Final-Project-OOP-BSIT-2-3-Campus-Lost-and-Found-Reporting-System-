@@ -24,7 +24,7 @@ import java.util.Optional;
 public class ItemDetailsController {
     @FXML private VBox imageBox;
     @FXML private Label lblItemName, lblCategory, lblStatus, lblDate, lblLocation, lblReportedBy, lblDescription;
-
+    
     @FXML private Button btnClaimItem;
     @FXML private Button btnEditItem;
     @FXML private Button btnDeleteItem;
@@ -126,7 +126,7 @@ public class ItemDetailsController {
         grid.add(new Label("Item Name:"), 0, 0); grid.add(nameField, 1, 0);
         grid.add(new Label("Location:"), 0, 1);  grid.add(locField, 1, 1);
         grid.add(new Label("Description:"), 0, 2); grid.add(descArea, 1, 2);
-
+        
         dialog.getDialogPane().setContent(grid);
         dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
 
@@ -134,13 +134,13 @@ public class ItemDetailsController {
         if (result.isPresent() && result.get() == ButtonType.OK) {
             // Update the Database
             AppDataStore.updateItemDetails(item, nameField.getText(), locField.getText(), descArea.getText());
-
+            
             // Update the local object and refresh the UI labels
             item.setItemName(nameField.getText());
             item.setLocation(locField.getText());
             item.setDescription(descArea.getText());
             refreshLabels();
-
+            
             toast.show(((Node) event.getSource()).getScene().getWindow(), "Item updated successfully!", "success");
         }
     }
@@ -149,15 +149,15 @@ public class ItemDetailsController {
     public void handleDeleteItem(ActionEvent event) {
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
         confirm.setTitle("Archive Item");
-        confirm.setHeaderText("Dispose / Archive this Record");
+        confirm.setHeaderText("Archive this Record");
         confirm.setContentText("Are you sure you want to archive this item? It will be removed from the public board but kept in the database history.");
-
+        
         if (confirm.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
-
-            AppDataStore.archiveItemReport(item);
+            
+            AppDataStore.archiveItemReport(item); 
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
             stage.close();
-
+            
             // NOTE: The main table will still auto-refresh because we remove it from the ObservableList in AppDataStore!
         }
     }
