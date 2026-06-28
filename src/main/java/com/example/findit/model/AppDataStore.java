@@ -89,10 +89,10 @@ public final class AppDataStore {
     public static ClaimRequest confirmMatch(ItemMatch match) {
         ClaimRequest existing = findAutoMatchClaim(match);
         if (existing != null) {
-            if (!"Approved".equalsIgnoreCase(existing.getStatus())) {
-                CLAIM_REQUEST_DAO.updateStatus(existing, "Approved");
-                existing.setStatus("Approved");
-                logClaimValidation(existing, "Approved");
+            if (!"Ready to claim".equalsIgnoreCase(existing.getStatus())) {
+                CLAIM_REQUEST_DAO.updateStatus(existing, "Ready to claim");
+                existing.setStatus("Ready to claim");
+                logClaimValidation(existing, "Pending");
                 markLocalChange();
             }
             match.setStatus("Confirmed");
@@ -112,9 +112,9 @@ public final class AppDataStore {
                 lostItem.getContact(),
                 proof
         );
-        CLAIM_REQUEST_DAO.updateStatus(request, "Approved");
-        request.setStatus("Approved");
-        logClaimValidation(request, "Approved");
+        CLAIM_REQUEST_DAO.updateStatus(request, "Ready to claim");
+        request.setStatus("Ready to claim");
+        logClaimValidation(request, "Pending");
         CLAIM_REQUESTS.add(0, request);
         markLocalChange();
         match.setStatus("Confirmed");
@@ -170,9 +170,19 @@ public final class AppDataStore {
     public static void updateClaimStatus(ClaimRequest request, String status) {
         CLAIM_REQUEST_DAO.updateStatus(request, status);
         request.setStatus(status);
+        notifyClaimRequestChanged(request);
         logClaimValidation(request, status);
         markLocalChange();
         refreshMatchSuggestions();
+    }
+
+    private static void notifyClaimRequestChanged(ClaimRequest request) {
+        for (int index = 0; index < CLAIM_REQUESTS.size(); index++) {
+            if (CLAIM_REQUESTS.get(index).getId() == request.getId()) {
+                CLAIM_REQUESTS.set(index, request);
+                return;
+            }
+        }
     }
 
     public static void deleteClaimRequest(ClaimRequest request) {
@@ -231,11 +241,11 @@ public final class AppDataStore {
     private static void refreshMatchSuggestions() {
         ObservableList<ItemMatch> matches = FXCollections.observableArrayList();
         for (ItemReport lostItem : ITEM_REPORTS) {
-            if (!"Lost".equalsIgnoreCase(lostItem.getType())) {
+            if (!"Lost".equalsIgnoreCase(lostItem.getType()) || isArchivedReportItem(lostItem)) {
                 continue;
             }
             for (ItemReport foundItem : ITEM_REPORTS) {
-                if (!"Found".equalsIgnoreCase(foundItem.getType())) {
+                if (!"Found".equalsIgnoreCase(foundItem.getType()) || isArchivedReportItem(foundItem)) {
                     continue;
                 }
                 if (isPotentialMatch(lostItem, foundItem)) {
@@ -254,7 +264,7 @@ public final class AppDataStore {
                     if (autoMatchClaim != null && "Rejected".equalsIgnoreCase(autoMatchClaim.getStatus())) {
                         continue;
                     }
-                    if (hasApprovedClaimForItem(foundItem)) {
+                    if (hasClaimFlowForItem(foundItem)) {
                         continue;
                     }
                     matches.add(match);
@@ -262,6 +272,17 @@ public final class AppDataStore {
             }
         }
         MATCH_SUGGESTIONS.setAll(matches);
+    }
+
+    private static boolean isArchivedReportItem(ItemReport item) {
+        if (item == null) {
+            return true;
+        }
+
+        return ARCHIVED_ITEMS.stream()
+                .anyMatch(archivedItem -> archivedItem.getId() == item.getId())
+                || ARCHIVED_CLAIMS.stream()
+                .anyMatch(archivedClaim -> archivedClaim.getItem().getId() == item.getId());
     }
 
     public static void declineMatch(ItemMatch match) {
@@ -346,10 +367,13 @@ public final class AppDataStore {
                 .orElse(null);
     }
 
-    private static boolean hasApprovedClaimForItem(ItemReport item) {
+    private static boolean hasClaimFlowForItem(ItemReport item) {
         return CLAIM_REQUESTS.stream()
                 .filter(claim -> claim.getItem().getId() == item.getId())
-                .anyMatch(claim -> "Approved".equalsIgnoreCase(claim.getStatus()));
+                .anyMatch(claim -> "Ready to claim".equalsIgnoreCase(claim.getStatus())
+                        || "Approved".equalsIgnoreCase(claim.getStatus())
+                        || "Unclaimed".equalsIgnoreCase(claim.getStatus())
+                        || "Claimed".equalsIgnoreCase(claim.getStatus()));
     }
 
     private static String autoMatchStudentNumber(ItemMatch match) {
@@ -515,7 +539,9 @@ public final class AppDataStore {
     }
 
     private static String normalizeValidationType(String status) {
-        if ("Approved".equalsIgnoreCase(status)) {
+        if ("Approved".equalsIgnoreCase(status)
+                || "Unclaimed".equalsIgnoreCase(status)
+                || "Claimed".equalsIgnoreCase(status)) {
             return "APPROVED";
         }
         if ("Rejected".equalsIgnoreCase(status)) {

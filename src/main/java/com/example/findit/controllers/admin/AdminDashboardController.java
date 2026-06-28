@@ -1,6 +1,7 @@
 package com.example.findit.controllers.admin;
 
 import com.example.findit.model.AppDataStore;
+import com.example.findit.model.ClaimRequest;
 import com.example.findit.model.ItemMatch;
 import com.example.findit.model.ItemReport;
 import javafx.collections.FXCollections;
@@ -41,8 +42,10 @@ public class AdminDashboardController implements Initializable {
 
     @FXML private AdminSidebarController sidebarController;
 
+    @FXML private Label totalItemsCount;
     @FXML private Label foundItemsCount;
     @FXML private Label lostReportsCount;
+    @FXML private Label pendingReportsCount;
     @FXML private Label matchedCount;
 
     @FXML private ProgressBar pbElectronics, pbWallet, pbDocument;
@@ -68,6 +71,7 @@ public class AdminDashboardController implements Initializable {
         ResponsiveTable.fillAvailableWidth(recentItemsTable);
         refreshDashboard();
         AppDataStore.getItemReports().addListener((ListChangeListener<ItemReport>) change -> refreshDashboard());
+        AppDataStore.getClaimRequests().addListener((ListChangeListener<ClaimRequest>) change -> refreshDashboard());
         AppDataStore.getMatchSuggestions().addListener((ListChangeListener<ItemMatch>) change -> refreshDashboard());
     }
 
@@ -98,12 +102,22 @@ public class AdminDashboardController implements Initializable {
     }
 
     private void loadDashboardStats() {
-        foundItemsCount.setText(String.valueOf(AppDataStore.countItemsByType("Found")));
-        lostReportsCount.setText(String.valueOf(AppDataStore.countItemsByType("Lost")));
-        matchedCount.setText(String.valueOf(AppDataStore.countMatches()));
-        foundItemsCount.setStyle("-fx-text-fill: #4A1515;");
-        lostReportsCount.setStyle("-fx-text-fill: #4A1515;");
-        matchedCount.setStyle("-fx-text-fill: #4A1515;");
+        setStat(totalItemsCount, String.valueOf(AppDataStore.getItemReports().size()));
+        setStat(foundItemsCount, String.valueOf(AppDataStore.countItemsByType("Found")));
+        setStat(lostReportsCount, String.valueOf(AppDataStore.countItemsByType("Lost")));
+        setStat(pendingReportsCount, String.valueOf(AppDataStore.getClaimRequests().stream()
+                .filter(claim -> "Pending".equalsIgnoreCase(claim.getStatus())
+                        || "Ready to claim".equalsIgnoreCase(claim.getStatus()))
+                .count()));
+        setStat(matchedCount, String.valueOf(AppDataStore.countMatches()));
+    }
+
+    private void setStat(Label label, String value) {
+        if (label == null) {
+            return;
+        }
+        label.setText(value);
+        label.setStyle("-fx-text-fill: #4A1515;");
     }
 
     private void loadCategoryBreakdown() {

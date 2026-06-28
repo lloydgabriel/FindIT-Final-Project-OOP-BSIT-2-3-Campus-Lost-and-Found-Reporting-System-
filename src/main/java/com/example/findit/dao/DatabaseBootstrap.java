@@ -32,6 +32,12 @@ public final class DatabaseBootstrap {
                 stmt.executeUpdate("ALTER TABLE claims ADD COLUMN IF NOT EXISTS student_number VARCHAR(30)");
                 stmt.executeUpdate("ALTER TABLE claims ADD COLUMN IF NOT EXISTS contact_info VARCHAR(100)");
                 stmt.executeUpdate("ALTER TABLE claims ADD COLUMN IF NOT EXISTS proof_description TEXT");
+                stmt.executeUpdate("ALTER TABLE claims DROP CONSTRAINT IF EXISTS claims_claim_status_check");
+                stmt.executeUpdate("""
+                        ALTER TABLE claims
+                        ADD CONSTRAINT claims_claim_status_check
+                        CHECK (claim_status IN ('Pending', 'Approved', 'Rejected', 'Ready to claim', 'Unclaimed', 'Claimed'))
+                        """);
                 stmt.executeUpdate("DROP TABLE IF EXISTS ingress_egress_logs");
                 stmt.executeUpdate("""
                         CREATE TABLE IF NOT EXISTS activity_logs (

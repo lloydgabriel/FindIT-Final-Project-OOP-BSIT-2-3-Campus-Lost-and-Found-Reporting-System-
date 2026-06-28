@@ -33,9 +33,9 @@ public class AdminSidebarController {
     @FXML private HBox headerBox;
     @FXML private Region headerSpacer;
     @FXML private Label logoText;
-    @FXML private Button btnDashboard, btnReported, btnClaims, btnMatch, btnMonitoring, btnLogout;
+    @FXML private Button btnDashboard, btnReported, btnClaims, btnMatch, btnLogout;
     @FXML private ImageView logoImage;
-    @FXML private ImageView imgDashboard, imgReported, imgClaims, imgMatch, imgMonitoring, imgLogout;
+    @FXML private ImageView imgDashboard, imgReported, imgClaims, imgMatch, imgLogout;
 
     @FXML
     public void initialize() {
@@ -70,7 +70,6 @@ public class AdminSidebarController {
             setNavButtonExpanded(btnReported);
             setNavButtonExpanded(btnClaims);
             setNavButtonExpanded(btnMatch);
-            setNavButtonExpanded(btnMonitoring);
             setNavButtonExpanded(btnLogout);
         } else {
             sidebarContainer.setPrefWidth(COLLAPSED_WIDTH);
@@ -89,7 +88,6 @@ public class AdminSidebarController {
             setNavButtonCollapsed(btnReported);
             setNavButtonCollapsed(btnClaims);
             setNavButtonCollapsed(btnMatch);
-            setNavButtonCollapsed(btnMonitoring);
             setNavButtonCollapsed(btnLogout);
         }
 
@@ -97,6 +95,9 @@ public class AdminSidebarController {
     }
 
     private void setNavButtonExpanded(Button button) {
+        if (button == null) {
+            return;
+        }
         button.setContentDisplay(ContentDisplay.LEFT);
         button.setAlignment(Pos.CENTER_LEFT);
         button.setGraphicTextGap(EXPANDED_ICON_GAP);
@@ -107,6 +108,9 @@ public class AdminSidebarController {
     }
 
     private void setNavButtonCollapsed(Button button) {
+        if (button == null) {
+            return;
+        }
         button.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
         button.setAlignment(Pos.CENTER);
         button.setGraphicTextGap(0);
@@ -136,14 +140,12 @@ public class AdminSidebarController {
         btnReported.setStyle(defaultStyle);
         btnClaims.setStyle(defaultStyle);
         btnMatch.setStyle(defaultStyle);
-        btnMonitoring.setStyle(defaultStyle);
         btnLogout.setStyle(defaultStyle);
 
         imgDashboard.setImage(safeLoadImage("/com/example/findit/assets/dashboard.png"));
         imgReported.setImage(safeLoadImage("/com/example/findit/assets/ItemReportedAdmin.png"));
         imgClaims.setImage(safeLoadImage("/com/example/findit/assets/claim.png"));
         imgMatch.setImage(safeLoadImage("/com/example/findit/assets/MatchSuggestion.png"));
-        imgMonitoring.setImage(safeLoadImage("/com/example/findit/assets/reportsidebar.png"));
         imgLogout.setImage(safeLoadImage("/com/example/findit/assets/logout.png"));
 
         ColorAdjust makeWhite = new ColorAdjust();
@@ -152,7 +154,6 @@ public class AdminSidebarController {
         imgReported.setEffect(makeWhite);
         imgClaims.setEffect(makeWhite);
         imgMatch.setEffect(makeWhite);
-        imgMonitoring.setEffect(makeWhite);
         imgLogout.setEffect(makeWhite);
 
         switch (tabName) {
@@ -168,15 +169,15 @@ public class AdminSidebarController {
             case "Match":
                 activateTab(btnMatch, imgMatch, "/com/example/findit/assets/yellow_icons/MatchSuggestion.png", activeStyle);
                 break;
-            case "Monitoring":
-                activateTab(btnMonitoring, imgMonitoring, "/com/example/findit/assets/yellow_icons/report.png", activeStyle);
-                break;
             default:
                 break;
         }
     }
 
     private void activateTab(Button button, ImageView icon, String iconPath, String style) {
+        if (button == null || icon == null) {
+            return;
+        }
         button.setStyle(style);
         icon.setImage(safeLoadImage(iconPath));
         icon.setEffect(null);
@@ -187,7 +188,7 @@ public class AdminSidebarController {
     }
 
     @FXML private void goToReportedItems(ActionEvent event) {
-        navigateTo(event, "/com/example/findit/views/admin/ReportedItems.fxml", "Reported Items", "Reported");
+        navigateTo(event, "/com/example/findit/views/admin/ReportedItems.fxml", "Reports", "Reported");
     }
 
     @FXML private void goToClaims(ActionEvent event) {
@@ -202,11 +203,6 @@ public class AdminSidebarController {
     private void handleLogout(ActionEvent event) {
         SessionManager.checkOut("Main Portal");
         navigateTo(event, "/com/example/findit/views/user/MainPortal.fxml", "Campus Lost and Found System", "");
-    }
-
-    @FXML
-    private void goToMonitoring(ActionEvent event) {
-        navigateTo(event, "/com/example/findit/views/admin/Monitoring.fxml", "Monitoring", "Monitoring");
     }
 
     private void navigateTo(ActionEvent event, String fxmlPath, String title, String tabName) {

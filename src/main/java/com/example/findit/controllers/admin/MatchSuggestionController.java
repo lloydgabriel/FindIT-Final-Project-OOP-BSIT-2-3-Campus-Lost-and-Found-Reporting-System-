@@ -108,7 +108,7 @@ public class MatchSuggestionController implements Initializable {
             AppDataStore.confirmMatch(currentMatch);
             setStatus("Confirmed");
             showAlert(Alert.AlertType.INFORMATION, "Match Confirmed",
-                    "An approved claim has been added to the Claims tab.");
+                    "A claim report is now ready for the user and will stay pending in Reports until admin approval.");
             closeDialog();
         } catch (RuntimeException e) {
             showAlert(Alert.AlertType.ERROR, "Database Error",
@@ -122,9 +122,9 @@ public class MatchSuggestionController implements Initializable {
             return;
         }
 
-        AppDataStore.rejectMatch(currentMatch);
+        AppDataStore.declineMatch(currentMatch);
         showAlert(Alert.AlertType.INFORMATION, "Match Declined",
-                "This match suggestion has been recorded as a rejected claim.");
+                "This match suggestion has been removed.");
         closeDialog();
     }
 

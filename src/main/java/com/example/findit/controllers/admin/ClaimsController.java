@@ -5,18 +5,16 @@ import com.example.findit.model.ClaimRequest;
 import com.example.findit.model.ItemMatch;
 import com.example.findit.model.ItemReport;
 import com.example.findit.util.ImageStorage;
+import com.example.findit.util.MatchDetailsDialog;
 import com.example.findit.util.toast;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
@@ -30,8 +28,6 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import javafx.stage.Modality;
-import javafx.stage.Stage;
 
 public class ClaimsController implements Initializable {
 
@@ -44,8 +40,7 @@ public class ClaimsController implements Initializable {
 
     @FXML private TableView<ClaimRow> claimsTable;
     
-    // Updated to exactly match the clean 5-column layout in FXML
-    @FXML private TableColumn<ClaimRow, String> colItemName, colDate, colClaimant, colStatus, colAction;
+    @FXML private TableColumn<ClaimRow, String> colClaimTrackingId, colItemName, colDate, colClaimant, colStatus, colAction;
 
     private final ObservableList<ClaimRow> masterData = FXCollections.observableArrayList();
     private FilteredList<ClaimRow> filteredData;
@@ -55,7 +50,7 @@ public class ClaimsController implements Initializable {
     public void initialize(URL location, ResourceBundle resources) {
         if (sidebarController != null) { sidebarController.setActiveTab("Claims"); }
         
-        statusFilter.setItems(FXCollections.observableArrayList("All Status", "Pending", "Approved", "Rejected"));
+        statusFilter.setItems(FXCollections.observableArrayList("All Status", "Unclaimed", "Claimed"));
         statusFilter.getSelectionModel().selectFirst();
         updateArchiveButton();
         
@@ -113,6 +108,7 @@ public class ClaimsController implements Initializable {
 
     private void configureTableColumns() {
         // Matches the properties in ClaimRow class
+        colClaimTrackingId.setCellValueFactory(new PropertyValueFactory<>("claimTrackingId"));
         colItemName.setCellValueFactory(new PropertyValueFactory<>("itemName"));
         colDate.setCellValueFactory(new PropertyValueFactory<>("date"));
         colClaimant.setCellValueFactory(new PropertyValueFactory<>("claimantName")); 
@@ -128,12 +124,10 @@ public class ClaimsController implements Initializable {
                     setGraphic(null);
                 } else {
                     badge.setText(item);
-                    if (item.equalsIgnoreCase("Pending")) {
-                        badge.setStyle("-fx-background-color: #FFE0B2; -fx-text-fill: #E65100; -fx-font-weight: bold; -fx-padding: 3 10 3 10; -fx-background-radius: 12;");
-                    } else if (item.equalsIgnoreCase("Approved")) {
+                    if (item.equalsIgnoreCase("Claimed")) {
                         badge.setStyle("-fx-background-color: #C8E6C9; -fx-text-fill: #2E7D32; -fx-font-weight: bold; -fx-padding: 3 10 3 10; -fx-background-radius: 12;");
-                    } else if (item.equalsIgnoreCase("Rejected")) {
-                        badge.setStyle("-fx-background-color: #FFCDD2; -fx-text-fill: #C62828; -fx-font-weight: bold; -fx-padding: 3 10 3 10; -fx-background-radius: 12;");
+                    } else {
+                        badge.setStyle("-fx-background-color: #FFE0B2; -fx-text-fill: #E65100; -fx-font-weight: bold; -fx-padding: 3 10 3 10; -fx-background-radius: 12;");
                     }
                     setGraphic(badge);
                 }
@@ -141,26 +135,24 @@ public class ClaimsController implements Initializable {
         });
 
         colAction.setCellFactory(col -> new TableCell<ClaimRow, String>() {
-            private final Button approveBtn = new Button();
-            private final Button rejectBtn  = new Button();
+            private final Button claimedBtn = new Button("Claimed");
+            private final Button unclaimedBtn = new Button("Unclaimed");
             private final Button archiveBtn = new Button("Archive");
             private final Button restoreBtn = new Button("Restore");
             private final Button viewBtn    = new Button();
 
             {
-                approveBtn.setGraphic(createIcon("/com/example/findit/assets/check.png"));
-                rejectBtn.setGraphic(createIcon("/com/example/findit/assets/ekis.png"));
                 viewBtn.setGraphic(createIcon("/com/example/findit/assets/ViewEye.png"));
 
                 String transparentStyle = "-fx-background-color: transparent; -fx-cursor: hand;";
-                approveBtn.setStyle(transparentStyle);
-                rejectBtn.setStyle(transparentStyle);
                 viewBtn.setStyle(transparentStyle);
+                claimedBtn.setStyle("-fx-background-color: #2E7D32; -fx-background-radius: 7; -fx-cursor: hand; -fx-text-fill: #FFFFFF; -fx-font-weight: bold; -fx-padding: 5 9 5 9;");
+                unclaimedBtn.setStyle("-fx-background-color: #F57F17; -fx-background-radius: 7; -fx-cursor: hand; -fx-text-fill: #FFFFFF; -fx-font-weight: bold; -fx-padding: 5 9 5 9;");
                 archiveBtn.setStyle("-fx-background-color: #800000; -fx-background-radius: 7; -fx-cursor: hand; -fx-text-fill: #FFFFFF; -fx-font-weight: bold; -fx-padding: 5 9 5 9;");
                 restoreBtn.setStyle("-fx-background-color: #FFCC00; -fx-background-radius: 7; -fx-cursor: hand; -fx-text-fill: #4A1212; -fx-font-weight: bold; -fx-padding: 5 9 5 9;");
 
-                approveBtn.setOnAction(e -> handleApprove(getTableView().getItems().get(getIndex())));
-                rejectBtn.setOnAction(e  -> handleReject(getTableView().getItems().get(getIndex())));
+                claimedBtn.setOnAction(e -> handleMarkClaimed(getTableView().getItems().get(getIndex())));
+                unclaimedBtn.setOnAction(e -> handleMarkUnclaimed(getTableView().getItems().get(getIndex())));
                 archiveBtn.setOnAction(e -> handleArchiveClaim(getTableView().getItems().get(getIndex())));
                 viewBtn.setOnAction(e -> showClaimDetails(getTableView().getItems().get(getIndex()), "Claim Details"));
                 restoreBtn.setOnAction(e -> handleRestoreClaim(getTableView().getItems().get(getIndex())));
@@ -181,10 +173,10 @@ public class ClaimsController implements Initializable {
                     if (isArchived) {
                         box.getChildren().addAll(viewBtn, restoreBtn);
                     } else {
-                        if ("Pending".equalsIgnoreCase(row.getClaimStatus())) {
-                            box.getChildren().addAll(approveBtn, rejectBtn, archiveBtn);
+                        if ("Unclaimed".equalsIgnoreCase(row.getClaimStatus())) {
+                            box.getChildren().addAll(viewBtn, claimedBtn, archiveBtn);
                         } else {
-                            box.getChildren().addAll(viewBtn, archiveBtn);
+                            box.getChildren().addAll(viewBtn, unclaimedBtn, archiveBtn);
                         }
                     }
                     setGraphic(box);
@@ -198,6 +190,9 @@ public class ClaimsController implements Initializable {
         ObservableList<ClaimRequest> sourceList = isArchived ? AppDataStore.ARCHIVED_CLAIMS : AppDataStore.getClaimRequests();
         
         masterData.setAll(sourceList.stream()
+                .filter(claim -> "Unclaimed".equalsIgnoreCase(claim.getStatus())
+                        || "Claimed".equalsIgnoreCase(claim.getStatus())
+                        || "Approved".equalsIgnoreCase(claim.getStatus()))
                 .map(ClaimRow::new)
                 .toList());
                 
@@ -210,7 +205,7 @@ public class ClaimsController implements Initializable {
         Alert confirmDialog = new Alert(Alert.AlertType.CONFIRMATION);
         confirmDialog.setTitle("Archive Claim Confirmation");
         confirmDialog.setHeaderText("Archive Claim: " + item.getItemName());
-        confirmDialog.setContentText("Are you sure you want to archive this claim request? It will be moved to the history logs.");
+        confirmDialog.setContentText("Are you sure you want to archive this claim record? It will be moved to the history logs.");
         confirmDialog.showAndWait().ifPresent(response -> {
             if (response == ButtonType.OK) {
                 AppDataStore.archiveClaimRequest(item.getRequest());
@@ -273,11 +268,14 @@ public class ClaimsController implements Initializable {
         refreshTableData();
     }
 
-    /** Returns true if the given item ID already has an Approved claim. */
+    /** Returns true if the given item ID already has an active approved or ready-to-claim record. */
     private boolean hasApprovedClaim(int itemId) {
         return AppDataStore.getClaimRequests().stream()
                 .anyMatch(c -> c.getItem().getId() == itemId
-                        && "Approved".equalsIgnoreCase(c.getStatus()));
+                        && ("Ready to claim".equalsIgnoreCase(c.getStatus())
+                        || "Approved".equalsIgnoreCase(c.getStatus())
+                        || "Unclaimed".equalsIgnoreCase(c.getStatus())
+                        || "Claimed".equalsIgnoreCase(c.getStatus())));
     }
 
     private VBox createMatchSuggestionCard(ItemMatch match, VBox cardContainer, Dialog<ButtonType> parentDialog) {
@@ -343,28 +341,7 @@ public class ClaimsController implements Initializable {
     }
 
     private void openMatchDetail(ItemMatch match) {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/findit/views/admin/MatchSuggestion.fxml"));
-            Parent root = loader.load();
-
-            MatchSuggestionController controller = loader.getController();
-            controller.loadMatch(match);
-
-            Stage dialog = new Stage();
-            dialog.initModality(Modality.APPLICATION_MODAL);
-            if (claimsTable.getScene() != null) {
-                dialog.initOwner(claimsTable.getScene().getWindow());
-            }
-            dialog.setTitle("Match Details");
-            dialog.setScene(new Scene(root));
-            dialog.showAndWait();
-        } catch (Exception e) {
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("Match Suggestions");
-            alert.setHeaderText(null);
-            alert.setContentText("Could not open the match details.");
-            alert.showAndWait();
-        }
+        MatchDetailsDialog.show(claimsTable.getScene() == null ? null : claimsTable.getScene().getWindow(), match);
     }
 
     private void wireSearchAndFilter() {
@@ -395,22 +372,26 @@ public class ClaimsController implements Initializable {
         });
     }
 
-    private void handleApprove(ClaimRow row) {
-        if (!confirmStatusChange("Approve Claim", "Are you sure about approving this claim?")) {
+    private void handleMarkClaimed(ClaimRow row) {
+        if (!confirmStatusChange("Mark Claimed", "Mark this item as already claimed by the user?")) {
             return;
         }
-        AppDataStore.updateClaimStatus(row.getRequest(), "Approved");
+        AppDataStore.updateClaimStatus(row.getRequest(), "Claimed");
+        row.setClaimStatus("Claimed");
         refreshTableData();
-        toast.show(claimsTable.getScene().getWindow(), "Claim successfully Approved!", "success");
+        claimsTable.refresh();
+        toast.show(claimsTable.getScene().getWindow(), "Claim marked as Claimed.", "success");
     }
 
-    private void handleReject(ClaimRow row) {
-        if (!confirmStatusChange("Reject Claim", "Are you sure about rejecting this claim?")) {
+    private void handleMarkUnclaimed(ClaimRow row) {
+        if (!confirmStatusChange("Mark Unclaimed", "Move this claim back to Unclaimed?")) {
             return;
         }
-        AppDataStore.updateClaimStatus(row.getRequest(), "Rejected");
+        AppDataStore.updateClaimStatus(row.getRequest(), "Unclaimed");
+        row.setClaimStatus("Unclaimed");
         refreshTableData();
-        toast.show(claimsTable.getScene().getWindow(), "Claim has been Rejected.", "error");
+        claimsTable.refresh();
+        toast.show(claimsTable.getScene().getWindow(), "Claim moved back to Unclaimed.", "warning");
     }
 
     private boolean confirmStatusChange(String title, String message) {
@@ -448,38 +429,30 @@ public class ClaimsController implements Initializable {
 
         String currentStatus = row.getClaimStatus();
         
-        ButtonType revertBtn = new ButtonType("Undo / Revert to Pending", ButtonBar.ButtonData.LEFT);
-        ButtonType approveBtn = new ButtonType("Change to Approved", ButtonBar.ButtonData.OTHER);
-        ButtonType rejectBtn = new ButtonType("Change to Rejected", ButtonBar.ButtonData.OTHER);
+        ButtonType unclaimedBtn = new ButtonType("Mark Unclaimed", ButtonBar.ButtonData.LEFT);
+        ButtonType claimedBtn = new ButtonType("Mark Claimed", ButtonBar.ButtonData.OTHER);
 
         boolean isArchived = showingArchived;
         
         if (!isArchived) {
-            if (currentStatus.equalsIgnoreCase("Approved")) {
-                dialog.getDialogPane().getButtonTypes().addAll(revertBtn, rejectBtn);
-            } else if (currentStatus.equalsIgnoreCase("Rejected")) {
-                dialog.getDialogPane().getButtonTypes().addAll(revertBtn, approveBtn);
+            if (currentStatus.equalsIgnoreCase("Unclaimed")) {
+                dialog.getDialogPane().getButtonTypes().add(claimedBtn);
+            } else if (currentStatus.equalsIgnoreCase("Claimed")) {
+                dialog.getDialogPane().getButtonTypes().add(unclaimedBtn);
             }
         }
     
         dialog.showAndWait().ifPresent(response -> {
             javafx.stage.Window window = claimsTable.getScene().getWindow();
 
-            if (response == revertBtn) {
-                AppDataStore.updateClaimStatus(claim, "Pending");
-                toast.show(window, "Claim reverted to Pending.", "warning");
-            } else if (response == approveBtn) {
-                if (!confirmStatusChange("Approve Claim", "Are you sure about approving this claim?")) {
-                    return;
-                }
-                AppDataStore.updateClaimStatus(claim, "Approved");
-                toast.show(window, "Claim successfully Approved!", "success");
-            } else if (response == rejectBtn) {
-                if (!confirmStatusChange("Reject Claim", "Are you sure about rejecting this claim?")) {
-                    return;
-                }
-                AppDataStore.updateClaimStatus(claim, "Rejected");
-                toast.show(window, "Claim has been Rejected.", "error");
+            if (response == unclaimedBtn) {
+                AppDataStore.updateClaimStatus(claim, "Unclaimed");
+                row.setClaimStatus("Unclaimed");
+                toast.show(window, "Claim moved back to Unclaimed.", "warning");
+            } else if (response == claimedBtn) {
+                AppDataStore.updateClaimStatus(claim, "Claimed");
+                row.setClaimStatus("Claimed");
+                toast.show(window, "Claim marked as Claimed.", "success");
             }
             
             refreshTableData(); 
@@ -612,7 +585,9 @@ public class ClaimsController implements Initializable {
         public String getStudentNumber() { return request.getStudentNumber(); }
         public String getContactInfo() { return request.getContactInfo(); }
         public String getProofDescription() { return request.getProofDescription(); }
-        public String getClaimStatus() { return request.getStatus(); }
+        public String getClaimStatus() {
+            return "Approved".equalsIgnoreCase(request.getStatus()) ? "Unclaimed" : request.getStatus();
+        }
         public String getClaimTrackingId() { return display(request.getTrackingId()); }
         public String getItemTrackingId() { return display(request.getItem().getTrackingId()); }
         public void setClaimStatus(String s) { request.setStatus(s); }

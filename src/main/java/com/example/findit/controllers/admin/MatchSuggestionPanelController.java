@@ -3,15 +3,13 @@ package com.example.findit.controllers.admin;
 import com.example.findit.model.AppDataStore;
 import com.example.findit.model.ItemMatch;
 import com.example.findit.model.ItemReport;
+import com.example.findit.util.MatchDetailsDialog;
 
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
@@ -20,8 +18,6 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
-import javafx.stage.Modality;
-import javafx.stage.Stage;
 
 import java.net.URL;
 import java.util.Locale;
@@ -153,28 +149,17 @@ public class MatchSuggestionPanelController implements Initializable {
     }
 
     private void openMatchDetail(ItemMatch match) {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/findit/views/admin/MatchSuggestion.fxml"));
-            Parent root = loader.load();
-
-            MatchSuggestionController controller = loader.getController();
-            controller.loadMatch(match);
-
-            Stage dialog = new Stage();
-            dialog.initModality(Modality.APPLICATION_MODAL);
-            dialog.initOwner(matchCardsContainer.getScene().getWindow());
-            dialog.setTitle("Match Details");
-            dialog.setScene(new Scene(root));
-            dialog.showAndWait();
-        } catch (Exception e) {
-            System.err.println("Could not load MatchSuggestion.fxml modal.");
-            e.printStackTrace();
-        }
+        MatchDetailsDialog.show(
+                matchCardsContainer.getScene() == null ? null : matchCardsContainer.getScene().getWindow(),
+                match
+        );
     }
 
     @FXML
     private void openMatchDetail() {
-        AppDataStore.getMatchSuggestions().stream().findFirst().ifPresent(this::openMatchDetail);
+        AppDataStore.getMatchSuggestions().stream()
+                .findFirst()
+                .ifPresentOrElse(this::openMatchDetail, () -> openMatchDetail(null));
     }
 
     private String safe(String value) {

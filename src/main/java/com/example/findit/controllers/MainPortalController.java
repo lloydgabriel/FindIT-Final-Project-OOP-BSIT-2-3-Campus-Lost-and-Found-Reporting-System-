@@ -38,6 +38,11 @@ public class MainPortalController {
         switchScene(event, "/com/example/findit/views/admin/AdminLogin.fxml");
     }
 
+    @FXML
+    public void handlePrivacyPolicy(ActionEvent event) {
+        showPrivacyPolicyDialog();
+    }
+
     private void switchScene(ActionEvent event, String fxmlPath) {
         try {
             Parent root = FXMLLoader.load(getClass().getResource(fxmlPath));

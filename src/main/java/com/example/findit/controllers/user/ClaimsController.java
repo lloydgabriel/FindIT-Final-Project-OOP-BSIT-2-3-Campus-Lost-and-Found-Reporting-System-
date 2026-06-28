@@ -35,7 +35,9 @@ public class ClaimsController {
         claimsFlow.setPrefWrapLength(700);
         claimsFlow.widthProperty().addListener((obs, oldWidth, newWidth) ->
                 claimsFlow.setPrefWrapLength(newWidth.doubleValue()));
-        statusFilter.setItems(FXCollections.observableArrayList("All Status", "Pending", "Approved", "Rejected"));
+        statusFilter.setItems(FXCollections.observableArrayList(
+                "All Status", "Pending", "Ready to claim", "Unclaimed", "Claimed", "Rejected"
+        ));
         statusFilter.getSelectionModel().selectFirst();
 
         searchField.textProperty().addListener((obs, oldValue, newValue) -> renderClaims());
@@ -47,6 +49,7 @@ public class ClaimsController {
     private void renderClaims() {
         claimsFlow.getChildren().clear();
         List<ClaimRequest> filteredClaims = AppDataStore.getClaimRequests().stream()
+                .filter(claim -> !isArchivedClaim(claim))
                 .filter(this::matchesFilters)
                 .toList();
 
@@ -77,6 +80,11 @@ public class ClaimsController {
                 || claim.getStatus().equalsIgnoreCase(status);
 
         return matchesSearch && matchesStatus;
+    }
+
+    private boolean isArchivedClaim(ClaimRequest claim) {
+        return AppDataStore.ARCHIVED_CLAIMS.stream()
+                .anyMatch(archivedClaim -> archivedClaim.getId() == claim.getId());
     }
 
     private boolean safeContains(String value, String search) {
@@ -218,11 +226,14 @@ public class ClaimsController {
     }
 
     private String statusStyle(String status) {
-        if ("Approved".equalsIgnoreCase(status)) {
+        if ("Claimed".equalsIgnoreCase(status)) {
             return "-fx-background-color: #C8E6C9; -fx-background-radius: 12; -fx-text-fill: #2E7D32; -fx-font-weight: bold; -fx-padding: 3 10 3 10;";
         }
         if ("Rejected".equalsIgnoreCase(status)) {
             return "-fx-background-color: #FFCDD2; -fx-background-radius: 12; -fx-text-fill: #C62828; -fx-font-weight: bold; -fx-padding: 3 10 3 10;";
+        }
+        if ("Ready to claim".equalsIgnoreCase(status) || "Unclaimed".equalsIgnoreCase(status)) {
+            return "-fx-background-color: #FFF3CD; -fx-background-radius: 12; -fx-text-fill: #8A5A00; -fx-font-weight: bold; -fx-padding: 3 10 3 10;";
         }
         return "-fx-background-color: #FFE0B2; -fx-background-radius: 12; -fx-text-fill: #E65100; -fx-font-weight: bold; -fx-padding: 3 10 3 10;";
     }
@@ -244,6 +255,7 @@ public class ClaimsController {
 
             // Search for the claim matching the tracking ID
             com.example.findit.model.ClaimRequest foundClaim = com.example.findit.model.AppDataStore.getClaimRequests().stream()
+                    .filter(claim -> !isArchivedClaim(claim))
                     .filter(claim -> sanitizedId.equals(claim.getTrackingId()))
                     .findFirst()
                     .orElse(null);
@@ -301,16 +313,21 @@ public class ClaimsController {
 
     private VBox createClaimTimeline(ClaimRequest claim) {
         String status = safe(claim.getStatus());
-        boolean approved = "Approved".equalsIgnoreCase(status);
+        boolean ready = "Ready to claim".equalsIgnoreCase(status);
+        boolean unclaimed = "Unclaimed".equalsIgnoreCase(status);
+        boolean claimed = "Claimed".equalsIgnoreCase(status);
         boolean rejected = "Rejected".equalsIgnoreCase(status);
-        boolean pending  = !approved && !rejected;
+        boolean pending  = !ready && !unclaimed && !claimed && !rejected;
 
         Label title = new Label("Claim Timeline");
         title.setStyle("-fx-text-fill: #4A1212; -fx-font-weight: bold; -fx-font-size: 13;");
 
         // Step 3 appearance depends on outcome
-        String step3Label  = rejected ? "Rejected Claim" : "Approved Claim";
-        boolean step3Done  = approved || rejected;
+        String step3Label = rejected ? "Rejected Report"
+                : claimed ? "Claimed"
+                : unclaimed ? "Unclaimed"
+                : "Ready to Claim";
+        boolean step3Done = ready || unclaimed || claimed || rejected;
 
         HBox timeline = new HBox(10);
         timeline.setAlignment(Pos.CENTER_LEFT);

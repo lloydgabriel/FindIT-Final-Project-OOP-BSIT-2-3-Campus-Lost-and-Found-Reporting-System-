@@ -43,7 +43,8 @@
                   <GridPane hgap="20.0" vgap="10.0">
                     <columnConstraints>
                       <ColumnConstraints hgrow="ALWAYS" minWidth="10.0" prefWidth="100.0" />
-                      <ColumnConstraints hgrow="ALWAYS" minWidth="10.0" prefWidth="100.0" />
+                        <ColumnConstraints hgrow="ALWAYS" minWidth="10.0" prefWidth="100.0" />
+                        <ColumnConstraints hgrow="ALWAYS" minWidth="10.0" prefWidth="100.0" />
                         <ColumnConstraints hgrow="ALWAYS" minWidth="10.0" prefWidth="100.0" />
                     </columnConstraints>
                     <rowConstraints>
@@ -51,6 +52,18 @@
                     </rowConstraints>
                      <children>
                         <HBox alignment="CENTER_LEFT" spacing="15.0" style="-fx-background-color: white; -fx-background-radius: 12; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 8, 0, 0, 4);">
+                           <children>
+                              <VBox alignment="CENTER_LEFT" HBox.hgrow="ALWAYS">
+                                 <children>
+                                    <Label style="-fx-text-fill: #4A1515; -fx-font-weight: bold;" text="Total Items"><font><Font name="System Bold" size="14.0" /></font></Label>
+                                    <Label fx:id="totalItemsCount" style="-fx-text-fill: #4A1515;" text="0"><font><Font size="32.0" /></font></Label>
+                                 </children>
+                              </VBox>
+                              <ImageView fitHeight="45.0" fitWidth="45.0" pickOnBounds="true" preserveRatio="true"><image><Image url="@../../assets/ItemReportedAdmin.png" /></image></ImageView>
+                           </children>
+                           <padding> <Insets left="20.0" right="20.0" /> </padding>
+                        </HBox>
+                        <HBox alignment="CENTER_LEFT" spacing="15.0" style="-fx-background-color: white; -fx-background-radius: 12; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 8, 0, 0, 4);" GridPane.columnIndex="1">
                            <children>
                               <VBox alignment="CENTER_LEFT" HBox.hgrow="ALWAYS">
                                  <children>
@@ -62,7 +75,7 @@
                            </children>
                            <padding> <Insets left="20.0" right="20.0" /> </padding>
                         </HBox>
-                        <HBox alignment="CENTER_LEFT" spacing="15.0" style="-fx-background-color: white; -fx-background-radius: 12; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 8, 0, 0, 4);" GridPane.columnIndex="1">
+                        <HBox alignment="CENTER_LEFT" spacing="15.0" style="-fx-background-color: white; -fx-background-radius: 12; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 8, 0, 0, 4);" GridPane.columnIndex="2">
                            <children>
                               <VBox alignment="CENTER_LEFT" HBox.hgrow="ALWAYS">
                                  <children>
@@ -74,12 +87,12 @@
                            </children>
                            <padding> <Insets left="20.0" right="20.0" /> </padding>
                         </HBox>
-                        <HBox alignment="CENTER_LEFT" spacing="15.0" style="-fx-background-color: white; -fx-background-radius: 12; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 8, 0, 0, 4);" GridPane.columnIndex="2">
+                        <HBox alignment="CENTER_LEFT" spacing="15.0" style="-fx-background-color: white; -fx-background-radius: 12; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 8, 0, 0, 4);" GridPane.columnIndex="3">
                            <children>
                               <VBox alignment="CENTER_LEFT" HBox.hgrow="ALWAYS">
                                  <children>
-                                    <Label style="-fx-text-fill: #4A1515; -fx-font-weight: bold;" text="Matched"><font><Font name="System Bold" size="14.0" /></font></Label>
-                                    <Label fx:id="matchedCount" style="-fx-text-fill: #4A1515;" text="0"><font><Font size="32.0" /></font></Label>
+                                    <Label style="-fx-text-fill: #4A1515; -fx-font-weight: bold;" text="Pending Reports"><font><Font name="System Bold" size="14.0" /></font></Label>
+                                    <Label fx:id="pendingReportsCount" style="-fx-text-fill: #4A1515;" text="0"><font><Font size="32.0" /></font></Label>
                                  </children>
                               </VBox>
                               <ImageView fitHeight="45.0" fitWidth="45.0" pickOnBounds="true" preserveRatio="true"><image><Image url="@../../assets/matched.jpg" /></image></ImageView>

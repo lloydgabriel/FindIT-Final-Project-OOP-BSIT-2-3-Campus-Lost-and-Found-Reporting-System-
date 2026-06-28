@@ -24,7 +24,7 @@
          <top>
             <HBox alignment="CENTER_LEFT" prefHeight="70.0" style="-fx-background-color: #800000;" BorderPane.alignment="CENTER">
                <children>
-                  <Label text="Claims" textFill="#ffcc00">
+                  <Label text="Claim Status" textFill="#ffcc00">
                      <font><Font name="System Bold" size="26.0" /></font>
                      <HBox.margin><Insets /></HBox.margin>
                   </Label>

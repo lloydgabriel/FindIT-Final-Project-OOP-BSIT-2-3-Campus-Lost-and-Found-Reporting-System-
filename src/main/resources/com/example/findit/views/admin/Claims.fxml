@@ -27,7 +27,7 @@
                   <!-- HEADER -->
                   <HBox alignment="CENTER_LEFT" prefHeight="70.0" style="-fx-background-color: #800000;">
                      <children>
-                        <Label text="Claim Requests" textFill="#FFCC00">
+                        <Label text="Claims" textFill="#FFCC00">
                            <font><Font name="System Bold" size="26.0" /></font>
                            <HBox.margin><Insets left="30.0" /></HBox.margin>
                         </Label>
@@ -44,7 +44,6 @@
                            <children>
                               <TextField fx:id="searchField" prefHeight="38.0" promptText="Search claims ..." style="-fx-background-color: #FFFFFF; -fx-border-color: #CCCCCC; -fx-border-radius: 8;" HBox.hgrow="ALWAYS" />
                               <ComboBox fx:id="statusFilter" prefHeight="38.0" prefWidth="200.0" promptText="All Status" style="-fx-background-color: #FFFFFF; -fx-border-color: #CCCCCC; -fx-border-radius: 8;" />
-                              <Button mnemonicParsing="false" onAction="#handleShowMatchSuggestions" prefHeight="38.0" prefWidth="190.0" style="-fx-background-color: #FFCC00; -fx-background-radius: 8; -fx-cursor: hand; -fx-text-fill: #4A1212; -fx-font-weight: bold;" text="Match Suggestions" />
                               <Button fx:id="archivedItemsButton" mnemonicParsing="false" onAction="#handleToggleArchivedItems" prefHeight="38.0" prefWidth="185.0" style="-fx-background-color: #800000; -fx-background-radius: 8; -fx-cursor: hand; -fx-text-fill: #FFFFFF; -fx-font-weight: bold;" text="Archived Claims" />
                            </children>
                         </HBox>
@@ -54,6 +53,7 @@
                            <children>
                               <TableView fx:id="claimsTable" styleClass="claims-table" VBox.vgrow="ALWAYS">
                                 <columns>
+                                  <TableColumn fx:id="colClaimTrackingId" minWidth="110.0" prefWidth="130.0" text="Claim Tracking ID" />
                                   <TableColumn fx:id="colItemName" minWidth="100.0" prefWidth="160.0" text="Item Name" />
                                   <TableColumn fx:id="colDate" minWidth="90.0" prefWidth="120.0" text="Date" />
                                   <TableColumn fx:id="colClaimant" minWidth="100.0" prefWidth="150.0" text="Claimant" />
