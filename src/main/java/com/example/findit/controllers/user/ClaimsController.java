@@ -1,119 +1,246 @@
-package com.example.findit.controllers.user;
+package com.example.findit.controllers.admin;
 
 import com.example.findit.model.AppDataStore;
 import com.example.findit.model.ClaimRequest;
 import com.example.findit.model.ItemReport;
+import com.example.findit.util.ImageStorage;
+import com.example.findit.util.toast;
+
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
+import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.Dialog;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
+import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.image.Image;
+import java.net.URL;
+import java.util.ResourceBundle;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.ColumnConstraints;
-import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 
-import java.util.List;
-import java.util.Locale;
+public class ClaimsController implements Initializable {
 
-public class ClaimsController {
+    @FXML private AdminSidebarController sidebarController;
+
     @FXML private TextField searchField;
     @FXML private ComboBox<String> statusFilter;
-    @FXML private FlowPane claimsFlow;
+    @FXML private ComboBox<String> viewToggle;
 
-    @FXML
-    public void initialize() {
-        UserSidebarController.setActivePage("Claims");
-        claimsFlow.setPrefWrapLength(700);
-        claimsFlow.widthProperty().addListener((obs, oldWidth, newWidth) ->
-                claimsFlow.setPrefWrapLength(newWidth.doubleValue()));
+    @FXML private TableView<ClaimRow> claimsTable;
+    
+    // Updated to exactly match the clean 5-column layout in FXML
+    @FXML private TableColumn<ClaimRow, String> colItemName, colDate, colClaimant, colStatus, colAction;
+
+    private final ObservableList<ClaimRow> masterData = FXCollections.observableArrayList();
+    private FilteredList<ClaimRow> filteredData;
+
+    @Override
+    public void initialize(URL location, ResourceBundle resources) {
+        if (sidebarController != null) { sidebarController.setActiveTab("Claims"); }
+        
         statusFilter.setItems(FXCollections.observableArrayList("All Status", "Pending", "Approved", "Rejected"));
         statusFilter.getSelectionModel().selectFirst();
-
-        searchField.textProperty().addListener((obs, oldValue, newValue) -> renderClaims());
-        statusFilter.valueProperty().addListener((obs, oldValue, newValue) -> renderClaims());
-        AppDataStore.getClaimRequests().addListener((javafx.collections.ListChangeListener<ClaimRequest>) change -> renderClaims());
-        renderClaims();
+        
+        if (viewToggle != null) {
+            viewToggle.setItems(FXCollections.observableArrayList("Active Claims", "Archived History"));
+            viewToggle.getSelectionModel().selectFirst();
+            
+            viewToggle.valueProperty().addListener((obs, oldVal, newVal) -> {
+                refreshTableData();
+                if ("Archived History".equals(newVal)) {
+                    claimsTable.setStyle("-fx-control-inner-background: #f4f4f4;"); 
+                } else {
+                    claimsTable.setStyle("-fx-control-inner-background: #ffffff;");
+                }
+                claimsTable.refresh();
+            });
+        }
+        
+        configureTableColumns();
+        claimsTable.setColumnResizePolicy(TableView.UNCONSTRAINED_RESIZE_POLICY);
+        refreshTableData();
+        wireSearchAndFilter();
+        
+        AppDataStore.getClaimRequests().addListener((javafx.collections.ListChangeListener<ClaimRequest>) change -> {
+            if (viewToggle == null || "Active Claims".equals(viewToggle.getValue())) {
+                refreshTableData();
+            }
+        });
     }
 
-    private void renderClaims() {
-        claimsFlow.getChildren().clear();
-        List<ClaimRequest> filteredClaims = AppDataStore.getClaimRequests().stream()
-                .filter(this::matchesFilters)
-                .toList();
+    private void configureTableColumns() {
+        // Matches the properties in ClaimRow class
+        colItemName.setCellValueFactory(new PropertyValueFactory<>("itemName"));
+        colDate.setCellValueFactory(new PropertyValueFactory<>("date"));
+        colClaimant.setCellValueFactory(new PropertyValueFactory<>("claimantName")); 
+        colStatus.setCellValueFactory(new PropertyValueFactory<>("claimStatus"));
 
-        if (filteredClaims.isEmpty()) {
-            Label emptyLabel = new Label("No claims found.");
-            emptyLabel.setStyle("-fx-text-fill: #777777; -fx-font-size: 16;");
-            claimsFlow.getChildren().add(emptyLabel);
+        colStatus.setCellFactory(col -> new TableCell<ClaimRow, String>() {
+            private final Label badge = new Label();
+
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setGraphic(null);
+                } else {
+                    badge.setText(item);
+                    if (item.equalsIgnoreCase("Pending")) {
+                        badge.setStyle("-fx-background-color: #FFE0B2; -fx-text-fill: #E65100; -fx-font-weight: bold; -fx-padding: 3 10 3 10; -fx-background-radius: 12;");
+                    } else if (item.equalsIgnoreCase("Approved")) {
+                        badge.setStyle("-fx-background-color: #C8E6C9; -fx-text-fill: #2E7D32; -fx-font-weight: bold; -fx-padding: 3 10 3 10; -fx-background-radius: 12;");
+                    } else if (item.equalsIgnoreCase("Rejected")) {
+                        badge.setStyle("-fx-background-color: #FFCDD2; -fx-text-fill: #C62828; -fx-font-weight: bold; -fx-padding: 3 10 3 10; -fx-background-radius: 12;");
+                    }
+                    setGraphic(badge);
+                }
+            }
+        });
+
+        colAction.setCellFactory(col -> new TableCell<ClaimRow, String>() {
+            private final Button approveBtn = new Button();
+            private final Button rejectBtn  = new Button();
+            private final Button archiveBtn = new Button();
+            private final Button viewBtn    = new Button();
+
+            {
+                approveBtn.setGraphic(createIcon("/com/example/findit/assets/check.png"));
+                rejectBtn.setGraphic(createIcon("/com/example/findit/assets/ekis.png"));
+                archiveBtn.setGraphic(createIcon("/com/example/findit/assets/trash.png"));
+                viewBtn.setGraphic(createIcon("/com/example/findit/assets/ViewEye.png"));
+
+                String transparentStyle = "-fx-background-color: transparent; -fx-cursor: hand;";
+                approveBtn.setStyle(transparentStyle);
+                rejectBtn.setStyle(transparentStyle);
+                archiveBtn.setStyle(transparentStyle);
+                viewBtn.setStyle(transparentStyle);
+
+                approveBtn.setOnAction(e -> handleApprove(getTableView().getItems().get(getIndex())));
+                rejectBtn.setOnAction(e  -> handleReject(getTableView().getItems().get(getIndex())));
+                archiveBtn.setOnAction(e -> handleArchiveClaim(getTableView().getItems().get(getIndex())));
+                viewBtn.setOnAction(e -> showClaimDetails(getTableView().getItems().get(getIndex()), "Claim Details"));
+            }
+
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || getTableRow() == null || getTableRow().getItem() == null) {
+                    setGraphic(null);
+                } else {
+                    ClaimRow row = getTableRow().getItem();
+                    javafx.scene.layout.HBox box = new javafx.scene.layout.HBox(2);
+                    box.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+
+                    boolean isArchived = viewToggle != null && "Archived History".equals(viewToggle.getValue());
+
+                    if (isArchived) {
+                        box.getChildren().addAll(viewBtn);
+                    } else {
+                        if ("Pending".equalsIgnoreCase(row.getClaimStatus())) {
+                            box.getChildren().addAll(approveBtn, rejectBtn, archiveBtn);
+                        } else {
+                            box.getChildren().addAll(viewBtn, archiveBtn);
+                        }
+                    }
+                    setGraphic(box);
+                }
+            }
+        });
+    }
+
+    private void refreshTableData() {
+        boolean isArchived = viewToggle != null && "Archived History".equals(viewToggle.getValue());
+        ObservableList<ClaimRequest> sourceList = isArchived ? AppDataStore.ARCHIVED_CLAIMS : AppDataStore.getClaimRequests();
+        
+        masterData.setAll(sourceList.stream()
+                .map(ClaimRow::new)
+                .toList());
+                
+        if (filteredData != null) {
+            applyFilter();
+        }
+    }
+
+    private void handleArchiveClaim(ClaimRow item) {
+        Alert confirmDialog = new Alert(Alert.AlertType.CONFIRMATION);
+        confirmDialog.setTitle("Archive Claim Confirmation");
+        confirmDialog.setHeaderText("Dispose / Archive Claim: " + item.getItemName());
+        confirmDialog.setContentText("Are you sure you want to archive this claim request? It will be moved to the history logs.");
+        confirmDialog.showAndWait().ifPresent(response -> {
+            if (response == ButtonType.OK) {
+                AppDataStore.archiveClaimRequest(item.getRequest());
+                refreshTableData();
+            }
+        });
+    }
+
+    private void wireSearchAndFilter() {
+        filteredData = new FilteredList<>(masterData, p -> true);
+        claimsTable.setItems(filteredData);
+
+        searchField.textProperty().addListener((obs, o, n) -> applyFilter());
+        statusFilter.valueProperty().addListener((obs, o, n) -> applyFilter());
+    }
+
+    private void applyFilter() {
+        String search = searchField.getText() == null ? "" : searchField.getText().toLowerCase().trim();
+        String statusValue = statusFilter.getValue() == null ? "All Status" : statusFilter.getValue();
+
+        filteredData.setPredicate(row -> {
+            boolean matchesSearch = search.isEmpty()
+                    || row.getItemName().toLowerCase().contains(search)
+                    || row.getClaimantName().toLowerCase().contains(search)
+                    || row.getClaimTrackingId().toLowerCase().contains(search)
+                    || row.getItemTrackingId().toLowerCase().contains(search)
+                    || row.getCategory().toLowerCase().contains(search)
+                    || row.getLocation().toLowerCase().contains(search);
+
+            boolean matchesStatus = "All Status".equals(statusValue)
+                    || row.getClaimStatus().equalsIgnoreCase(statusValue);
+
+            return matchesSearch && matchesStatus;
+        });
+    }
+
+    private void handleApprove(ClaimRow row) {
+        if (!confirmStatusChange("Approve Claim", "Are you sure about approving this claim?")) {
             return;
         }
+        AppDataStore.updateClaimStatus(row.getRequest(), "Approved");
+        refreshTableData();
+        toast.show(claimsTable.getScene().getWindow(), "Claim successfully Approved!", "success");
+    }
 
-        for (ClaimRequest claim : filteredClaims) {
-            claimsFlow.getChildren().add(createClaimCard(claim));
+    private void handleReject(ClaimRow row) {
+        if (!confirmStatusChange("Reject Claim", "Are you sure about rejecting this claim?")) {
+            return;
         }
+        AppDataStore.updateClaimStatus(row.getRequest(), "Rejected");
+        refreshTableData();
+        toast.show(claimsTable.getScene().getWindow(), "Claim has been Rejected.", "error");
     }
 
-    private boolean matchesFilters(ClaimRequest claim) {
-        String search = searchField.getText() == null
-                ? ""
-                : searchField.getText().trim().toLowerCase(Locale.ROOT);
-        String status = statusFilter.getValue();
-
-        boolean matchesSearch = search.isEmpty()
-                || safeContains(claim.getItem().getItemName(), search)
-                || safeContains(claim.getClaimantName(), search)
-                || safeContains(claim.getItem().getCategory(), search)
-                || safeContains(claim.getItem().getLocation(), search);
-        boolean matchesStatus = "All Status".equals(status)
-                || claim.getStatus().equalsIgnoreCase(status);
-
-        return matchesSearch && matchesStatus;
+    private boolean confirmStatusChange(String title, String message) {
+        Alert confirmDialog = new Alert(Alert.AlertType.CONFIRMATION);
+        confirmDialog.setTitle(title);
+        confirmDialog.setHeaderText(null);
+        confirmDialog.setContentText(message);
+        return confirmDialog.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK;
     }
 
-    private boolean safeContains(String value, String search) {
-        return value != null && value.toLowerCase(Locale.ROOT).contains(search);
-    }
-
-    private VBox createClaimCard(ClaimRequest claim) {
-        VBox card = new VBox(7);
-        card.setPrefWidth(230);
-        card.setMinWidth(210);
-        card.setPadding(new Insets(15));
-        card.setStyle("-fx-background-color: #FFFFFF; -fx-background-radius: 12; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.06), 8, 0, 0, 4); -fx-cursor: hand;");
-        card.setOnMouseClicked(event -> showClaimDetails(claim));
-
-        Label itemName = new Label(claim.getItem().getItemName());
-        itemName.setWrapText(true);
-        itemName.setStyle("-fx-text-fill: #4A1515; -fx-font-weight: bold; -fx-font-size: 15;");
-
-        Label claimant = new Label("Claimant: " + claim.getClaimantName());
-        claimant.setWrapText(true);
-        claimant.setStyle("-fx-text-fill: #555555;");
-
-        Label location = new Label("Item details hidden");
-        location.setWrapText(true);
-        location.setStyle("-fx-text-fill: #777777;");
-
-        Label badge = new Label(claim.getStatus());
-        badge.setStyle(statusStyle(claim.getStatus()));
-
-        card.getChildren().addAll(itemName, claimant, location, badge);
-        return card;
-    }
-
-    private void showClaimDetails(ClaimRequest claim) {
+    private void showClaimDetails(ClaimRow row, String title) {
+        ClaimRequest claim = row.getRequest();
         Dialog<ButtonType> dialog = new Dialog<>();
-        dialog.setTitle("Claim Details");
-        dialog.setHeaderText(claim.getItem().getItemName() + " - " + claim.getStatus());
-        dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
+        dialog.setTitle(title);
+        dialog.setHeaderText(row.getItemName() + " - " + row.getClaimStatus());
         dialog.getDialogPane().setPrefWidth(820);
 
         HBox content = new HBox(22);
@@ -131,7 +258,47 @@ public class ClaimsController {
 
         content.getChildren().addAll(createImagePanel(claim.getItem()), details);
         dialog.getDialogPane().setContent(content);
-        dialog.showAndWait();
+        ButtonType closeBtn = ButtonType.CLOSE;
+        dialog.getDialogPane().getButtonTypes().add(closeBtn);
+
+        String currentStatus = row.getClaimStatus();
+        
+        ButtonType revertBtn = new ButtonType("Undo / Revert to Pending", ButtonBar.ButtonData.LEFT);
+        ButtonType approveBtn = new ButtonType("Change to Approved", ButtonBar.ButtonData.OTHER);
+        ButtonType rejectBtn = new ButtonType("Change to Rejected", ButtonBar.ButtonData.OTHER);
+
+        boolean isArchived = viewToggle != null && "Archived History".equals(viewToggle.getValue());
+        
+        if (!isArchived) {
+            if (currentStatus.equalsIgnoreCase("Approved")) {
+                dialog.getDialogPane().getButtonTypes().addAll(revertBtn, rejectBtn);
+            } else if (currentStatus.equalsIgnoreCase("Rejected")) {
+                dialog.getDialogPane().getButtonTypes().addAll(revertBtn, approveBtn);
+            }
+        }
+    
+        dialog.showAndWait().ifPresent(response -> {
+            javafx.stage.Window window = claimsTable.getScene().getWindow();
+
+            if (response == revertBtn) {
+                AppDataStore.updateClaimStatus(claim, "Pending");
+                toast.show(window, "Claim reverted to Pending.", "warning");
+            } else if (response == approveBtn) {
+                if (!confirmStatusChange("Approve Claim", "Are you sure about approving this claim?")) {
+                    return;
+                }
+                AppDataStore.updateClaimStatus(claim, "Approved");
+                toast.show(window, "Claim successfully Approved!", "success");
+            } else if (response == rejectBtn) {
+                if (!confirmStatusChange("Reject Claim", "Are you sure about rejecting this claim?")) {
+                    return;
+                }
+                AppDataStore.updateClaimStatus(claim, "Rejected");
+                toast.show(window, "Claim has been Rejected.", "error");
+            }
+            
+            refreshTableData(); 
+        });
     }
 
     private VBox createImagePanel(ItemReport item) {
@@ -143,9 +310,18 @@ public class ClaimsController {
         imageFrame.setPrefSize(260, 240);
         imageFrame.setStyle("-fx-background-color: #F0F0F3; -fx-background-radius: 10;");
 
-        Label placeholder = new Label("Image hidden");
-        placeholder.setStyle("-fx-text-fill: #777777; -fx-font-weight: bold;");
-        imageFrame.getChildren().add(placeholder);
+        Image image = ImageStorage.loadImage(item.getImagePath());
+        if (image == null) {
+            Label placeholder = new Label("No Image Available");
+            placeholder.setStyle("-fx-text-fill: #777777; -fx-font-weight: bold;");
+            imageFrame.getChildren().add(placeholder);
+        } else {
+            ImageView imageView = new ImageView(image);
+            imageView.setFitWidth(240);
+            imageView.setFitHeight(220);
+            imageView.setPreserveRatio(true);
+            imageFrame.getChildren().add(imageView);
+        }
 
         Label imageLabel = new Label(item.getItemName());
         imageLabel.setWrapText(true);
@@ -162,18 +338,23 @@ public class ClaimsController {
 
     private GridPane createClaimGrid(ClaimRequest claim) {
         GridPane grid = createDetailsGrid();
-        addDetailRow(grid, 0, "Claimant", claim.getClaimantName());
-        addDetailRow(grid, 1, "Student Number", claim.getStudentNumber());
-        addDetailRow(grid, 2, "Contact", claim.getContactInfo());
-        addDetailRow(grid, 3, "Status", claim.getStatus());
+        addDetailRow(grid, 0, "Claim Tracking ID", claim.getTrackingId());
+        addDetailRow(grid, 1, "Claimant", claim.getClaimantName());
+        addDetailRow(grid, 2, "Student Number", claim.getStudentNumber());
+        addDetailRow(grid, 3, "Contact", claim.getContactInfo());
+        addDetailRow(grid, 4, "Status", claim.getStatus());
         return grid;
     }
 
     private GridPane createItemGrid(ItemReport item) {
         GridPane grid = createDetailsGrid();
-        addDetailRow(grid, 0, "Item Name", item.getItemName());
-        addDetailRow(grid, 1, "Status", item.getType());
-        addDetailRow(grid, 2, "Details", "Hidden from users to prevent false claims.");
+        addDetailRow(grid, 0, "Item Tracking ID", item.getTrackingId());
+        addDetailRow(grid, 1, "Category", item.getCategory());
+        addDetailRow(grid, 2, "Date", item.getDate());
+        addDetailRow(grid, 3, "Location", item.getLocation());
+        addDetailRow(grid, 4, "Reported By", item.getReportedBy());
+        addDetailRow(grid, 5, "Reporter Contact", item.getContact());
+        addDetailRow(grid, 6, "Description", item.getDescription());
         return grid;
     }
 
@@ -216,82 +397,43 @@ public class ClaimsController {
         return value == null || value.isBlank() ? "N/A" : value;
     }
 
-    private String statusStyle(String status) {
-        if ("Approved".equalsIgnoreCase(status)) {
-            return "-fx-background-color: #C8E6C9; -fx-background-radius: 12; -fx-text-fill: #2E7D32; -fx-font-weight: bold; -fx-padding: 3 10 3 10;";
+    private ImageView createIcon(String path) {
+        java.io.InputStream stream = getClass().getResourceAsStream(path);
+        if (stream == null) {
+            System.err.println("❌ Missing table icon: " + path);
+            return new ImageView(); 
         }
-        if ("Rejected".equalsIgnoreCase(status)) {
-            return "-fx-background-color: #FFCDD2; -fx-background-radius: 12; -fx-text-fill: #C62828; -fx-font-weight: bold; -fx-padding: 3 10 3 10;";
+        ImageView imgView = new ImageView(new Image(stream));
+        imgView.setFitWidth(20);  
+        imgView.setFitHeight(20);
+        imgView.setPreserveRatio(true);
+        return imgView;
+    }
+    
+    public static class ClaimRow {
+        private final ClaimRequest request;
+
+        public ClaimRow(ClaimRequest request) {
+            this.request = request;
         }
-        return "-fx-background-color: #FFE0B2; -fx-background-radius: 12; -fx-text-fill: #E65100; -fx-font-weight: bold; -fx-padding: 3 10 3 10;";
-    }
 
-    @FXML
-    public void handleManageClaim(javafx.event.ActionEvent event) {
-        javafx.scene.control.TextInputDialog dialog = new javafx.scene.control.TextInputDialog();
-        dialog.setTitle("Manage Claim Submission");
-        dialog.setHeaderText("Secure Access");
-        dialog.setContentText("Enter your Claim Tracking ID (e.g., CD-5678):");
+        public ClaimRequest getRequest() { return request; }
+        public String getType() { return request.getItem().getType(); }
+        public String getItemName() { return request.getItem().getItemName(); }
+        public String getCategory() { return request.getItem().getCategory(); }
+        public String getDate() { return request.getItem().getDate(); }
+        public String getLocation() { return request.getItem().getLocation(); }
+        public String getClaimantName() { return request.getClaimantName(); }
+        public String getStudentNumber() { return request.getStudentNumber(); }
+        public String getContactInfo() { return request.getContactInfo(); }
+        public String getProofDescription() { return request.getProofDescription(); }
+        public String getClaimStatus() { return request.getStatus(); }
+        public String getClaimTrackingId() { return display(request.getTrackingId()); }
+        public String getItemTrackingId() { return display(request.getItem().getTrackingId()); }
+        public void setClaimStatus(String s) { request.setStatus(s); }
 
-        dialog.showAndWait().ifPresent(trackingId -> {
-            String sanitizedId = trackingId.trim().toUpperCase();
-
-            if (!sanitizedId.matches("[A-Z]{2}-\\d{4}")) {
-                com.example.findit.util.toast.show(((javafx.scene.Node) event.getSource()).getScene().getWindow(), "Invalid Format. Must be LL-NNNN.", "error");
-                return;
-            }
-
-            // Search for the claim matching the tracking ID
-            com.example.findit.model.ClaimRequest foundClaim = com.example.findit.model.AppDataStore.getClaimRequests().stream()
-                    .filter(claim -> sanitizedId.equals(claim.getTrackingId()))
-                    .findFirst()
-                    .orElse(null);
-
-            if (foundClaim != null) {
-                showClaimManagerWindow(foundClaim, event);
-            } else {
-                com.example.findit.util.toast.show(((javafx.scene.Node) event.getSource()).getScene().getWindow(), "No claim found with ID: " + sanitizedId, "warning");
-            }
-        });
-    }
-
-    private void showClaimManagerWindow(com.example.findit.model.ClaimRequest claim, javafx.event.ActionEvent event) {
-        javafx.scene.control.Dialog<javafx.scene.control.ButtonType> dialog = new javafx.scene.control.Dialog<>();
-        dialog.setTitle("Edit Claim");
-        dialog.setHeaderText("Managing Claim for: " + claim.getItem().getItemName());
-
-        // Create Editable Fields
-        javafx.scene.control.TextField contactField = new javafx.scene.control.TextField(claim.getContactInfo());
-        javafx.scene.control.TextArea proofArea = new javafx.scene.control.TextArea(claim.getProofDescription());
-        proofArea.setPrefRowCount(3);
-
-        // Layout the form
-        javafx.scene.layout.GridPane grid = new javafx.scene.layout.GridPane();
-        grid.setHgap(10); grid.setVgap(10);
-        grid.add(new javafx.scene.control.Label("Contact Info:"), 0, 0); grid.add(contactField, 1, 0);
-        grid.add(new javafx.scene.control.Label("Proof Details:"), 0, 1); grid.add(proofArea, 1, 1);
-        
-        dialog.getDialogPane().setContent(grid);
-
-        // Add Action Buttons
-        javafx.scene.control.ButtonType saveBtn = new javafx.scene.control.ButtonType("Save Changes", javafx.scene.control.ButtonBar.ButtonData.OK_DONE);
-        javafx.scene.control.ButtonType deleteBtn = new javafx.scene.control.ButtonType("Delete Claim", javafx.scene.control.ButtonBar.ButtonData.LEFT);
-        dialog.getDialogPane().getButtonTypes().addAll(saveBtn, deleteBtn, javafx.scene.control.ButtonType.CANCEL);
-
-        dialog.showAndWait().ifPresent(response -> {
-            javafx.stage.Window window = ((javafx.scene.Node) event.getSource()).getScene().getWindow();
-            
-            if (response == saveBtn) {
-                com.example.findit.model.AppDataStore.updateClaimDetails(
-                        claim, 
-                        contactField.getText(), 
-                        proofArea.getText()
-                );
-                com.example.findit.util.toast.show(window, "Claim updated successfully!", "success");
-            } else if (response == deleteBtn) {
-                com.example.findit.model.AppDataStore.deleteClaimRequest(claim);
-                com.example.findit.util.toast.show(window, "Claim withdrawn permanently.", "warning");
-            }
-        });
+        private static String display(String value) {
+            return value == null || value.isBlank() ? "N/A" : value;
+        }
     }
 }
