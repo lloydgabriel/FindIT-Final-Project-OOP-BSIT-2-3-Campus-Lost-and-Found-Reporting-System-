@@ -21,9 +21,9 @@
             <Label fx:id="logoText" text="findIT" textFill="WHITE">
                <font> <Font name="System Bold" size="24.0" /> </font>
             </Label>
-
+            
             <Region fx:id="headerSpacer" HBox.hgrow="ALWAYS" />
-
+            
             <Button mnemonicParsing="false" onAction="#toggleSidebar" style="-fx-background-color: transparent; -fx-cursor: hand;" text="≡" textFill="WHITE">
                <font> <Font name="System Bold" size="24.0" /> </font>
             </Button>
@@ -31,13 +31,13 @@
          <padding> <Insets left="15.0" right="15.0" /> </padding>
          <VBox.margin> <Insets bottom="20.0" top="10.0" /> </VBox.margin>
       </HBox>
-
+      
       <Button fx:id="btnDashboard" alignment="BASELINE_LEFT" contentDisplay="LEFT" mnemonicParsing="false" onAction="#goToDashboard" prefHeight="45.0" prefWidth="220.0" style="-fx-background-color: transparent;" text="Dashboard" textFill="WHITE">
          <font> <Font size="15.0" /> </font>
          <graphic><ImageView fx:id="imgDashboard" fitHeight="22.0" fitWidth="22.0" pickOnBounds="true" preserveRatio="true"><image><Image url="@../../assets/dashboard.png" /></image></ImageView></graphic>
          <padding> <Insets left="20.0" /> </padding>
       </Button>
-
+      
       <Button fx:id="btnReported" alignment="BASELINE_LEFT" contentDisplay="LEFT" mnemonicParsing="false" onAction="#goToReportedItems" prefHeight="45.0" prefWidth="220.0" style="-fx-background-color: transparent;" text="Reported Items" textFill="WHITE">
          <font> <Font size="15.0" /> </font>
          <graphic><ImageView fx:id="imgReported" fitHeight="22.0" fitWidth="22.0" pickOnBounds="true" preserveRatio="true"><image><Image url="@../../assets/ItemReportedAdmin.png" /></image></ImageView></graphic>
@@ -50,7 +50,7 @@
          <padding> <Insets left="20.0" /> </padding>
       </Button>
 
-      <Button fx:id="btnMatch" alignment="BASELINE_LEFT" contentDisplay="LEFT" mnemonicParsing="false" onAction="#goToMatchSuggestions" prefHeight="45.0" prefWidth="220.0" style="-fx-background-color: transparent;" text="Match Suggestions" textFill="WHITE">
+      <Button fx:id="btnMatch" alignment="BASELINE_LEFT" contentDisplay="LEFT" managed="false" mnemonicParsing="false" onAction="#goToMatchSuggestions" prefHeight="45.0" prefWidth="220.0" style="-fx-background-color: transparent;" text="Match Suggestions" textFill="WHITE" visible="false">
          <font> <Font size="15.0" /> </font>
          <graphic><ImageView fx:id="imgMatch" fitHeight="22.0" fitWidth="22.0" pickOnBounds="true" preserveRatio="true"><image><Image url="@../../assets/MatchSuggestion.png" /></image></ImageView></graphic>
          <padding> <Insets left="20.0" /> </padding>
@@ -76,13 +76,13 @@
          <padding> <Insets left="20.0" /> </padding>
       </Button>
       <Region VBox.vgrow="ALWAYS" />
-
+      
       <Button fx:id="btnLogout" alignment="BASELINE_LEFT" contentDisplay="LEFT" mnemonicParsing="false" onAction="#handleLogout" prefHeight="45.0" prefWidth="220.0" style="-fx-background-color: transparent;" text="Logout" textFill="WHITE">
          <font> <Font size="15.0" /> </font>
          <graphic><ImageView fx:id="imgLogout" fitHeight="22.0" fitWidth="22.0" pickOnBounds="true" preserveRatio="true"><image><Image url="@../../assets/logout.png" /></image>
-            <effect>
-               <ColorAdjust brightness="1.0" />
-            </effect></ImageView></graphic>
+               <effect>
+                  <ColorAdjust brightness="1.0" />
+               </effect></ImageView></graphic>
          <padding> <Insets left="20.0" /> </padding>
          <VBox.margin> <Insets bottom="20.0" /> </VBox.margin>
       </Button>
