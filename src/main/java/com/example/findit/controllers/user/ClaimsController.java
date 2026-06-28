@@ -270,7 +270,7 @@ public class ClaimsController {
         grid.setHgap(10); grid.setVgap(10);
         grid.add(new javafx.scene.control.Label("Contact Info:"), 0, 0); grid.add(contactField, 1, 0);
         grid.add(new javafx.scene.control.Label("Proof Details:"), 0, 1); grid.add(proofArea, 1, 1);
-        
+
         dialog.getDialogPane().setContent(grid);
 
         // Add Action Buttons
@@ -280,11 +280,11 @@ public class ClaimsController {
 
         dialog.showAndWait().ifPresent(response -> {
             javafx.stage.Window window = ((javafx.scene.Node) event.getSource()).getScene().getWindow();
-            
+
             if (response == saveBtn) {
                 com.example.findit.model.AppDataStore.updateClaimDetails(
-                        claim, 
-                        contactField.getText(), 
+                        claim,
+                        contactField.getText(),
                         proofArea.getText()
                 );
                 com.example.findit.util.toast.show(window, "Claim updated successfully!", "success");

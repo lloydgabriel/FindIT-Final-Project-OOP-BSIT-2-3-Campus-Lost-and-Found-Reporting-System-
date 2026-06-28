@@ -30,7 +30,7 @@ public class ItemReport {
     }
 
     // --- GETTERS ---
-    
+
     public int getId() { return id; }
     public String getType() { return type; }
     public String getItemName() { return itemName; }
@@ -55,7 +55,7 @@ public class ItemReport {
     public void setDescription(String description) {
         this.description = description;
     }
-    
+
     public void setTrackingId(String trackingId) {
         this.trackingId = trackingId;
     }

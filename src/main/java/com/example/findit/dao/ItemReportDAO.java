@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ItemReportDAO {
-    
+
     public List<ItemReport> findAll() {
         DatabaseBootstrap.ensureApplicationSchema();
         List<ItemReport> reports = new ArrayList<>();
@@ -44,7 +44,7 @@ public class ItemReportDAO {
                              String location, String reportedBy, String contact,
                              String description, String imagePath) {
         DatabaseBootstrap.ensureApplicationSchema();
-        
+
         // Generate the tracking ticket
         String newTicket = com.example.findit.util.TrackingGenerator.generateID();
         String sql = """
@@ -92,7 +92,7 @@ public class ItemReportDAO {
                 stmt.setInt(9, reporterId);
                 stmt.setInt(10, categoryId);
                 stmt.setString(11, newTicket);
-                
+
                 stmt.setInt(12, categoryId);
                 stmt.setInt(13, reporterId);
                 stmt.setInt(14, reporterId);
@@ -127,19 +127,19 @@ public class ItemReportDAO {
         // FIX 3: Now it archives the item AND its orphaned claims!
         String archiveItemSql = "UPDATE items SET record_status = 'Archived' WHERE item_id = ?";
         String archiveClaimsSql = "UPDATE claims SET record_status = 'Archived' WHERE item_id = ?";
-        
+
         try (java.sql.Connection conn = DBConnection.connect();
              java.sql.PreparedStatement itemStmt = conn.prepareStatement(archiveItemSql);
              java.sql.PreparedStatement claimsStmt = conn.prepareStatement(archiveClaimsSql)) {
-            
+
             // Execute Item Archive
             itemStmt.setInt(1, item.getId());
             itemStmt.executeUpdate();
-            
+
             // Execute Claims Archive
             claimsStmt.setInt(1, item.getId());
             claimsStmt.executeUpdate();
-            
+
         } catch (Exception e) {
             System.err.println("Could not archive item and its claims: " + e.getMessage());
         }
@@ -158,13 +158,13 @@ public class ItemReportDAO {
                 WHERE i.record_status = 'Archived'
                 ORDER BY i.created_at DESC NULLS LAST, i.item_id DESC
                 """;
-        
+
         try (Connection conn = DBConnection.connect();
              PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
-            
+
             while (rs.next()) {
-                archivedList.add(mapReport(rs)); 
+                archivedList.add(mapReport(rs));
             }
         } catch (Exception e) {
             System.err.println("Error fetching archived items: " + e.getMessage());
@@ -206,7 +206,7 @@ public class ItemReportDAO {
             itemName = rs.getString("description");
         }
 
-       return new ItemReport(
+        return new ItemReport(
                 rs.getInt("item_id"),
                 rs.getString("item_type"),
                 itemName,
@@ -217,7 +217,7 @@ public class ItemReportDAO {
                 rs.getString("contact_number"),
                 rs.getString("description"),
                 rs.getString("image_path"),
-                rs.getString("tracking_id") 
+                rs.getString("tracking_id")
         );
     }
 }

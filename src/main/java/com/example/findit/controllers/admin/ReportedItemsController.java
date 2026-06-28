@@ -41,7 +41,7 @@ public class ReportedItemsController implements Initializable {
     @FXML private ComboBox<String> viewToggle;
     @FXML private Label lblTimestamp; // NEW: The Live Clock Label
     @FXML private TableView<ItemReport> itemsTable;
-    
+
     @FXML private TableColumn<ItemReport, String> colType, colTrackingId, colItemName, colCategory, colDate, colReportedBy, colLocation, colAction;
 
     private FilteredList<ItemReport> filteredData;
@@ -49,7 +49,7 @@ public class ReportedItemsController implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         if (sidebarController != null) { sidebarController.setActiveTab("Reported"); }
-        
+
         // 1. LIVE CLOCK SETUP
         Timeline clock = new Timeline(new KeyFrame(Duration.ZERO, e -> {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM dd, yyyy  hh:mm:ss a");
@@ -63,7 +63,7 @@ public class ReportedItemsController implements Initializable {
         // 2. SETUP DROPDOWNS
         typeFilter.setItems(FXCollections.observableArrayList("All", "Lost", "Found"));
         typeFilter.getSelectionModel().selectFirst();
-        
+
         // Setup the new View Toggle
         if (viewToggle != null) {
             viewToggle.setItems(FXCollections.observableArrayList("Active Records", "Archived History"));
@@ -73,15 +73,15 @@ public class ReportedItemsController implements Initializable {
         configureTableColumns();
         ResponsiveTable.fillAvailableWidth(itemsTable);
         wireSearchAndFilter();
-        
+
         // 3. LISTEN FOR TOGGLE CHANGES (Active vs Archived)
         if (viewToggle != null) {
             viewToggle.valueProperty().addListener((obs, oldVal, newVal) -> {
                 wireSearchAndFilter(); // Re-wire the table to the new list
-                
+
                 if ("Archived History".equals(newVal)) {
                     // Make the table slightly grey to indicate it's the archive
-                    itemsTable.setStyle("-fx-control-inner-background: #f4f4f4;"); 
+                    itemsTable.setStyle("-fx-control-inner-background: #f4f4f4;");
                 } else {
                     itemsTable.setStyle("-fx-control-inner-background: #ffffff;");
                 }
@@ -100,10 +100,10 @@ public class ReportedItemsController implements Initializable {
         colType.setStyle("-fx-alignment: CENTER;");
         colTrackingId.setStyle("-fx-alignment: CENTER;");
         colAction.setStyle("-fx-alignment: CENTER;");
-        
+
         colType.setCellFactory(col -> new TableCell<ItemReport, String>() {
             private final Label badge = new Label();
-            
+
             @Override
             protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
@@ -156,10 +156,10 @@ public class ReportedItemsController implements Initializable {
                     javafx.scene.layout.HBox actionBox = new javafx.scene.layout.HBox(8);
                     actionBox.setAlignment(javafx.geometry.Pos.CENTER);
                     actionBox.setMaxWidth(Double.MAX_VALUE);
-                    
+
                     actionBox.getChildren().add(viewBtn);
                     boolean isArchived = viewToggle != null && "Archived History".equals(viewToggle.getValue());
-                    
+
                     if (!isArchived) {
                         actionBox.getChildren().add(deleteBtn);
                     }
@@ -170,12 +170,12 @@ public class ReportedItemsController implements Initializable {
             }
         });
     }
-    
+
     private ImageView createIcon(String path) {
         java.io.InputStream stream = getClass().getResourceAsStream(path);
         if (stream == null) {
             System.err.println("X Missing table icon: " + path);
-            return new ImageView(); 
+            return new ImageView();
         }
         ImageView imgView = new ImageView(new Image(stream));
         imgView.setFitWidth(20);
@@ -196,7 +196,7 @@ public class ReportedItemsController implements Initializable {
         // Clear old listeners and add new ones
         searchField.textProperty().addListener((obs, oldVal, newVal) -> applyFilter());
         typeFilter.valueProperty().addListener((obs, oldVal, newVal) -> applyFilter());
-        
+
         applyFilter(); // Apply immediately to refresh
     }
 
@@ -329,12 +329,12 @@ public class ReportedItemsController implements Initializable {
         confirmDialog.setTitle("Archive Confirmation");
         confirmDialog.setHeaderText("Dispose / Archive Report: " + item.getItemName());
         confirmDialog.setContentText("Are you sure you want to archive this item? It will be removed from the active board but kept in the database history.");
-        
+
         confirmDialog.showAndWait().ifPresent(response -> {
             if (response == ButtonType.OK) {
                 AppDataStore.archiveItemReport(item);
-                
-                wireSearchAndFilter(); 
+
+                wireSearchAndFilter();
             }
         });
     }

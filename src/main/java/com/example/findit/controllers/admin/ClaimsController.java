@@ -35,7 +35,7 @@ public class ClaimsController implements Initializable {
     @FXML private ComboBox<String> viewToggle;
 
     @FXML private TableView<ClaimRow> claimsTable;
-    
+
     // Updated to exactly match the clean 5-column layout in FXML
     @FXML private TableColumn<ClaimRow, String> colItemName, colDate, colClaimant, colStatus, colAction;
 
@@ -45,30 +45,30 @@ public class ClaimsController implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         if (sidebarController != null) { sidebarController.setActiveTab("Claims"); }
-        
+
         statusFilter.setItems(FXCollections.observableArrayList("All Status", "Pending", "Approved", "Rejected"));
         statusFilter.getSelectionModel().selectFirst();
-        
+
         if (viewToggle != null) {
             viewToggle.setItems(FXCollections.observableArrayList("Active Claims", "Archived History"));
             viewToggle.getSelectionModel().selectFirst();
-            
+
             viewToggle.valueProperty().addListener((obs, oldVal, newVal) -> {
                 refreshTableData();
                 if ("Archived History".equals(newVal)) {
-                    claimsTable.setStyle("-fx-control-inner-background: #f4f4f4;"); 
+                    claimsTable.setStyle("-fx-control-inner-background: #f4f4f4;");
                 } else {
                     claimsTable.setStyle("-fx-control-inner-background: #ffffff;");
                 }
                 claimsTable.refresh();
             });
         }
-        
+
         configureTableColumns();
         claimsTable.setColumnResizePolicy(TableView.UNCONSTRAINED_RESIZE_POLICY);
         refreshTableData();
         wireSearchAndFilter();
-        
+
         AppDataStore.getClaimRequests().addListener((javafx.collections.ListChangeListener<ClaimRequest>) change -> {
             if (viewToggle == null || "Active Claims".equals(viewToggle.getValue())) {
                 refreshTableData();
@@ -80,7 +80,7 @@ public class ClaimsController implements Initializable {
         // Matches the properties in ClaimRow class
         colItemName.setCellValueFactory(new PropertyValueFactory<>("itemName"));
         colDate.setCellValueFactory(new PropertyValueFactory<>("date"));
-        colClaimant.setCellValueFactory(new PropertyValueFactory<>("claimantName")); 
+        colClaimant.setCellValueFactory(new PropertyValueFactory<>("claimantName"));
         colStatus.setCellValueFactory(new PropertyValueFactory<>("claimStatus"));
 
         colStatus.setCellFactory(col -> new TableCell<ClaimRow, String>() {
@@ -159,11 +159,11 @@ public class ClaimsController implements Initializable {
     private void refreshTableData() {
         boolean isArchived = viewToggle != null && "Archived History".equals(viewToggle.getValue());
         ObservableList<ClaimRequest> sourceList = isArchived ? AppDataStore.ARCHIVED_CLAIMS : AppDataStore.getClaimRequests();
-        
+
         masterData.setAll(sourceList.stream()
                 .map(ClaimRow::new)
                 .toList());
-                
+
         if (filteredData != null) {
             applyFilter();
         }
@@ -262,13 +262,13 @@ public class ClaimsController implements Initializable {
         dialog.getDialogPane().getButtonTypes().add(closeBtn);
 
         String currentStatus = row.getClaimStatus();
-        
+
         ButtonType revertBtn = new ButtonType("Undo / Revert to Pending", ButtonBar.ButtonData.LEFT);
         ButtonType approveBtn = new ButtonType("Change to Approved", ButtonBar.ButtonData.OTHER);
         ButtonType rejectBtn = new ButtonType("Change to Rejected", ButtonBar.ButtonData.OTHER);
 
         boolean isArchived = viewToggle != null && "Archived History".equals(viewToggle.getValue());
-        
+
         if (!isArchived) {
             if (currentStatus.equalsIgnoreCase("Approved")) {
                 dialog.getDialogPane().getButtonTypes().addAll(revertBtn, rejectBtn);
@@ -276,7 +276,7 @@ public class ClaimsController implements Initializable {
                 dialog.getDialogPane().getButtonTypes().addAll(revertBtn, approveBtn);
             }
         }
-    
+
         dialog.showAndWait().ifPresent(response -> {
             javafx.stage.Window window = claimsTable.getScene().getWindow();
 
@@ -296,8 +296,8 @@ public class ClaimsController implements Initializable {
                 AppDataStore.updateClaimStatus(claim, "Rejected");
                 toast.show(window, "Claim has been Rejected.", "error");
             }
-            
-            refreshTableData(); 
+
+            refreshTableData();
         });
     }
 
@@ -401,15 +401,15 @@ public class ClaimsController implements Initializable {
         java.io.InputStream stream = getClass().getResourceAsStream(path);
         if (stream == null) {
             System.err.println("❌ Missing table icon: " + path);
-            return new ImageView(); 
+            return new ImageView();
         }
         ImageView imgView = new ImageView(new Image(stream));
-        imgView.setFitWidth(20);  
+        imgView.setFitWidth(20);
         imgView.setFitHeight(20);
         imgView.setPreserveRatio(true);
         return imgView;
     }
-    
+
     public static class ClaimRow {
         private final ClaimRequest request;
 

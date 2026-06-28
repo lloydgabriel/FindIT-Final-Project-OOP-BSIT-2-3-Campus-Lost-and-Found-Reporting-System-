@@ -364,7 +364,7 @@ public final class AppDataStore {
     public static void updateItemDetails(ItemReport item, String newName, String newLocation, String newDescription) {
         ITEM_REPORT_DAO.updateDetails(item, newName, newLocation, newDescription);
         markLocalChange();
-        refreshAll(); 
+        refreshAll();
     }
 
     public static void updateClaimDetails(ClaimRequest request, String newContact, String newProof) {
@@ -509,20 +509,20 @@ public final class AppDataStore {
     //archive logic
     public static void archiveItemReport(ItemReport item) {
         ITEM_REPORT_DAO.archiveItem(item);
-        ITEM_REPORTS.remove(item);  
+        ITEM_REPORTS.remove(item);
         if (!ARCHIVED_ITEMS.contains(item)) {
-            ARCHIVED_ITEMS.add(item);          
+            ARCHIVED_ITEMS.add(item);
         }
         CLAIM_REQUESTS.removeIf(claim -> claim.getItem().getId() == item.getId());
         refreshMatchSuggestions();
     }
 
     public static void archiveClaimRequest(ClaimRequest claim) {
-        CLAIM_REQUEST_DAO.archiveClaim(claim); 
-        CLAIM_REQUESTS.remove(claim);          
-        
+        CLAIM_REQUEST_DAO.archiveClaim(claim);
+        CLAIM_REQUESTS.remove(claim);
+
         if (!ARCHIVED_CLAIMS.contains(claim)) {
-            ARCHIVED_CLAIMS.add(claim);        
+            ARCHIVED_CLAIMS.add(claim);
         }
         refreshMatchSuggestions();
     }
@@ -540,8 +540,8 @@ public final class AppDataStore {
 
                     if (daysOld > 60) {
                         boolean isClaimed = CLAIM_REQUESTS.stream()
-                                .anyMatch(claim -> claim.getItem().getId() == item.getId() 
-                                                && "Approved".equalsIgnoreCase(claim.getStatus()));
+                                .anyMatch(claim -> claim.getItem().getId() == item.getId()
+                                        && "Approved".equalsIgnoreCase(claim.getStatus()));
 
                         if (!isClaimed) {
                             itemsToDispose.add(item);
@@ -554,7 +554,7 @@ public final class AppDataStore {
         }
 
         for (ItemReport item : itemsToDispose) {
-            archiveItemReport(item); 
+            archiveItemReport(item);
             archivedCount++;
         }
         return archivedCount;

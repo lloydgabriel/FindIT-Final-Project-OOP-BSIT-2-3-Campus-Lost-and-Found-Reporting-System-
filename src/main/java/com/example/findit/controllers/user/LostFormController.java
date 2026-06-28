@@ -124,17 +124,17 @@ public class LostFormController {
         idField.setEditable(false);
         idField.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; -fx-alignment: center; -fx-background-color: #F0F0F0;");
 
-        VBox layout = new VBox(15, 
-            new Label("Keep this ID to edit or delete your report later."),
-            new Label("Please screenshot or take a picture of this tracking ID before tapping Done."),
-            idField
+        VBox layout = new VBox(15,
+                new Label("Keep this ID to edit or delete your report later."),
+                new Label("Please screenshot or take a picture of this tracking ID before tapping Done."),
+                idField
         );
         layout.setAlignment(Pos.CENTER);
         alert.getDialogPane().setContent(layout);
         Button done = (Button) alert.getDialogPane().lookupButton(doneButton);
         done.setStyle("-fx-cursor: hand; -fx-background-color: #800000; -fx-text-fill: white; -fx-font-weight: bold;");
         alert.showAndWait();
-        
+
         UserSidebarController.setActivePage("Items");
         UserNavigationHelper.switchScene(event, "/com/example/findit/views/user/Items.fxml");
     }
