@@ -89,12 +89,13 @@ public final class AppDataStore {
     public static ClaimRequest confirmMatch(ItemMatch match) {
         ClaimRequest existing = findAutoMatchClaim(match);
         if (existing != null) {
-            if (!"Ready to claim".equalsIgnoreCase(existing.getStatus())) {
+            // If it was previously rejected, reopen it as Ready to claim
+            if ("Rejected".equalsIgnoreCase(existing.getStatus())) {
                 CLAIM_REQUEST_DAO.updateStatus(existing, "Ready to claim");
                 existing.setStatus("Ready to claim");
-                logClaimValidation(existing, "Pending");
                 markLocalChange();
             }
+            // Already Ready to claim or further — nothing to do
             match.setStatus("Confirmed");
             refreshMatchSuggestions();
             return existing;
@@ -105,16 +106,16 @@ public final class AppDataStore {
         String proof = "Auto-generated from match suggestion between lost report #"
                 + lostItem.getId() + " and found report #" + foundItem.getId() + ".";
 
+        // Step 2: Admin confirms → create claim with "Ready to claim" so the owner sees it in their Claim Tab.
+        // The claim stays "Ready to claim" until the user formally submits it (step 3).
         ClaimRequest request = CLAIM_REQUEST_DAO.insert(
                 foundItem,
                 lostItem.getReportedBy(),
                 autoMatchStudentNumber(match),
                 lostItem.getContact(),
-                proof
+                proof,
+                "Ready to claim"
         );
-        CLAIM_REQUEST_DAO.updateStatus(request, "Ready to claim");
-        request.setStatus("Ready to claim");
-        logClaimValidation(request, "Pending");
         CLAIM_REQUESTS.add(0, request);
         markLocalChange();
         match.setStatus("Confirmed");
@@ -139,30 +140,41 @@ public final class AppDataStore {
             return existing;
         }
 
-        ItemReport lostItem = match.getLostItem();
-        ItemReport foundItem = match.getFoundItem();
-        String proof = "Auto-generated rejected match suggestion between lost report #"
-                + lostItem.getId() + " and found report #" + foundItem.getId() + ".";
-
-        ClaimRequest request = CLAIM_REQUEST_DAO.insert(
-                foundItem,
-                lostItem.getReportedBy(),
-                autoMatchStudentNumber(match),
-                lostItem.getContact(),
-                proof,
-                "Rejected"
-        );
-        logClaimValidation(request, "Rejected");
-        CLAIM_REQUESTS.add(0, request);
-        markLocalChange();
+        // No pre-existing claim — just decline the in-memory match without creating a DB record
         declineMatch(match);
-        return request;
+        return null;
     }
 
     public static void deleteItemReport(ItemReport item) {
         ITEM_REPORT_DAO.delete(item);
         ITEM_REPORTS.remove(item);
         CLAIM_REQUESTS.removeIf(claim -> claim.getItem().getId() == item.getId());
+        markLocalChange();
+        refreshMatchSuggestions();
+    }
+
+    /**
+     * Step 3 of the match flow: user formally submits the pre-created "Ready to claim" entry.
+     * Transitions the claim from "Ready to claim" → "Pending" so the admin can review it in Claims.
+     */
+    public static void submitMatchClaim(ClaimRequest request, String claimantName,
+                                        String studentNumber, String contactInfo, String proofDescription) {
+        if (request == null) {
+            throw new IllegalArgumentException("Claim request must not be null.");
+        }
+        if (!"Ready to claim".equalsIgnoreCase(request.getStatus())) {
+            throw new IllegalStateException("Only 'Ready to claim' entries can be submitted by the user.");
+        }
+
+        // Update the editable fields if the user provided them
+        if ((contactInfo != null && !contactInfo.isBlank())
+                || (proofDescription != null && !proofDescription.isBlank())) {
+            CLAIM_REQUEST_DAO.updateDetails(request, contactInfo, proofDescription);
+        }
+
+        CLAIM_REQUEST_DAO.updateStatus(request, "Pending");
+        request.setStatus("Pending");
+        notifyClaimRequestChanged(request);
         markLocalChange();
         refreshMatchSuggestions();
     }
@@ -262,6 +274,10 @@ public final class AppDataStore {
                     );
                     ClaimRequest autoMatchClaim = findAutoMatchClaim(match);
                     if (autoMatchClaim != null && "Rejected".equalsIgnoreCase(autoMatchClaim.getStatus())) {
+                        continue;
+                    }
+                    // Hide from match panel once admin has confirmed this specific pair
+                    if (autoMatchClaim != null && "Ready to claim".equalsIgnoreCase(autoMatchClaim.getStatus())) {
                         continue;
                     }
                     if (hasClaimFlowForItem(foundItem)) {
@@ -370,7 +386,7 @@ public final class AppDataStore {
     private static boolean hasClaimFlowForItem(ItemReport item) {
         return CLAIM_REQUESTS.stream()
                 .filter(claim -> claim.getItem().getId() == item.getId())
-                .anyMatch(claim -> "Ready to claim".equalsIgnoreCase(claim.getStatus())
+                .anyMatch(claim -> "Pending".equalsIgnoreCase(claim.getStatus())
                         || "Approved".equalsIgnoreCase(claim.getStatus())
                         || "Unclaimed".equalsIgnoreCase(claim.getStatus())
                         || "Claimed".equalsIgnoreCase(claim.getStatus()));
