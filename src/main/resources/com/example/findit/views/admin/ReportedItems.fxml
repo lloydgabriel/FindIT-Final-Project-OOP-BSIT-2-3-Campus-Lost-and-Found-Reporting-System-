@@ -54,7 +54,6 @@
                         <ComboBox fx:id="statusFilter" prefHeight="38.0" prefWidth="145.0" promptText="Status" style="-fx-background-color: #FFFFFF; -fx-border-color: #CCCCCC; -fx-border-radius: 8;" />
                         <ComboBox fx:id="dateFilter" prefHeight="38.0" prefWidth="150.0" promptText="Date" style="-fx-background-color: #FFFFFF; -fx-border-color: #CCCCCC; -fx-border-radius: 8;" />
                         <DatePicker fx:id="monthPicker" prefHeight="38.0" prefWidth="145.0" promptText="Month" />
-                        <Button mnemonicParsing="false" onAction="#handleShowMatchSuggestions" prefHeight="38.0" prefWidth="190.0" style="-fx-background-color: #FFCC00; -fx-background-radius: 8; -fx-cursor: hand; -fx-text-fill: #4A1212; -fx-font-weight: bold;" text="Match Suggestions" />
                         <Button fx:id="archivedItemsButton" mnemonicParsing="false" onAction="#handleToggleArchivedItems" prefHeight="38.0" prefWidth="185.0" style="-fx-background-color: #800000; -fx-background-radius: 8; -fx-cursor: hand; -fx-text-fill: #FFFFFF; -fx-font-weight: bold;" text="Archived Reports" />
                      </children>
                   </HBox>
@@ -68,10 +67,10 @@
                               <TableColumn fx:id="colClaimTrackingId" prefWidth="125.0" text="Claim ID" />
                               <TableColumn fx:id="colItemTrackingId" prefWidth="125.0" text="Item ID" />
                               <TableColumn fx:id="colItemName" prefWidth="140.0" text="Item Name" />
-                              <TableColumn fx:id="colType" prefWidth="85.0" text="Type" />
+                              <TableColumn fx:id="colType" prefWidth="115.0" text="Report Kind" />
                               <TableColumn fx:id="colCategory" prefWidth="110.0" text="Category" />
                               <TableColumn fx:id="colDate" prefWidth="105.0" text="Date" />
-                              <TableColumn fx:id="colClaimant" prefWidth="130.0" text="Claimant" />
+                              <TableColumn fx:id="colClaimant" prefWidth="140.0" text="Reporter / Claimant" />
                               <TableColumn fx:id="colLocation" prefWidth="130.0" text="Location" />
                               <TableColumn fx:id="colAction" prefWidth="180.0" text="Action" />
                           </columns>
