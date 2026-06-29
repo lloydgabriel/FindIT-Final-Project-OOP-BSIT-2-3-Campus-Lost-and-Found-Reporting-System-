@@ -33,6 +33,7 @@ public final class MatchDetailsDialog {
             Parent root = loader.load();
 
             MatchSuggestionController controller = loader.getController();
+            controller.setOwnerWindow(owner);
             controller.loadMatch(match);
 
             Stage dialog = new Stage();
