@@ -653,9 +653,8 @@ public class ReportedItemsController implements Initializable {
         addDetailRow(grid, 0, "Report Status", row.getReviewStatus());
         addDetailRow(grid, 1, "Claim Tracking ID", claim.getTrackingId());
         addDetailRow(grid, 2, "Claimant", claim.getClaimantName());
-        addDetailRow(grid, 3, "Student Number", claim.getStudentNumber());
-        addDetailRow(grid, 4, "Contact", claim.getContactInfo());
-        addDetailRow(grid, 5, "Workflow Status", claim.getStatus());
+        addDetailRow(grid, 3, "Contact", claim.getContactInfo());
+        addDetailRow(grid, 4, "Workflow Status", claim.getStatus());
         return grid;
     }
 

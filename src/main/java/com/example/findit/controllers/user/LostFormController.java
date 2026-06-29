@@ -87,6 +87,12 @@ public class LostFormController {
             return;
         }
 
+        if (!InputValidator.isRealReporterName(txtReporterName.getText())) {
+            showAlert(Alert.AlertType.WARNING, "Invalid Reporter Name",
+                    "Please enter your real name. Anonymous names are not accepted.");
+            return;
+        }
+
         if (!InputValidator.isValidNameText(txtItemName.getText())
                 || (!txtLocation.getText().isBlank() && !InputValidator.isValidNameText(txtLocation.getText()))
                 || !InputValidator.isValidNameText(txtReporterName.getText())

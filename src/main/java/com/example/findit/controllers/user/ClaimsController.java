@@ -376,9 +376,8 @@ public class ClaimsController {
     private GridPane createClaimGrid(ClaimRequest claim) {
         GridPane grid = createDetailsGrid();
         addDetailRow(grid, 0, "Claimant", claim.getClaimantName());
-        addDetailRow(grid, 1, "Student Number", claim.getStudentNumber());
-        addDetailRow(grid, 2, "Contact", claim.getContactInfo());
-        addDetailRow(grid, 3, "Status", claim.getStatus());
+        addDetailRow(grid, 1, "Contact", claim.getContactInfo());
+        addDetailRow(grid, 2, "Status", claim.getStatus());
         return grid;
     }
 

@@ -42,18 +42,18 @@
                      <children>
                         <VBox spacing="6.0">
                            <children>
-                              <Label text="Item Name *" textFill="#333333">
+                              <HBox><children><Label text="Item Name " textFill="#333333">
                                  <font>
                                     <Font name="System Bold" size="15.0" />
-                                 </font></Label><TextField fx:id="txtItemName" maxWidth="1.7976931348623157E308" prefHeight="46.0" promptText="e.g., iPhone 13 Pro" style="-fx-background-color: #FFFFFF; -fx-border-color: #CCCCCC; -fx-border-radius: 8; -fx-font-size: 15;" />
+                                 </font></Label><Label text="*" textFill="RED"><font><Font name="System Bold" size="15.0" /></font></Label></children></HBox><TextField fx:id="txtItemName" maxWidth="1.7976931348623157E308" prefHeight="46.0" promptText="e.g., iPhone 13 Pro" style="-fx-background-color: #FFFFFF; -fx-border-color: #CCCCCC; -fx-border-radius: 8; -fx-font-size: 15;" />
                            </children>
                         </VBox>
                         <VBox spacing="6.0" GridPane.columnIndex="1">
                            <children>
-                              <Label text="Category *">
+                              <HBox><children><Label text="Category ">
                                  <font>
                                     <Font name="System Bold" size="15.0" />
-                                 </font></Label><ComboBox fx:id="cmbCategory" maxWidth="1.7976931348623157E308" prefHeight="46.0" promptText="Select a category" style="-fx-background-color: white; -fx-border-color: #CCCCCC; -fx-border-radius: 8; -fx-font-size: 15;" />
+                                 </font></Label><Label text="*" textFill="RED"><font><Font name="System Bold" size="15.0" /></font></Label></children></HBox><ComboBox fx:id="cmbCategory" maxWidth="1.7976931348623157E308" prefHeight="46.0" promptText="Select a category" style="-fx-background-color: white; -fx-border-color: #CCCCCC; -fx-border-radius: 8; -fx-font-size: 15;" />
                            </children>
                         </VBox>
                         <VBox spacing="6.0" GridPane.columnIndex="2">
@@ -66,7 +66,7 @@
                         </VBox>
                         <VBox spacing="6.0" GridPane.rowIndex="1">
                            <children>
-                              <Label text="Location Found *"><font><Font name="System Bold" size="15.0" /></font></Label><TextField fx:id="txtLocation" maxWidth="1.7976931348623157E308" prefHeight="46.0" promptText="e.g., Canteen" style="-fx-background-color: #FFFFFF; -fx-border-color: #CCCCCC; -fx-border-radius: 8; -fx-font-size: 15;" />
+                              <HBox><children><Label text="Location Found "><font><Font name="System Bold" size="15.0" /></font></Label><Label text="*" textFill="RED"><font><Font name="System Bold" size="15.0" /></font></Label></children></HBox><TextField fx:id="txtLocation" maxWidth="1.7976931348623157E308" prefHeight="46.0" promptText="e.g., Canteen" style="-fx-background-color: #FFFFFF; -fx-border-color: #CCCCCC; -fx-border-radius: 8; -fx-font-size: 15;" />
                            </children>
                         </VBox>
                         <VBox spacing="6.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
@@ -84,7 +84,7 @@
 
                   <VBox spacing="6.0" VBox.vgrow="ALWAYS">
                      <children>
-                        <Label text="Location Description *"><font><Font name="System Bold" size="15.0" /></font></Label><TextArea fx:id="txtDescription" maxHeight="1.7976931348623157E308" prefHeight="120.0" promptText="Provide detailed description..." style="-fx-background-color: #FFFFFF; -fx-border-color: #CCCCCC; -fx-border-radius: 8; -fx-font-size: 15;" wrapText="true" VBox.vgrow="ALWAYS" />
+                        <HBox><children><Label text="Item Description "><font><Font name="System Bold" size="15.0" /></font></Label><Label text="*" textFill="RED"><font><Font name="System Bold" size="15.0" /></font></Label></children></HBox><TextArea fx:id="txtDescription" maxHeight="1.7976931348623157E308" prefHeight="120.0" promptText="Provide detailed description..." style="-fx-background-color: #FFFFFF; -fx-border-color: #CCCCCC; -fx-border-radius: 8; -fx-font-size: 15;" wrapText="true" VBox.vgrow="ALWAYS" />
                      </children>
                   </VBox>
 

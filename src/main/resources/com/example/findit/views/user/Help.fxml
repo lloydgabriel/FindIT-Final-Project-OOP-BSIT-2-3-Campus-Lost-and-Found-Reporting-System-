@@ -21,7 +21,7 @@
          <children>
             <VBox alignment="CENTER" spacing="10.0">
                <children>
-                  <Label text="How to Use FindIT?" textFill="#800000">
+                  <Label text="How to Use findIT?" textFill="#800000">
                      <font><Font name="System Bold" size="36.0" /></font>
                   </Label>
                   <Label text="Lost something on campus? Found someone's belongings? Here's how our system works." textAlignment="CENTER" textFill="#444444" wrapText="true">

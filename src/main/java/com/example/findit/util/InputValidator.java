@@ -65,6 +65,19 @@ public final class InputValidator {
         return trim(value).matches(DESCRIPTION_PATTERN);
     }
 
+    public static boolean isRealReporterName(String value) {
+        String normalized = trim(value).toLowerCase().replaceAll("[^a-z0-9]+", " ").trim();
+        if (normalized.isBlank()) {
+            return false;
+        }
+
+        return !normalized.matches(".*\\b(anon[a-z0-9]*|anonym[a-z0-9]*|unknown|unnamed|none|private|confidential|redacted|withheld|secret)\\b.*")
+                && !normalized.contains("no name")
+                && !normalized.contains("not disclose")
+                && !normalized.contains("prefer not")
+                && !normalized.matches("n a|na");
+    }
+
     private static String trim(String value) {
         return value == null ? "" : value.trim();
     }

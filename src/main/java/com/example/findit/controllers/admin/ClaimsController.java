@@ -556,9 +556,8 @@ public class ClaimsController implements Initializable {
         GridPane grid = createDetailsGrid();
         addDetailRow(grid, 0, "Claim Tracking ID", claim.getTrackingId());
         addDetailRow(grid, 1, "Claimant", claim.getClaimantName());
-        addDetailRow(grid, 2, "Student Number", claim.getStudentNumber());
-        addDetailRow(grid, 3, "Contact", claim.getContactInfo());
-        addDetailRow(grid, 4, "Status", claim.getStatus());
+        addDetailRow(grid, 2, "Contact", claim.getContactInfo());
+        addDetailRow(grid, 3, "Status", claim.getStatus());
         return grid;
     }
 
