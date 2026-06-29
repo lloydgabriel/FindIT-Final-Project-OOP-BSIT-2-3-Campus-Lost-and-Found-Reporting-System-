@@ -41,6 +41,11 @@ public class MatchSuggestionController implements Initializable {
     @FXML private Button declineButton;
 
     private ItemMatch currentMatch;
+    private javafx.stage.Window ownerWindow; // set by MatchDetailsDialog before showing
+
+    public void setOwnerWindow(javafx.stage.Window owner) {
+        this.ownerWindow = owner;
+    }
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -79,7 +84,6 @@ public class MatchSuggestionController implements Initializable {
         if (imageBox == null) {
             return;
         }
-
         imageBox.getChildren().clear();
         imageBox.setAlignment(Pos.CENTER);
 
@@ -103,17 +107,20 @@ public class MatchSuggestionController implements Initializable {
         if (currentMatch == null) {
             return;
         }
-
         try {
             AppDataStore.confirmMatch(currentMatch);
             setStatus("Confirmed");
-            showAlert(Alert.AlertType.INFORMATION, "Match Confirmed",
-                    "A claim report is now ready for the user and will stay pending in Reports until admin approval.");
-            closeDialog();
         } catch (RuntimeException e) {
             showAlert(Alert.AlertType.ERROR, "Database Error",
                     "The match could not be confirmed. Please try again.");
+            return;
         }
+        // Close the stage first, then show the alert owned by the parent window
+        // so the alert is never orphaned by the closing stage.
+        closeDialog();
+        showAlertOnOwner(Alert.AlertType.INFORMATION, "Match Confirmed",
+                "The item owner will see a 'Ready to Claim' entry in their Claims tab.\n"
+                + "Once they submit, the claim will appear in the Admin Claims module for final approval.");
     }
 
     @FXML
@@ -121,11 +128,10 @@ public class MatchSuggestionController implements Initializable {
         if (currentMatch == null) {
             return;
         }
-
         AppDataStore.declineMatch(currentMatch);
-        showAlert(Alert.AlertType.INFORMATION, "Match Declined",
-                "This match suggestion has been removed.");
         closeDialog();
+        showAlertOnOwner(Alert.AlertType.INFORMATION, "Match Declined",
+                "This match suggestion has been removed.");
     }
 
     @FXML
@@ -134,9 +140,11 @@ public class MatchSuggestionController implements Initializable {
     }
 
     private void setStatus(String status) {
+        if (statusBadge == null) return;
         statusBadge.setText(status);
         if ("Confirmed".equalsIgnoreCase(status)) {
-            statusBadge.setStyle("-fx-background-color: #C8E6C9; -fx-background-radius: 12; -fx-text-fill: #2E7D32; -fx-font-weight: bold;");
+            statusBadge.setStyle("-fx-background-color: #C8E6C9; -fx-background-radius: 12; "
+                    + "-fx-text-fill: #2E7D32; -fx-font-weight: bold;");
             if (confirmButton != null) {
                 confirmButton.setDisable(true);
                 confirmButton.setText("Match Confirmed");
@@ -145,7 +153,8 @@ public class MatchSuggestionController implements Initializable {
                 declineButton.setDisable(true);
             }
         } else {
-            statusBadge.setStyle("-fx-background-color: #FFE0B2; -fx-background-radius: 12; -fx-text-fill: #E65100; -fx-font-weight: bold;");
+            statusBadge.setStyle("-fx-background-color: #FFE0B2; -fx-background-radius: 12; "
+                    + "-fx-text-fill: #E65100; -fx-font-weight: bold;");
             if (confirmButton != null) {
                 confirmButton.setDisable(false);
                 confirmButton.setText("Confirm Match");
@@ -157,6 +166,10 @@ public class MatchSuggestionController implements Initializable {
     }
 
     private void closeDialog() {
+        if (statusBadge == null || statusBadge.getScene() == null
+                || statusBadge.getScene().getWindow() == null) {
+            return;
+        }
         Stage stage = (Stage) statusBadge.getScene().getWindow();
         stage.close();
     }
@@ -166,6 +179,23 @@ public class MatchSuggestionController implements Initializable {
         alert.setTitle(title);
         alert.setHeaderText(null);
         alert.setContentText(msg);
+        // Make alert owned by the match detail stage so it stays on top
+        if (statusBadge != null && statusBadge.getScene() != null
+                && statusBadge.getScene().getWindow() != null) {
+            alert.initOwner(statusBadge.getScene().getWindow());
+        }
+        alert.showAndWait();
+    }
+
+    /** Shows an alert owned by the original caller's window (used after the stage is already closed). */
+    private void showAlertOnOwner(Alert.AlertType type, String title, String msg) {
+        Alert alert = new Alert(type);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(msg);
+        if (ownerWindow != null) {
+            alert.initOwner(ownerWindow);
+        }
         alert.showAndWait();
     }
 
