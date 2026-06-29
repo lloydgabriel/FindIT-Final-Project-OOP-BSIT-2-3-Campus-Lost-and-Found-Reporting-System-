@@ -10,6 +10,8 @@ import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -42,6 +44,7 @@ public class FoundFormController {
         );
         if (uploadArea != null) {
             uploadArea.setOnMouseClicked(e -> handleUploadImage());
+            showUploadPrompt();
         }
     }
 
@@ -156,8 +159,64 @@ public class FoundFormController {
                         "The selected image could not be prepared. Please choose a smaller PNG or JPG file.");
                 return;
             }
-            showAlert(Alert.AlertType.INFORMATION, "Image Selected", "Selected: " + file.getName());
+            showImagePreview(file.getName());
         }
+    }
+
+    private void showUploadPrompt() {
+        if (uploadArea == null) {
+            return;
+        }
+
+        Label title = new Label("Upload Image (Optional)");
+        title.setStyle("-fx-text-fill: #333333; -fx-font-weight: bold; -fx-font-size: 15;");
+        Label instruction = new Label("Click to upload or drag and drop");
+        instruction.setStyle("-fx-text-fill: #666666; -fx-font-weight: bold; -fx-font-size: 15;");
+        Label note = new Label("PNG, JPG up to 5MB");
+        note.setStyle("-fx-text-fill: #999999; -fx-font-size: 12;");
+
+        uploadArea.getChildren().setAll(title, instruction, note);
+        uploadArea.setStyle("-fx-border-color: #CCCCCC; -fx-border-style: dashed; -fx-border-radius: 8; -fx-background-color: #FAFAFA; -fx-cursor: hand;");
+    }
+
+    private void showImagePreview(String fileName) {
+        if (uploadArea == null) {
+            return;
+        }
+
+        Image image = ImageStorage.loadImage(selectedImagePath);
+        if (image == null) {
+            selectedImagePath = null;
+            showUploadPrompt();
+            showAlert(Alert.AlertType.ERROR, "Image Error",
+                    "The selected image could not be previewed. Please choose another PNG or JPG file.");
+            return;
+        }
+
+        ImageView preview = new ImageView(image);
+        preview.setFitHeight(70);
+        preview.setFitWidth(180);
+        preview.setPreserveRatio(true);
+        preview.setSmooth(true);
+
+        Label selected = new Label("Selected: " + fileName);
+        selected.setStyle("-fx-text-fill: #333333; -fx-font-weight: bold;");
+
+        Button removeButton = new Button("Remove Image");
+        removeButton.setStyle("-fx-background-color: #CCCCCC; -fx-background-radius: 8; -fx-cursor: hand; -fx-text-fill: #333333; -fx-font-weight: bold;");
+        removeButton.addEventFilter(javafx.scene.input.MouseEvent.MOUSE_CLICKED, event -> event.consume());
+        removeButton.setOnAction(event -> {
+            event.consume();
+            removeSelectedImage();
+        });
+
+        uploadArea.getChildren().setAll(preview, selected, removeButton);
+        uploadArea.setStyle("-fx-border-color: #800000; -fx-border-radius: 8; -fx-background-color: #FFF8E1; -fx-cursor: hand;");
+    }
+
+    private void removeSelectedImage() {
+        selectedImagePath = null;
+        showUploadPrompt();
     }
 
     private void showAlert(Alert.AlertType type, String title, String message) {
