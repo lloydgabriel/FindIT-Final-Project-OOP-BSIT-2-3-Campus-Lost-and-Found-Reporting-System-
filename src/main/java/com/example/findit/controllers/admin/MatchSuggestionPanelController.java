@@ -35,7 +35,7 @@ public class MatchSuggestionPanelController implements Initializable {
             sidebarController.setActiveTab("Match");
         }
 
-        statusFilter.setItems(FXCollections.observableArrayList("All Status", "Pending", "Confirmed"));
+        statusFilter.setItems(FXCollections.observableArrayList("All Status", "Pending"));
         statusFilter.getSelectionModel().selectFirst();
 
         searchField.textProperty().addListener((obs, oldValue, newValue) -> renderMatches());
@@ -153,6 +153,10 @@ public class MatchSuggestionPanelController implements Initializable {
                 matchCardsContainer.getScene() == null ? null : matchCardsContainer.getScene().getWindow(),
                 match
         );
+        // Refresh the panel after the detail window closes so confirmed/declined
+        // matches are removed from the card list immediately
+        AppDataStore.refreshAll();
+        renderMatches();
     }
 
     @FXML
