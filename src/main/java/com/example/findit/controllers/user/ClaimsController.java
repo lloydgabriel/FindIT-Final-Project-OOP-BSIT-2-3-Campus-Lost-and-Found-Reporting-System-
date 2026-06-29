@@ -97,7 +97,6 @@ public class ClaimsController {
         card.setMinWidth(210);
         card.setPadding(new Insets(15));
         card.setStyle("-fx-background-color: #FFFFFF; -fx-background-radius: 12; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.06), 8, 0, 0, 4); -fx-cursor: hand;");
-        card.setOnMouseClicked(event -> showClaimDetails(claim));
 
         Label itemName = new Label(claim.getItem().getItemName());
         itemName.setWrapText(true);
@@ -115,7 +114,212 @@ public class ClaimsController {
         badge.setStyle(statusStyle(claim.getStatus()));
 
         card.getChildren().addAll(itemName, claimant, location, badge);
+
+        if ("Ready to claim".equalsIgnoreCase(claim.getStatus())) {
+            // For matched claims, tapping the card OR the button both require tracking ID verification.
+            // The button is the primary CTA; clicking the card also triggers verification.
+            javafx.scene.control.Button submitBtn = new javafx.scene.control.Button("Submit Claim Request");
+            submitBtn.setMaxWidth(Double.MAX_VALUE);
+            submitBtn.setStyle("-fx-background-color: #800000; -fx-background-radius: 8; -fx-cursor: hand;"
+                    + " -fx-text-fill: #FFFFFF; -fx-font-weight: bold; -fx-padding: 6 12 6 12;");
+            submitBtn.setOnAction(event -> {
+                event.consume();
+                verifyAndSubmitClaim(claim);
+            });
+            card.setOnMouseClicked(event -> verifyAndSubmitClaim(claim));
+            card.getChildren().add(submitBtn);
+        } else {
+            // Non-matched claims: clicking shows read-only details
+            card.setOnMouseClicked(event -> showClaimDetails(claim));
+        }
+
         return card;
+    }
+
+    /**
+     * Gate for "Ready to claim" entries created by a match confirmation.
+     * Prompts the user for the lost item's Tracking ID to prove ownership
+     * before allowing them to proceed to the submit claim form.
+     */
+    private void verifyAndSubmitClaim(ClaimRequest claim) {
+        // Only auto-match claims have studentNumber in "MATCH-{lostId}-{foundId}" format
+        String studentNumber = claim.getStudentNumber();
+        if (studentNumber == null || !studentNumber.startsWith("MATCH-")) {
+            // Not a match-generated claim — go straight to submit
+            showSubmitClaimDialog(claim);
+            return;
+        }
+
+        // Parse the lost item id from "MATCH-{lostId}-{foundId}"
+        ItemReport lostItem = resolveLostItemFromMatchStudentNumber(studentNumber);
+
+        javafx.scene.control.TextInputDialog prompt = new javafx.scene.control.TextInputDialog();
+        prompt.setTitle("Verify Ownership");
+        prompt.setHeaderText("Enter your Lost Item Tracking ID");
+        prompt.setContentText("This item was matched to a lost report.\n"
+                + "Please enter the Tracking ID from your lost item report\n"
+                + "to prove ownership before submitting your claim.");
+
+        // Style the dialog
+        prompt.getDialogPane().setPrefWidth(460);
+
+        prompt.showAndWait().ifPresent(input -> {
+            String entered = input.trim().toUpperCase();
+
+            if (entered.isBlank()) {
+                showError("Tracking ID Required",
+                        "Please enter the Tracking ID from your lost item report.");
+                return;
+            }
+
+            // Validate against the actual lost item's tracking ID
+            boolean verified = lostItem != null
+                    && entered.equals(safe(lostItem.getTrackingId()).toUpperCase());
+
+            if (!verified) {
+                showError("Verification Failed",
+                        "The Tracking ID you entered does not match the lost item report.\n"
+                        + "Please check your lost item tracking ID and try again.");
+                return;
+            }
+
+            // Ownership confirmed — open the submit claim form
+            showSubmitClaimDialog(claim);
+        });
+    }
+
+    /**
+     * Looks up the lost ItemReport from the auto-match student number
+     * which has the format "MATCH-{lostItemId}-{foundItemId}".
+     */
+    private ItemReport resolveLostItemFromMatchStudentNumber(String studentNumber) {
+        try {
+            // Format: "MATCH-{lostId}-{foundId}"
+            String[] parts = studentNumber.split("-");
+            // parts[0]="MATCH", parts[1]=lostId, parts[2]=foundId
+            int lostId = Integer.parseInt(parts[1]);
+            // Search active reports first, then archived
+            ItemReport found = AppDataStore.getItemReports().stream()
+                    .filter(item -> item.getId() == lostId)
+                    .findFirst().orElse(null);
+            if (found == null) {
+                found = AppDataStore.ARCHIVED_ITEMS.stream()
+                        .filter(item -> item.getId() == lostId)
+                        .findFirst().orElse(null);
+            }
+            return found;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private void showError(String title, String message) {
+        javafx.scene.control.Alert err = new javafx.scene.control.Alert(
+                javafx.scene.control.Alert.AlertType.WARNING);
+        err.setTitle(title);
+        err.setHeaderText(null);
+        err.setContentText(message);
+        err.showAndWait();
+    }
+
+    /** Step 3: Formally submit a claim after ownership is verified. Transitions "Ready to claim" → "Pending". */
+    private void showSubmitClaimDialog(ClaimRequest claim) {
+        javafx.scene.control.Dialog<javafx.scene.control.ButtonType> dialog = new javafx.scene.control.Dialog<>();
+        dialog.setTitle("Submit Claim Request");
+        dialog.setHeaderText("Submit your claim for: " + claim.getItem().getItemName());
+
+        javafx.scene.control.TextField contactField = new javafx.scene.control.TextField(
+                claim.getContactInfo() != null ? claim.getContactInfo() : "");
+        contactField.setPromptText("e.g. 09XXXXXXXXX or email@domain.com");
+
+        javafx.scene.control.TextArea proofArea = new javafx.scene.control.TextArea(
+                claim.getProofDescription() != null ? claim.getProofDescription() : "");
+        proofArea.setPromptText("Describe how you can prove ownership of this item...");
+        proofArea.setPrefRowCount(4);
+
+        javafx.scene.layout.GridPane grid = new javafx.scene.layout.GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.add(new javafx.scene.control.Label("Contact Info:"), 0, 0);
+        grid.add(contactField, 1, 0);
+        grid.add(new javafx.scene.control.Label("Proof Details:"), 0, 1);
+        grid.add(proofArea, 1, 1);
+
+        Label note = new Label("A match was found for your lost item. Please review your contact and proof\n"
+                + "details, then click Submit to send your claim to the admin for approval.");
+        note.setWrapText(true);
+        note.setStyle("-fx-text-fill: #555555; -fx-font-size: 12;");
+
+        VBox content = new VBox(12, note, grid);
+        dialog.getDialogPane().setContent(content);
+        dialog.getDialogPane().setPrefWidth(500);
+
+        javafx.scene.control.ButtonType submitBtn = new javafx.scene.control.ButtonType(
+                "Submit", javafx.scene.control.ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(submitBtn, javafx.scene.control.ButtonType.CANCEL);
+
+        dialog.showAndWait().ifPresent(response -> {
+            if (response == submitBtn) {
+                String contact = contactField.getText().trim();
+                String proof = proofArea.getText().trim();
+
+                if (contact.isBlank() || proof.isBlank()) {
+                    javafx.scene.control.Alert err = new javafx.scene.control.Alert(
+                            javafx.scene.control.Alert.AlertType.WARNING, "Please fill in all fields before submitting.");
+                    err.setHeaderText(null);
+                    err.showAndWait();
+                    return;
+                }
+
+                if (!com.example.findit.util.InputValidator.isValidContact(contact)) {
+                    javafx.scene.control.Alert err = new javafx.scene.control.Alert(
+                            javafx.scene.control.Alert.AlertType.WARNING,
+                            "Please enter a valid 11-digit phone number or email address.");
+                    err.setHeaderText(null);
+                    err.showAndWait();
+                    return;
+                }
+
+                try {
+                    AppDataStore.submitMatchClaim(claim, claim.getClaimantName(),
+                            claim.getStudentNumber(), contact, proof);
+                } catch (RuntimeException e) {
+                    javafx.scene.control.Alert err = new javafx.scene.control.Alert(
+                            javafx.scene.control.Alert.AlertType.ERROR, "Could not submit claim. Please try again.");
+                    err.setHeaderText(null);
+                    err.showAndWait();
+                    return;
+                }
+
+                // Show the tracking ID receipt
+                showSubmitConfirmation(claim);
+            }
+        });
+    }
+
+    private void showSubmitConfirmation(ClaimRequest claim) {
+        javafx.scene.control.Alert alert = new javafx.scene.control.Alert(
+                javafx.scene.control.Alert.AlertType.INFORMATION);
+        alert.setTitle("Claim Submitted");
+        alert.setHeaderText("Your claim is now pending admin review.");
+
+        javafx.scene.control.TextField idField = new javafx.scene.control.TextField(claim.getTrackingId());
+        idField.setEditable(false);
+        idField.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; -fx-alignment: center; -fx-background-color: #F0F0F0;");
+
+        VBox layout = new VBox(15,
+                new Label("Use this Tracking ID to follow up on your claim:"),
+                idField
+        );
+        layout.setAlignment(Pos.CENTER);
+        alert.getDialogPane().setContent(layout);
+
+        javafx.scene.control.ButtonType doneBtn = new javafx.scene.control.ButtonType("Done");
+        alert.getButtonTypes().setAll(doneBtn);
+        javafx.scene.control.Button done = (javafx.scene.control.Button)
+                alert.getDialogPane().lookupButton(doneBtn);
+        done.setStyle("-fx-cursor: hand; -fx-background-color: #800000; -fx-text-fill: white; -fx-font-weight: bold;");
+        alert.showAndWait();
     }
 
     private void showClaimDetails(ClaimRequest claim) {
@@ -313,31 +517,52 @@ public class ClaimsController {
 
     private VBox createClaimTimeline(ClaimRequest claim) {
         String status = safe(claim.getStatus());
-        boolean ready = "Ready to claim".equalsIgnoreCase(status);
+        boolean readyToClaim = "Ready to claim".equalsIgnoreCase(status);
+        boolean pending  = "Pending".equalsIgnoreCase(status);
         boolean unclaimed = "Unclaimed".equalsIgnoreCase(status);
         boolean claimed = "Claimed".equalsIgnoreCase(status);
         boolean rejected = "Rejected".equalsIgnoreCase(status);
-        boolean pending  = !ready && !unclaimed && !claimed && !rejected;
+
+        // Step progress
+        boolean step2Done = pending || unclaimed || claimed || rejected;
+        boolean step3Done = unclaimed || claimed || rejected;
+        boolean step4Done = unclaimed || claimed || rejected;
+
+        // Step 3 label: pending review by admin (after user submits)
+        // Step 4 label: outcome
+        String step4Label = rejected ? "Rejected"
+                : claimed ? "Claimed"
+                : unclaimed ? "Ready for Pickup"
+                : "Outcome";
 
         Label title = new Label("Claim Timeline");
         title.setStyle("-fx-text-fill: #4A1212; -fx-font-weight: bold; -fx-font-size: 13;");
 
-        // Step 3 appearance depends on outcome
-        String step3Label = rejected ? "Rejected Report"
-                : claimed ? "Claimed"
-                : unclaimed ? "Unclaimed"
-                : "Ready to Claim";
-        boolean step3Done = ready || unclaimed || claimed || rejected;
-
-        HBox timeline = new HBox(10);
+        HBox timeline = new HBox(6);
         timeline.setAlignment(Pos.CENTER_LEFT);
-        timeline.getChildren().addAll(
-                createTimelineStep("1", "Submitted Claim", true,  false,   false),
-                createTimelineConnector(true),
-                createTimelineStep("2", "Pending Review",  true,  pending, false),
-                createTimelineConnector(step3Done),
-                createTimelineStep("3", step3Label,        step3Done, step3Done, rejected)
-        );
+
+        if (readyToClaim) {
+            // Special case: match confirmed, waiting for user to submit
+            timeline.getChildren().addAll(
+                    createTimelineStep("1", "Match Found", true, true, false),
+                    createTimelineConnector(false),
+                    createTimelineStep("2", "Submit Claim", false, false, false),
+                    createTimelineConnector(false),
+                    createTimelineStep("3", "Admin Review", false, false, false),
+                    createTimelineConnector(false),
+                    createTimelineStep("4", "Outcome", false, false, false)
+            );
+        } else {
+            timeline.getChildren().addAll(
+                    createTimelineStep("1", "Claim Submitted", true, false, false),
+                    createTimelineConnector(step2Done),
+                    createTimelineStep("2", "Pending Review", step2Done, pending, false),
+                    createTimelineConnector(step3Done),
+                    createTimelineStep("3", "Admin Decision", step3Done, step3Done && !step4Done, false),
+                    createTimelineConnector(step4Done),
+                    createTimelineStep("4", step4Label, step4Done, step4Done, rejected)
+            );
+        }
 
         VBox wrapper = new VBox(8, title, timeline);
         wrapper.setPadding(new Insets(12));
