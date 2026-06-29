@@ -13,16 +13,16 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<BorderPane prefHeight="600.0" prefWidth="1000.0" style="-fx-background-color: #F5F5F7;" stylesheets="@../../styles/admin-claims.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.findit.controllers.admin.ClaimsController">
+<BorderPane prefHeight="600.0" prefWidth="1000.0" style="-fx-background-color: #F5F5F7;" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.findit.controllers.admin.ClaimsController">
    
    <left>
       <fx:include fx:id="sidebar" source="AdminDashboardSidebar.fxml" />
    </left>
    
    <center>
-      <ScrollPane fx:id="contentScrollPane" fitToHeight="true" fitToWidth="true" hbarPolicy="AS_NEEDED" styleClass="claims-content-scroll" vbarPolicy="AS_NEEDED" BorderPane.alignment="CENTER">
+      <ScrollPane fitToHeight="true" fitToWidth="true" hbarPolicy="AS_NEEDED" vbarPolicy="AS_NEEDED" BorderPane.alignment="CENTER">
          <content>
-            <VBox fx:id="contentContainer" minWidth="760.0">
+            <VBox fx:id="contentContainer" minWidth="760.0" VBox.vgrow="ALWAYS">
                <children>
                   <!-- HEADER -->
                   <HBox alignment="CENTER_LEFT" prefHeight="70.0" style="-fx-background-color: #800000;">
@@ -51,14 +51,14 @@
                         <!-- TABLE CONTAINER -->
                         <VBox style="-fx-background-color: #FFFFFF; -fx-background-radius: 15; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 10, 0, 0, 5);" VBox.vgrow="ALWAYS">
                            <children>
-                              <TableView fx:id="claimsTable" styleClass="claims-table" VBox.vgrow="ALWAYS">
+                              <TableView fx:id="claimsTable" VBox.vgrow="ALWAYS">
                                 <columns>
-                                  <TableColumn fx:id="colClaimTrackingId" minWidth="110.0" prefWidth="130.0" text="Claim Tracking ID" />
-                                  <TableColumn fx:id="colItemName" minWidth="100.0" prefWidth="160.0" text="Item Name" />
-                                  <TableColumn fx:id="colDate" minWidth="90.0" prefWidth="120.0" text="Date" />
-                                  <TableColumn fx:id="colClaimant" minWidth="100.0" prefWidth="150.0" text="Claimant" />
-                                  <TableColumn fx:id="colStatus" minWidth="100.0" prefWidth="140.0" text="Status" />
-                                  <TableColumn fx:id="colAction" maxWidth="187.0" minWidth="120.0" prefWidth="140.0" text="Action" />
+                                  <TableColumn fx:id="colClaimTrackingId" text="Claim ID" />
+                                  <TableColumn fx:id="colItemName" text="Item Name" />
+                                  <TableColumn fx:id="colDate" text="Date" />
+                                  <TableColumn fx:id="colClaimant" text="Claimant" />
+                                  <TableColumn fx:id="colStatus" text="Status" />
+                                  <TableColumn fx:id="colAction" text="Action" />
                                 </columns>
                                  <VBox.margin><Insets bottom="15.0" left="15.0" right="15.0" top="15.0" /></VBox.margin>
                               </TableView>
